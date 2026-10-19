@@ -1,18 +1,11 @@
 import { publicUrl } from '../config';
 import { h } from '../dom';
-import {
-  buildJourneyHash,
-  buildJourneyUrl,
-  cleanLabel,
-  formatPoint,
-  type Journey,
-  type Point,
-} from '../destination-url';
+import { buildJourneyHash, buildJourneyUrl, formatPoint, type Journey, type Point } from '../destination-url';
 import { parseLocation } from '../link-parsing';
 import { drawQr, pngFileName, qrPngUrl } from '../qr';
 import { browserStorage, SavedPlaces, type SavedPlace } from '../saved-places';
 import { creditFooter, SHARE_RESULT_TEXT, shareLink } from './common';
-import { createStopsEditor } from './stops-editor';
+import { createStopsEditor, type StopsChange } from './stops-editor';
 
 const ERRORS = {
   empty: 'Paste a map link or type coordinates first.',
@@ -23,11 +16,30 @@ const ERRORS = {
   invalidQr: 'That QR link looks broken. Make a fresh one below.',
 } as const;
 
+/** Wait this long after the last keystroke before trying typed text. */
+const TYPING_DELAY_MS = 500;
+
+const pretty = (p: Point) => formatPoint(p).replace(',', ', ');
+
+/** What a saved place is called in the list when it has no name. */
+function fallbackName(place: SavedPlace): string {
+  const end = place.stops[place.stops.length - 1]!;
+  return place.stops.length > 1 ? `Route to ${pretty(end)}` : pretty(end);
+}
+
 export function renderCreate(root: HTMLElement, { brokenLink = false } = {}): void {
   const saved = new SavedPlaces(browserStorage());
+  // The QR only carries the stops. Name and note stay on this device.
   let current: Journey | null = null;
+  let typingTimer: ReturnType<typeof setTimeout> | undefined;
 
-  const stops = createStopsEditor({ onPaste: () => submit({ quiet: true }) });
+  const stops = createStopsEditor({ onChange });
+  const error = h('p', { class: 'error', role: 'alert', hidden: !brokenLink });
+  if (brokenLink) error.textContent = ERRORS.invalidQr;
+
+  // Result card: QR, then what you'd want to keep it under, then actions.
+  const qrCanvas = h('canvas', { class: 'qr', role: 'img', 'aria-label': 'QR code for this journey' });
+  const resultStops = h('p', { class: 'coords' });
   const nameInput = h('input', {
     id: 'name',
     type: 'text',
@@ -41,13 +53,6 @@ export function renderCreate(root: HTMLElement, { brokenLink = false } = {}): vo
     maxlength: '200',
     placeholder: 'e.g. Blue door, ring twice',
   });
-  const error = h('p', { class: 'error', role: 'alert', hidden: !brokenLink });
-  if (brokenLink) error.textContent = ERRORS.invalidQr;
-
-  // Result card
-  const qrCanvas = h('canvas', { class: 'qr', role: 'img', 'aria-label': 'QR code for this journey' });
-  const resultTitle = h('h2', { class: 'result-title' });
-  const resultStops = h('p', { class: 'coords' });
   const saveMessage = h('p', { class: 'error', role: 'status', hidden: true });
   const saveButton = h('button', { type: 'button', class: 'go' }, 'Save');
   const shareButton = h('button', { type: 'button' }, 'Share');
@@ -57,22 +62,31 @@ export function renderCreate(root: HTMLElement, { brokenLink = false } = {}): vo
     'section',
     { class: 'result', hidden: true, 'aria-live': 'polite' },
     qrCanvas,
-    resultTitle,
     resultStops,
     h(
-      'p',
-      { class: 'privacy' },
-      'Anyone who scans this sees these exact spots. For a home address, consider pinning the corner instead.',
+      'div',
+      { class: 'keep-fields' },
+      h('label', { for: 'name' }, 'Name ', h('span', { class: 'optional' }, '(optional, only for you)')),
+      nameInput,
+      h('label', { for: 'note' }, 'Note ', h('span', { class: 'optional' }, '(optional, only for you)')),
+      noteInput,
     ),
     saveMessage,
     h('div', { class: 'actions' }, saveButton, shareButton),
     h('div', { class: 'more' }, downloadLink, previewLink),
   );
+  nameInput.addEventListener('input', resetSaveButton);
+  noteInput.addEventListener('input', resetSaveButton);
 
   // Saved places ("corral")
   const savedList = h('ul', { class: 'saved-list' });
-  const emptyNote = h('p', { class: 'hint' }, 'Nothing saved yet. Make a QR, give it a name and tap Save.');
-  const importInput = h('input', { type: 'file', accept: 'application/json,.json', class: 'visually-hidden', id: 'import-file' });
+  const emptyNote = h('p', { class: 'hint' }, 'Nothing saved yet. Paste a place and tap Save.');
+  const importInput = h('input', {
+    type: 'file',
+    accept: 'application/json,.json',
+    class: 'visually-hidden',
+    id: 'import-file',
+  });
   const exportLink = h('a', { class: 'text-link', href: '#', download: 'gogogo-places.json' }, 'Export list');
   const importLabel = h('label', { for: 'import-file', class: 'text-link' }, 'Import list');
   const corralMessage = h('p', { class: 'hint', role: 'status' });
@@ -93,30 +107,48 @@ export function renderCreate(root: HTMLElement, { brokenLink = false } = {}): vo
     );
   }
 
-  async function show(journey: Journey): Promise<void> {
-    current = journey;
-    const url = buildJourneyUrl(publicUrl(), journey);
-    await drawQr(qrCanvas, url);
-    resultTitle.textContent = journey.label ?? (journey.stops.length > 1 ? 'Your route' : 'Your destination');
-    resultStops.textContent =
-      journey.stops.length > 1
-        ? `${journey.stops.length} stops`
-        : formatPoint(journey.stops[0]!).replace(',', ', ');
-    previewLink.href = buildJourneyHash(journey);
-    downloadLink.download = pngFileName(journey.label);
+  function resetSaveButton(): void {
     saveButton.textContent = 'Save';
-    shareButton.textContent = 'Share';
     saveMessage.hidden = true;
-    result.hidden = false;
-    error.hidden = true;
-    result.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
 
-  /** quiet: called on paste, so stay silent if other stops still need filling in. */
-  function submit({ quiet = false } = {}): void {
-    const filled = stops.values().map((v, i) => ({ text: v, number: i + 1 })).filter((v) => v.text.trim());
+  async function show(journey: Journey): Promise<void> {
+    const changed = !current || buildJourneyHash(current) !== buildJourneyHash(journey);
+    current = journey;
+    if (changed) {
+      await drawQr(qrCanvas, buildJourneyUrl(publicUrl(), journey));
+      resetSaveButton();
+      shareButton.textContent = 'Share';
+    }
+    resultStops.textContent =
+      journey.stops.length > 1 ? `${journey.stops.length} stops` : pretty(journey.stops[0]!);
+    previewLink.href = buildJourneyHash(journey);
+    error.hidden = true;
+    const wasHidden = result.hidden;
+    result.hidden = false;
+    if (wasHidden) result.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  function hideResult(): void {
+    current = null;
+    result.hidden = true;
+  }
+
+  function onChange(change: StopsChange): void {
+    clearTimeout(typingTimer);
+    if (change === 'typing') typingTimer = setTimeout(() => update(false), TYPING_DELAY_MS);
+    else update(change === 'commit');
+  }
+
+  /** Read the stops and show the QR. Only explain problems when `explain` is set. */
+  function update(explain: boolean): void {
+    const filled = stops
+      .values()
+      .map((text, i) => ({ text, number: i + 1 }))
+      .filter((v) => v.text.trim());
     if (filled.length === 0) {
-      if (!quiet) showError(ERRORS.empty);
+      hideResult();
+      error.hidden = true;
       return;
     }
     const points: Point[] = [];
@@ -124,22 +156,20 @@ export function renderCreate(root: HTMLElement, { brokenLink = false } = {}): vo
     for (const { text, number } of filled) {
       const parsed = parseLocation(text);
       if (!parsed.ok) {
-        if (!quiet || filled.length === 1) {
-          showError(filled.length > 1 ? `Stop ${number}: ${ERRORS[parsed.reason]}` : ERRORS[parsed.reason]);
+        hideResult();
+        if (explain) {
+          error.textContent =
+            filled.length > 1 ? `Stop ${number}: ${ERRORS[parsed.reason]}` : ERRORS[parsed.reason];
+          error.hidden = false;
         }
         return;
       }
       points.push({ lat: parsed.place.lat, lon: parsed.place.lon });
       foundLabel = parsed.place.label ?? foundLabel;
     }
+    // A pasted place link often carries the place's name: offer it as the name to save under.
     if (!nameInput.value.trim() && foundLabel && points.length === 1) nameInput.value = foundLabel;
-    void show({ stops: points, label: cleanLabel(nameInput.value) });
-  }
-
-  function showError(message: string): void {
-    error.textContent = message;
-    error.hidden = false;
-    result.hidden = true;
+    void show({ stops: points });
   }
 
   function renderSaved(): void {
@@ -151,6 +181,7 @@ export function renderCreate(root: HTMLElement, { brokenLink = false } = {}): vo
   }
 
   function savedItem(place: SavedPlace): HTMLLIElement {
+    const title = place.name ?? fallbackName(place);
     return h(
       'li',
       {},
@@ -160,16 +191,17 @@ export function renderCreate(root: HTMLElement, { brokenLink = false } = {}): vo
           type: 'button',
           class: 'saved-open',
           onclick: () => {
-            stops.setValues(place.stops.map((p) => formatPoint(p).replace(',', ', ')));
-            nameInput.value = place.name;
+            stops.setValues(place.stops.map(pretty));
+            nameInput.value = place.name ?? '';
             noteInput.value = place.note ?? '';
-            void show({ stops: place.stops, label: place.name });
+            void show({ stops: place.stops });
+            result.scrollIntoView({ behavior: 'smooth', block: 'start' });
           },
         },
         h(
           'span',
           { class: 'saved-name' },
-          place.name,
+          title,
           place.stops.length > 1 ? h('span', { class: 'chip' }, `${place.stops.length} stops`) : null,
         ),
         place.note ? h('span', { class: 'saved-note' }, place.note) : null,
@@ -179,7 +211,7 @@ export function renderCreate(root: HTMLElement, { brokenLink = false } = {}): vo
         {
           type: 'button',
           class: 'saved-delete',
-          'aria-label': `Delete ${place.name}`,
+          'aria-label': `Delete ${title}`,
           onclick: () => {
             saved.remove(place.id);
             renderSaved();
@@ -197,26 +229,14 @@ export function renderCreate(root: HTMLElement, { brokenLink = false } = {}): vo
       saveMessage.hidden = false;
       return;
     }
-    const name = cleanLabel(nameInput.value);
-    if (!name) {
-      saveMessage.textContent = 'Add a name above to save it.';
-      saveMessage.hidden = false;
-      nameInput.focus();
-      return;
-    }
-    saved.add({ ...current, name, note: noteInput.value });
-    // The name may have been added after the QR was made: keep both in step.
-    if (name !== current.label) void show({ ...current, label: name });
+    saved.add({ ...current, name: nameInput.value, note: noteInput.value });
     saveButton.textContent = 'Saved';
     renderSaved();
   });
 
   shareButton.addEventListener('click', async () => {
     if (!current) return;
-    const outcome = await shareLink(
-      buildJourneyUrl(publicUrl(), current),
-      current.label ? `Take me to ${current.label}` : 'gogogo.rodeo',
-    );
+    const outcome = await shareLink(buildJourneyUrl(publicUrl(), current), 'gogogo.rodeo');
     shareButton.textContent = SHARE_RESULT_TEXT[outcome];
   });
 
@@ -227,6 +247,7 @@ export function renderCreate(root: HTMLElement, { brokenLink = false } = {}): vo
       return;
     }
     event.preventDefault();
+    downloadLink.download = pngFileName(nameInput.value);
     const url = await qrPngUrl(buildJourneyUrl(publicUrl(), current));
     downloadLink.href = url;
     downloadLink.dataset.ready = '1';
@@ -267,26 +288,6 @@ export function renderCreate(root: HTMLElement, { brokenLink = false } = {}): vo
     }
   });
 
-  const form = h(
-    'form',
-    {
-      class: 'place-form',
-      onsubmit: (event: Event) => {
-        event.preventDefault();
-        submit();
-      },
-    },
-    h('p', { class: 'field-label' }, 'Where to?'),
-    stops.element,
-    h('p', { id: 'place-hint', class: 'hint' }, 'Google Maps, Yandex, Apple Maps or OpenStreetMap links all work.'),
-    h('label', { for: 'name' }, 'Name ', h('span', { class: 'optional' }, '(shown to the driver)')),
-    nameInput,
-    h('label', { for: 'note' }, 'Note ', h('span', { class: 'optional' }, '(optional, only for you)')),
-    noteInput,
-    error,
-    h('button', { type: 'submit', class: 'primary' }, 'Make my QR'),
-  );
-
   root.replaceChildren(
     h(
       'header',
@@ -299,7 +300,7 @@ export function renderCreate(root: HTMLElement, { brokenLink = false } = {}): vo
       ),
       h('p', { class: 'tagline' }, 'Hold on to your hat. Paste a place, get a QR, share it easily.'),
     ),
-    form,
+    h('div', { class: 'place-form' }, h('p', { class: 'field-label' }, 'Where to?'), stops.element, error),
     result,
     savedSection,
     creditFooter(),

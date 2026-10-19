@@ -5,7 +5,11 @@ import { AppPreference } from '../preferences';
 import { browserStorage } from '../saved-places';
 import { creditFooter, SHARE_RESULT_TEXT, shareLink } from './common';
 
-export function renderDestination(root: HTMLElement, journey: Journey): void {
+export function renderDestination(
+  root: HTMLElement,
+  journey: Journey,
+  { backToCreate }: { backToCreate?: () => void } = {},
+): void {
   const platform = detectPlatform(navigator.userAgent, navigator.maxTouchPoints);
   const preference = new AppPreference(browserStorage());
   const multiStop = journey.stops.length > 1;
@@ -50,14 +54,31 @@ export function renderDestination(root: HTMLElement, journey: Journey): void {
     h(
       'nav',
       { class: 'topbar' },
-      h('a', { href: import.meta.env.BASE_URL, class: 'back', 'aria-label': 'Back to gogogo.rodeo' }, '←'),
+      h(
+        'a',
+        {
+          href: import.meta.env.BASE_URL,
+          class: 'back',
+          'aria-label': 'Back to gogogo.rodeo',
+          onclick: (event: Event) => {
+            if (!backToCreate) return;
+            event.preventDefault();
+            backToCreate();
+          },
+        },
+        '←',
+      ),
       shareButton,
     ),
     h(
       'header',
       { class: 'masthead' },
       h('p', { class: 'eyebrow' }, multiStop ? `Your route · ${journey.stops.length} stops` : 'Next stop'),
-      h('h1', { class: 'destination-name' }, journey.label ?? pretty(journey.stops.length - 1)),
+      h(
+        'h1',
+        { class: 'destination-name' },
+        journey.label ?? (multiStop ? 'Your route' : pretty(journey.stops.length - 1)),
+      ),
       multiStop
         ? h(
             'ol',

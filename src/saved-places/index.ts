@@ -12,7 +12,7 @@ import {
 
 export interface SavedPlace {
   id: string;
-  name: string;
+  name?: string;
   note?: string;
   stops: Point[];
   savedAt: number;
@@ -57,7 +57,6 @@ function toSavedPlace(value: unknown): SavedPlace | null {
   const stops = rawStops.map(toPoint);
   if (stops.length === 0 || stops.length > MAX_STOPS || stops.some((s) => s === null)) return null;
   const name = cleanLabel(typeof v.name === 'string' ? v.name : (v.label as string | undefined));
-  if (!name) return null;
   return {
     id: typeof v.id === 'string' && v.id ? v.id : newId(),
     name,
@@ -98,13 +97,11 @@ export class SavedPlaces {
     }
   }
 
-  /** Save a journey under a name, newest first. Saving the same one again moves it to the top. */
-  add(journey: Journey & { name: string; note?: string }, now = Date.now()): SavedPlace {
-    const name = cleanLabel(journey.name);
-    if (!name) throw new Error('A saved place needs a name.');
+  /** Save a journey, newest first. Saving the same one again moves it to the top. */
+  add(journey: Journey & { name?: string; note?: string }, now = Date.now()): SavedPlace {
     const place: SavedPlace = {
       id: newId(now),
-      name,
+      name: cleanLabel(journey.name),
       note: cleanNote(journey.note),
       stops: journey.stops.map(({ lat, lon }) => ({ lat, lon })),
       savedAt: now,
@@ -168,7 +165,7 @@ export class SavedPlaces {
     try {
       const old: unknown = JSON.parse(legacy);
       const converted = (Array.isArray(old) ? old : [])
-        .map((p: Record<string, unknown>) => toSavedPlace({ ...p, name: p.label ?? `${p.lat}, ${p.lon}` }))
+        .map(toSavedPlace)
         .filter((p): p is SavedPlace => p !== null);
       this.write([...this.list(), ...converted]);
     } catch {

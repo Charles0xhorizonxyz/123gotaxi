@@ -9,10 +9,18 @@ export interface StopsEditor {
 }
 
 /**
+ * What just happened, so the page can decide how eager to be:
+ * - "commit": a paste, Enter or leaving the field. Make the QR, or explain what's wrong.
+ * - "typing": a keystroke. Make the QR once the text reads as a place; stay quiet otherwise.
+ * - "reorder": stops moved or removed. Rebuild the QR.
+ */
+export type StopsChange = 'commit' | 'typing' | 'reorder';
+
+/**
  * The "Where to?" list: one input per stop, reorderable by dragging the handle
  * (mouse or finger) or with the arrow keys when the handle has focus.
  */
-export function createStopsEditor({ onPaste }: { onPaste: () => void }): StopsEditor {
+export function createStopsEditor({ onChange }: { onChange: (change: StopsChange) => void }): StopsEditor {
   const list = h('ol', { class: 'stops' });
   const addButton = h('button', { type: 'button', class: 'text-link add-stop' }, '+ Add a stop');
 
@@ -43,6 +51,7 @@ export function createStopsEditor({ onPaste }: { onPaste: () => void }): StopsEd
     if (!sibling) return;
     list.insertBefore(row, offset < 0 ? sibling : sibling.nextElementSibling);
     refresh();
+    onChange('reorder');
   }
 
   function startDrag(row: HTMLLIElement, handle: HTMLButtonElement, event: PointerEvent): void {
@@ -69,8 +78,10 @@ export function createStopsEditor({ onPaste }: { onPaste: () => void }): StopsEd
         }
       }
     };
+    const before = rows();
     const onEnd = () => {
       row.classList.remove('dragging');
+      if (rows().some((r, i) => r !== before[i])) onChange('reorder');
       handle.removeEventListener('pointermove', onMove);
       handle.removeEventListener('pointerup', onEnd);
       handle.removeEventListener('pointercancel', onEnd);
@@ -86,10 +97,19 @@ export function createStopsEditor({ onPaste }: { onPaste: () => void }): StopsEd
       inputmode: 'url',
       autocomplete: 'off',
       spellcheck: 'false',
-      'aria-describedby': 'place-hint',
     });
     input.value = value;
-    input.addEventListener('paste', () => setTimeout(onPaste, 0));
+    input.addEventListener('paste', () => setTimeout(() => onChange('commit'), 0));
+    input.addEventListener('input', (event) => {
+      if ((event as InputEvent).inputType !== 'insertFromPaste') onChange('typing');
+    });
+    input.addEventListener('change', () => onChange('commit'));
+    input.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        onChange('commit');
+      }
+    });
 
     const row = h('li', { class: 'stop-row' });
     const handle = h('button', { type: 'button', class: 'drag-handle' }, '⠿');
@@ -108,6 +128,7 @@ export function createStopsEditor({ onPaste }: { onPaste: () => void }): StopsEd
         onclick: () => {
           row.remove();
           refresh();
+          onChange('reorder');
           rows()[0]?.querySelector('input')?.focus();
         },
       },

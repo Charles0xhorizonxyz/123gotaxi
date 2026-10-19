@@ -10,9 +10,8 @@ test('making and saving a QR sends nothing over the network', async ({ page }) =
   page.on('request', (request) => requests.push(request.url()));
 
   await page.getByLabel('Where to?').fill('https://www.google.com/maps/@41.0342,28.9844,15z');
-  await page.getByLabel(/^Name/).fill('Ev');
-  await page.getByRole('button', { name: 'Make my QR' }).click();
   await expect(page.getByRole('img', { name: /QR code/ })).toBeVisible();
+  await page.getByLabel(/^Name/).fill('Ev');
   await page.getByRole('button', { name: 'Save', exact: true }).click();
   await page.getByRole('button', { name: /^Ev/ }).click();
 

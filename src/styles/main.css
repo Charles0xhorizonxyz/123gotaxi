@@ -222,7 +222,10 @@ button:disabled {
 }
 
 .text-link {
+  display: inline-flex;
+  align-items: center;
   min-height: 44px;
+  line-height: 1.2;
   padding: 0.5rem;
   border: 0;
   background: none;
@@ -272,7 +275,25 @@ button:disabled {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
+  align-items: center;
   gap: 0 1rem;
+}
+
+/* Name and note sit under the QR, left-aligned like a form. */
+.keep-fields {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  text-align: left;
+}
+
+.view {
+  display: contents;
+}
+
+.view[hidden] {
+  display: none !important;
 }
 
 /* Saved places */
@@ -442,8 +463,6 @@ button:disabled {
 
 label.text-link {
   margin: 0;
-  display: inline-flex;
-  align-items: center;
   cursor: pointer;
 }
 

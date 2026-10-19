@@ -228,7 +228,8 @@ I can set up the live deploy at the end of Milestone 1 on the default `*.github.
 12. **Simplicity over extras:** no passcode on saved places, no history-scrubbing.
 13. **Multi-stop journeys** (up to 4 stops): `via=lat,lon~lat,lon` lists earlier stops, `lat`/`lon` stays the final one, so the v1 format is unchanged. Only apps that follow every stop are offered (Google Maps, Yandex Navigator, Yandex Maps).
 14. **Driver page stays** (drivers can come back to it and share it). "Put my app first next time" moves the remembered app to the top; no auto-redirect.
-15. **Saved places** have a name (required) and a private note (never in the QR), with export/import as a JSON file.
+15. **Saved places** have an optional name and an optional note. Both are private: they stay on the device and are never put in the QR (the QR carries only the stops). Export/import as a JSON file.
+17. **No "Make" button:** the QR appears as soon as a place is pasted or typed. Name and note sit under the QR.
 16. Footer: "Made with ♥ by 0xhorizon.xyz". Slogan removed from the page.
 10. **Two-tap rule:** passenger pastes or picks → QR appears; driver scans → taps app. Design directions in `docs/design-proposals.html`.
 

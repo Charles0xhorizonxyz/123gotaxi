@@ -28,9 +28,10 @@ describe('SavedPlaces', () => {
     expect(a).toMatchObject({ name: 'A', note: 'Blue door' });
   });
 
-  it('needs a name', () => {
+  it('treats the name as optional', () => {
     const store = new SavedPlaces(memoryStorage());
-    expect(() => store.add({ ...at(1), name: '   ' })).toThrow();
+    store.add({ ...at(1), name: '   ', note: 'Corner shop' });
+    expect(store.list()[0]).toMatchObject({ name: undefined, note: 'Corner shop' });
   });
 
   it('keeps multi-stop journeys in order', () => {
@@ -85,7 +86,7 @@ describe('SavedPlaces', () => {
       JSON.stringify([{ id: 'a', lat: 41.03, lon: 28.98, label: 'Home', savedAt: 5 }, { id: 'b', lat: 1, lon: 2, savedAt: 6 }]),
     );
     const places = new SavedPlaces(storage).list();
-    expect(places.map((p) => p.name)).toEqual(['Home', '1, 2']);
+    expect(places.map((p) => p.name)).toEqual(['Home', undefined]);
     expect(storage.getItem('gogogo.saved.v1')).toBeNull();
   });
 
@@ -122,7 +123,7 @@ describe('export and import', () => {
     const file = JSON.stringify({
       format: 'gogogo.rodeo/places',
       version: 1,
-      places: [{ name: 'Ok', stops: [{ lat: 1, lon: 1 }] }, { name: 'Bad', stops: [{ lat: 500, lon: 1 }] }, { stops: [{ lat: 1, lon: 1 }] }],
+      places: [{ name: 'Ok', stops: [{ lat: 1, lon: 1 }] }, { name: 'Bad', stops: [{ lat: 500, lon: 1 }] }, { name: 'No stops' }],
     });
     expect(store.importJson(file)).toBe(1);
   });
