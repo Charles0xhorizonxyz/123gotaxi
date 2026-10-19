@@ -8,6 +8,7 @@ export default defineConfig({
     command: 'npm run build && npx vite preview --port 4173 --strictPort',
     url: 'http://localhost:4173',
     reuseExistingServer: !process.env.CI,
+    timeout: 180_000,
   },
   // Phone-sized viewports; both run in Chromium so CI only needs one browser.
   projects: [

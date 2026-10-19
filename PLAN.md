@@ -239,6 +239,13 @@ I can set up the live deploy at the end of Milestone 1 on the default `*.github.
 
 All traffic is HTTPS. There is no gogogo.rodeo server to encrypt *to*: the app never sends the address anywhere itself.
 
+**Enforced, not just promised:**
+- The published page carries a Content-Security-Policy with `connect-src 'none'`. The browser itself refuses any attempt by the page to send data to a server, even from a buggy or compromised library. Milestones 3–4 open it only to the named search and map-tile hosts.
+- `referrer: no-referrer`, so the nav app isn't told which page sent the driver.
+- Automated tests (`tests/e2e/privacy.spec.ts`) fail the build if making or saving a QR causes any network request, if the page can send data out, or if the destination appears in any URL sent to the server.
+
+**Places we can't control, documented for users:** the phone itself (malware, browser extensions), QR-scanner apps that keep a scan history, browser history on the driver's phone (the full link is stored locally), and the nav app the driver picks.
+
 ### Why the QR doesn't open the driver's app directly
 
 We considered encoding `geo:LAT,LON` straight into the QR, so the phone would offer its own app list with no web page in between. Rejected because:
