@@ -29,8 +29,21 @@ test('the name stays on this device and is not in the QR link', async ({ page })
 test('saving without a name lists the coordinates', async ({ page }) => {
   await page.goto('./');
   await page.getByLabel('Where to?').fill('41.0342, 28.9844');
+  await expect(page.getByRole('img', { name: /QR code/ })).toBeVisible();
   await page.getByRole('button', { name: 'Save', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Saved', exact: true })).toBeVisible();
   await expect(page.getByRole('button', { name: /^41\.0342, 28\.9844/ })).toBeVisible();
+});
+
+test('tapping Save straight after a paste or an edit saves the right place', async ({ page }) => {
+  await page.goto('./');
+  const where = page.getByLabel('Where to?');
+  await where.fill('41.0342, 28.9844');
+  await where.press('Enter');
+  await page.getByRole('button', { name: 'Save', exact: true }).click();
+  await where.fill('41.05, 28.99');
+  await page.getByRole('button', { name: 'Save', exact: true }).click();
+  await expect(page.locator('.saved-name')).toHaveText(['41.05, 28.99', '41.0342, 28.9844']);
 });
 
 test('a multi-stop journey can be reordered, previewed and come back intact', async ({ page }) => {

@@ -10,11 +10,12 @@ export interface StopsEditor {
 
 /**
  * What just happened, so the page can decide how eager to be:
- * - "commit": a paste, Enter or leaving the field. Make the QR, or explain what's wrong.
+ * - "commit": a paste or Enter. Make the QR and bring it into view, or explain what's wrong.
+ * - "leave": the field lost focus. Same, but don't move the page: the user is tapping something else.
  * - "typing": a keystroke. Make the QR once the text reads as a place; stay quiet otherwise.
  * - "reorder": stops moved or removed. Rebuild the QR.
  */
-export type StopsChange = 'commit' | 'typing' | 'reorder';
+export type StopsChange = 'commit' | 'leave' | 'typing' | 'reorder';
 
 /**
  * The "Where to?" list: one input per stop, reorderable by dragging the handle
@@ -103,7 +104,7 @@ export function createStopsEditor({ onChange }: { onChange: (change: StopsChange
     input.addEventListener('input', (event) => {
       if ((event as InputEvent).inputType !== 'insertFromPaste') onChange('typing');
     });
-    input.addEventListener('change', () => onChange('commit'));
+    input.addEventListener('change', () => onChange('leave'));
     input.addEventListener('keydown', (event) => {
       if (event.key === 'Enter') {
         event.preventDefault();

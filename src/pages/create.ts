@@ -112,7 +112,12 @@ export function renderCreate(root: HTMLElement, { brokenLink = false } = {}): vo
     saveMessage.hidden = true;
   }
 
-  async function show(journey: Journey): Promise<void> {
+  /**
+   * reveal: bring the QR into view. Only after a paste, Enter or picking a saved
+   * place, never while typing. It jumps instead of gliding, so a quick tap on
+   * Save can't land while the page is still moving.
+   */
+  async function show(journey: Journey, { reveal = false } = {}): Promise<void> {
     const changed = !current || buildJourneyHash(current) !== buildJourneyHash(journey);
     current = journey;
     if (changed) {
@@ -124,9 +129,8 @@ export function renderCreate(root: HTMLElement, { brokenLink = false } = {}): vo
       journey.stops.length > 1 ? `${journey.stops.length} stops` : pretty(journey.stops[0]!);
     previewLink.href = buildJourneyHash(journey);
     error.hidden = true;
-    const wasHidden = result.hidden;
     result.hidden = false;
-    if (wasHidden) result.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    if (reveal) result.scrollIntoView({ block: 'nearest' });
   }
 
   function hideResult(): void {
@@ -137,11 +141,11 @@ export function renderCreate(root: HTMLElement, { brokenLink = false } = {}): vo
   function onChange(change: StopsChange): void {
     clearTimeout(typingTimer);
     if (change === 'typing') typingTimer = setTimeout(() => update(false), TYPING_DELAY_MS);
-    else update(change === 'commit');
+    else update(change === 'commit' || change === 'leave', change === 'commit');
   }
 
   /** Read the stops and show the QR. Only explain problems when `explain` is set. */
-  function update(explain: boolean): void {
+  function update(explain: boolean, reveal = false): void {
     const filled = stops
       .values()
       .map((text, i) => ({ text, number: i + 1 }))
@@ -169,7 +173,7 @@ export function renderCreate(root: HTMLElement, { brokenLink = false } = {}): vo
     }
     // A pasted place link often carries the place's name: offer it as the name to save under.
     if (!nameInput.value.trim() && foundLabel && points.length === 1) nameInput.value = foundLabel;
-    void show({ stops: points });
+    void show({ stops: points }, { reveal });
   }
 
   function renderSaved(): void {
@@ -194,8 +198,7 @@ export function renderCreate(root: HTMLElement, { brokenLink = false } = {}): vo
             stops.setValues(place.stops.map(pretty));
             nameInput.value = place.name ?? '';
             noteInput.value = place.note ?? '';
-            void show({ stops: place.stops });
-            result.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            void show({ stops: place.stops }, { reveal: true });
           },
         },
         h(
