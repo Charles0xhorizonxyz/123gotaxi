@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -4 100 104">
+  <title>gogogo.rodeo</title>
+  <!-- A taxi bucking like a bronco, a rider on the roof waving his hat. -->
+  <g transform="rotate(13 50 62)">
+    <path d="M27 50 L35 36 H62 L71 50 Z" fill="#141414"/>
+    <rect x="10" y="49" width="80" height="19" rx="6" fill="#141414"/>
+    <path d="M32 49 L38 39.5 H47.5 V49 Z M51.5 49 V39.5 H60 L66 49 Z" fill="#ffc61a"/>
+    <g fill="#ffc61a">
+      <rect x="16" y="56" width="5" height="4"/><rect x="26" y="56" width="5" height="4"/><rect x="36" y="56" width="5" height="4"/>
+      <rect x="46" y="56" width="5" height="4"/><rect x="56" y="56" width="5" height="4"/><rect x="66" y="56" width="5" height="4"/><rect x="76" y="56" width="5" height="4"/>
+      <rect x="21" y="60" width="5" height="4"/><rect x="31" y="60" width="5" height="4"/><rect x="41" y="60" width="5" height="4"/>
+      <rect x="51" y="60" width="5" height="4"/><rect x="61" y="60" width="5" height="4"/><rect x="71" y="60" width="5" height="4"/>
+    </g>
+    <circle cx="27" cy="70" r="9" fill="#141414" stroke="#ffc61a" stroke-width="3"/>
+    <circle cx="73" cy="70" r="9" fill="#141414" stroke="#ffc61a" stroke-width="3"/>
+    <rect x="55" y="29.5" width="11" height="6.5" rx="1.5" fill="#141414"/>
+    <!-- rider: bent legs on the roof, one hand on the roof light, one waving the hat -->
+    <g fill="none" stroke="#141414" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M42.5 25 L37 30 L38 36.5 M42.5 25 L47 30.5 L46.5 36.5" stroke-width="4.2"/>
+      <path d="M42.5 25 L40.5 14.5" stroke-width="6.5"/>
+      <path d="M41.5 17.5 L49 22 L55.5 29.5" stroke-width="3.4"/>
+      <path d="M40.5 15.5 L47 6.5" stroke-width="3.4"/>
+    </g>
+    <circle cx="38.6" cy="8.6" r="4.4" fill="#141414"/>
+    <!-- cowboy hat: curled brim + pinched crown -->
+    <path d="M41.2 5.4 Q48 8.8 56.4 2.8" fill="none" stroke="#141414" stroke-width="2.4" stroke-linecap="round"/>
+    <path d="M44.6 5.8 Q44.2 -1.6 47.6 -0.2 Q49.4 -1.4 51.2 -0.4 Q54 -1 53.2 4.6 Z" fill="#141414"/>
+  </g>
+  <g fill="#141414" opacity=".55"><circle cx="88" cy="90" r="3"/><circle cx="94" cy="86" r="2"/><circle cx="82" cy="94" r="2"/></g>
+</svg>

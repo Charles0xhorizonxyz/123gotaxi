@@ -1,3 +1,6 @@
+import '@fontsource/archivo/400.css';
+import '@fontsource/archivo/700.css';
+import '@fontsource/alfa-slab-one/400.css';
 import './styles/main.css';
 import { parseDestination } from './destination-url';
 import { renderCreate } from './pages/create';

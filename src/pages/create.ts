@@ -14,7 +14,7 @@ import { browserStorage, SavedPlaces, type SavedPlace } from '../saved-places';
 const ERRORS = {
   empty: 'Paste a map link or type coordinates first.',
   'short-link':
-    "That's a short link, which hides the coordinates. Open it, then copy the long link from your browser's address bar.",
+    'That link threw its rider. Short links hide the location: open it, then copy the long link from the address bar.',
   unrecognised:
     'We couldn\'t find coordinates in that. Try a Google Maps or Yandex link, or coordinates like "41.0342, 28.9844".',
   invalidQr: 'That QR link looks broken. Make a fresh one below.',
@@ -46,10 +46,10 @@ export function renderCreate(root: HTMLElement, { brokenLink = false } = {}): vo
   const qrCanvas = h('canvas', { class: 'qr', role: 'img', 'aria-label': 'QR code for this destination' });
   const resultTitle = h('h2', { class: 'result-title' });
   const resultCoords = h('p', { class: 'coords' });
-  const saveButton = h('button', { type: 'button', class: 'secondary' }, 'Save on this device');
+  const saveButton = h('button', { type: 'button', class: 'go' }, 'Save on this device');
   const downloadLink = h('a', { class: 'button secondary', href: '#', download: 'gogogo.png' }, 'Download PNG');
-  const copyButton = h('button', { type: 'button', class: 'secondary' }, 'Copy link');
-  const previewLink = h('a', { class: 'button secondary', href: '#' }, 'See what the driver sees');
+  const copyButton = h('button', { type: 'button', class: 'text-link' }, 'Copy link');
+  const previewLink = h('a', { class: 'text-link', href: '#' }, 'See what the driver sees');
   const result = h(
     'section',
     { class: 'result', hidden: true, 'aria-live': 'polite' },
@@ -61,14 +61,15 @@ export function renderCreate(root: HTMLElement, { brokenLink = false } = {}): vo
       { class: 'privacy' },
       'Anyone who scans this sees this exact spot. For a home address, consider pinning the corner instead.',
     ),
-    h('div', { class: 'actions' }, saveButton, downloadLink, copyButton, previewLink),
+    h('div', { class: 'actions' }, saveButton, downloadLink),
+    h('div', { class: 'more' }, copyButton, previewLink),
   );
 
   const savedList = h('ul', { class: 'saved-list' });
   const savedSection = h(
     'section',
     { class: 'saved', hidden: true },
-    h('h2', {}, 'Saved on this device'),
+    h('h2', {}, 'Your corral'),
     h(
       'p',
       { class: 'hint' },
@@ -206,8 +207,13 @@ export function renderCreate(root: HTMLElement, { brokenLink = false } = {}): vo
     h(
       'header',
       { class: 'masthead' },
-      h('h1', { class: 'wordmark' }, 'gogogo.rodeo'),
-      h('p', { class: 'tagline' }, 'Paste a place. Show the QR. The driver picks their app.'),
+      h(
+        'h1',
+        { class: 'wordmark' },
+        h('img', { src: `${import.meta.env.BASE_URL}logo.svg`, alt: '', width: '56', height: '58' }),
+        'gogogo.rodeo',
+      ),
+      h('p', { class: 'tagline' }, 'Hold on to your hat. Paste a place, get a QR.'),
     ),
     form,
     result,

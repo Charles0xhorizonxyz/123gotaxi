@@ -224,6 +224,8 @@ I can set up the live deploy at the end of Milestone 1 on the default `*.github.
 7. **No translations:** English only; browser translation covers the rest.
 8. **Registrar: Njalla.** DNS guide will target Njalla's DNS panel.
 9. **Saved places** live only in the browser (`localStorage`), never sent anywhere.
+11. **Look: "Bucking Cab"** (Direction C in `docs/design-rodeo.html`): cream, taxi yellow, asphalt black, one light theme. Logo `public/logo.svg`. Fonts self-hosted, no Google requests.
+12. **Simplicity over extras:** no passcode on saved places, no history-scrubbing.
 10. **Two-tap rule:** passenger pastes or picks → QR appears; driver scans → taps app. Design directions in `docs/design-proposals.html`.
 
 ### Privacy model (who can see an address)

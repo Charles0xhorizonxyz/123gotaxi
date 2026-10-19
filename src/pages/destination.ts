@@ -14,7 +14,7 @@ export function renderDestination(root: HTMLElement, destination: Destination): 
     h(
       'header',
       { class: 'masthead' },
-      h('p', { class: 'eyebrow' }, 'Take me to'),
+      h('p', { class: 'eyebrow' }, 'Next stop'),
       h('h1', { class: 'destination-name' }, destination.label ?? coords),
       destination.label ? h('p', { class: 'coords' }, coords) : null,
     ),
@@ -32,7 +32,12 @@ export function renderDestination(root: HTMLElement, destination: Destination): 
     h(
       'footer',
       {},
-      h('a', { href: import.meta.env.BASE_URL }, 'Make your own QR at gogogo.rodeo'),
+      h(
+        'a',
+        { href: import.meta.env.BASE_URL, class: 'footer-brand' },
+        h('img', { src: `${import.meta.env.BASE_URL}logo.svg`, alt: '', width: '32', height: '33' }),
+        'Make your own QR at gogogo.rodeo',
+      ),
     ),
   );
 }

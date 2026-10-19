@@ -18,7 +18,7 @@ test('a short link explains what to do', async ({ page }) => {
   await page.goto('./');
   await page.getByLabel('Where to?').fill('https://maps.app.goo.gl/abc123');
   await page.getByRole('button', { name: 'Make my QR' }).click();
-  await expect(page.getByRole('alert')).toContainText('short link');
+  await expect(page.getByRole('alert')).toContainText('Short links');
 });
 
 test('the driver screen lists navigation apps', async ({ page }) => {
