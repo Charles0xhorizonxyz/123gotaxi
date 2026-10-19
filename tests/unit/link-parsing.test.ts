@@ -85,9 +85,9 @@ describe('Apple Maps and OpenStreetMap', () => {
   });
 });
 
-describe('gogogo.rodeo links', () => {
+describe('123go.taxi links', () => {
   it('reads our own QR links back', () => {
-    expect(parseLocation('https://gogogo.rodeo/#v=1&lat=41.0342&lon=28.9844&n=Home')).toEqual({
+    expect(parseLocation('https://123go.taxi/#v=1&lat=41.0342&lon=28.9844&n=Home')).toEqual({
       ok: true,
       place: { lat: 41.0342, lon: 28.9844, label: 'Home' },
     });

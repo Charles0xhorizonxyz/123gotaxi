@@ -1,5 +1,5 @@
 // Pull coordinates out of whatever the user pastes: raw coordinates, geo: URIs,
-// or links from Google Maps, Yandex, Apple Maps, OpenStreetMap and gogogo.rodeo.
+// or links from Google Maps, Yandex, Apple Maps, OpenStreetMap and 123go.taxi.
 
 import { finalStop, isValidCoordinate, parseJourney } from '../destination-url';
 

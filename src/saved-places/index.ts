@@ -22,7 +22,9 @@ export const STORAGE_KEY = 'gogogo.saved.v2';
 const LEGACY_KEY = 'gogogo.saved.v1';
 export const MAX_SAVED = 200;
 export const MAX_NOTE_LENGTH = 200;
-const EXPORT_FORMAT = 'gogogo.rodeo/places';
+const EXPORT_FORMAT = '123go.taxi/places';
+/** Files exported before the move from gogogo.rodeo still import. */
+const ACCEPTED_FORMATS = [EXPORT_FORMAT, 'gogogo.rodeo/places'];
 
 /** localStorage, or null when the browser blocks it (private mode, some in-app browsers). */
 export function browserStorage(): Storage | null {
@@ -141,7 +143,7 @@ export class SavedPlaces {
       throw new Error('not-json');
     }
     const places = (data as { format?: unknown; places?: unknown })?.places;
-    if ((data as { format?: unknown })?.format !== EXPORT_FORMAT || !Array.isArray(places)) {
+    if (!ACCEPTED_FORMATS.includes((data as { format?: string })?.format ?? '') || !Array.isArray(places)) {
       throw new Error('wrong-format');
     }
     const current = this.list();

@@ -46,7 +46,7 @@ export function renderDestination(
 
   const shareButton = h('button', { type: 'button', class: 'text-link' }, 'Share');
   shareButton.addEventListener('click', async () => {
-    const outcome = await shareLink(location.href, journey.label ?? 'gogogo.rodeo');
+    const outcome = await shareLink(location.href, journey.label ?? '123go.taxi');
     shareButton.textContent = SHARE_RESULT_TEXT[outcome];
   });
 
@@ -59,7 +59,7 @@ export function renderDestination(
         {
           href: import.meta.env.BASE_URL,
           class: 'back',
-          'aria-label': 'Back to gogogo.rodeo',
+          'aria-label': 'Back to 123go.taxi',
           onclick: (event: Event) => {
             if (!backToCreate) return;
             event.preventDefault();

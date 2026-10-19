@@ -1,4 +1,4 @@
-# Contributing to gogogo.rodeo
+# Contributing to 123go.taxi
 
 Thanks for helping! Bug reports and real-phone test results are especially welcome.
 

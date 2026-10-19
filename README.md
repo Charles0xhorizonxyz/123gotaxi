@@ -1,25 +1,27 @@
-# gogogo.rodeo
+# 123go.taxi
 
 *For a smooth ride — or it might get rocky, but at least it started smoothly.*
 
-**gogogo.rodeo** turns an address into a QR code that a taxi driver can scan to start navigation in their own app: Google Maps, Yandex, Waze, Apple Maps or any other.
+**123go.taxi** turns an address into a QR code that a taxi driver can scan to start navigation in their own app: Google Maps, Yandex, Waze, Apple Maps or any other.
 
 > Status: early development. See [PLAN.md](PLAN.md) for the roadmap.
 
 ## How it works
 
-1. **You** search for a place, paste a Google Maps or Yandex link, or type coordinates.
-2. You drag the pin to the exact entrance and get a QR code to show, download or print.
+1. **You** paste a Google Maps, Yandex, Apple Maps or OpenStreetMap link, or type coordinates. The QR code appears straight away. Add up to 4 stops and drag them into order for a multi-stop ride.
+2. Show the QR, share the link, or download it as a PNG. Save places on your device, with a private name and note, and export or import the list.
 3. **The driver** scans it, taps their navigation app, and the route starts.
 
-The QR code points to a gogogo.rodeo page, not straight to one app. That page lists the apps, so app support can improve without reprinting codes. Drivers can tick "Remember my choice" to skip the list next time.
+The QR code points to a 123go.taxi page, not straight to one app. That page lists the apps, so app support can improve without reprinting codes. Drivers can tick "Put my app first next time".
 
 ## Privacy
 
 - No accounts, no database, no analytics, no cookies.
 - QR codes are generated in your browser.
 - **The coordinates are part of the QR link.** Anyone who scans the code sees the location. For a home address, consider pinning a nearby corner instead.
-- A remembered app choice is stored only in the driver's own browser (`localStorage`) and can be cleared from the page at any time.
+- Saved places, names and notes stay in your browser (`localStorage`) and never go into the QR code or anywhere else.
+- A remembered app choice is stored only in the driver's own browser and can be cleared by unticking the box.
+- The published page's Content-Security-Policy forbids it from sending data to any server.
 
 ## Development
 
@@ -40,7 +42,7 @@ It's a static site: build it and serve `dist/` from anywhere. Two build-time set
 
 | Variable | Default | Purpose |
 |---|---|---|
-| `VITE_PUBLIC_URL` | `https://gogogo.rodeo` | Address that QR codes point to. |
+| `VITE_PUBLIC_URL` | `https://123go.taxi` | Address that QR codes point to. |
 | `BASE_PATH` | `/` | Sub-path if the site isn't at the root of its domain, e.g. `/gogogo-rodeo/`. |
 
 ## Credits

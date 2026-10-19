@@ -86,7 +86,7 @@ export const NAV_APPS: readonly NavApp[] = [
     platforms: ['android', 'ios', 'other'],
     multiStop: false,
     url(journey) {
-      return `https://waze.com/ul?ll=${formatPoint(finalStop(journey))}&navigate=yes&utm_source=gogogo.rodeo`;
+      return `https://waze.com/ul?ll=${formatPoint(finalStop(journey))}&navigate=yes&utm_source=123go.taxi`;
     },
   },
   {

@@ -19,14 +19,14 @@ describe('formatCoord', () => {
 
 describe('buildJourneyUrl', () => {
   it('puts everything after # so servers never see it', () => {
-    expect(buildJourneyUrl('https://gogogo.rodeo', { stops: [home] })).toBe(
-      'https://gogogo.rodeo/#v=1&lat=41.0342&lon=28.9844',
+    expect(buildJourneyUrl('https://123go.taxi', { stops: [home] })).toBe(
+      'https://123go.taxi/#v=1&lat=41.0342&lon=28.9844',
     );
   });
 
   it('encodes Turkish labels and spaces', () => {
-    expect(buildJourneyUrl('https://gogogo.rodeo', { stops: [home], label: 'Kadıköy İskele' })).toBe(
-      'https://gogogo.rodeo/#v=1&lat=41.0342&lon=28.9844&n=Kad%C4%B1k%C3%B6y%20%C4%B0skele',
+    expect(buildJourneyUrl('https://123go.taxi', { stops: [home], label: 'Kadıköy İskele' })).toBe(
+      'https://123go.taxi/#v=1&lat=41.0342&lon=28.9844&n=Kad%C4%B1k%C3%B6y%20%C4%B0skele',
     );
   });
 
@@ -39,8 +39,8 @@ describe('buildJourneyUrl', () => {
       ],
       label: 'Errands',
     };
-    expect(buildJourneyUrl('https://gogogo.rodeo', journey)).toBe(
-      'https://gogogo.rodeo/#v=1&lat=41.0342&lon=28.9844&n=Errands&via=41.01,28.97~41.02,28.98',
+    expect(buildJourneyUrl('https://123go.taxi', journey)).toBe(
+      'https://123go.taxi/#v=1&lat=41.0342&lon=28.9844&n=Errands&via=41.01,28.97~41.02,28.98',
     );
   });
 
@@ -57,7 +57,7 @@ describe('parseJourney', () => {
       { stops: [home], label: 'Ev & bahçe #2' },
       { stops: [{ lat: -33.8688, lon: 151.2093 }, { lat: 1, lon: 2 }, home], label: 'Tour' },
     ]) {
-      const hash = new URL(buildJourneyUrl('https://gogogo.rodeo', journey)).hash;
+      const hash = new URL(buildJourneyUrl('https://123go.taxi', journey)).hash;
       expect(parseJourney(hash)).toEqual({ kind: 'ok', journey });
     }
   });

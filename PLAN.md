@@ -1,4 +1,4 @@
-# gogogo.rodeo — Implementation plan
+# 123go.taxi — Implementation plan
 
 *For a smooth ride — or it might get rocky, but at least it started smoothly.*
 
@@ -10,8 +10,8 @@ Status: **draft, waiting for product-owner approval.** Nothing is built yet.
 
 A static website with two faces on the same address:
 
-- **Create page** (`https://gogogo.rodeo/`): the passenger searches for or pastes a place, drags a pin to the exact entrance, and gets a QR code to show, download or print.
-- **Destination page** (`https://gogogo.rodeo/#v=1&lat=…&lon=…&n=…`): what the driver sees after scanning. It shows the name, a small map and big "Open with" buttons for Google Maps, Yandex, Waze, Apple Maps and "Other app". It can remember the driver's choice.
+- **Create page** (`https://123go.taxi/`): the passenger searches for or pastes a place, drags a pin to the exact entrance, and gets a QR code to show, download or print.
+- **Destination page** (`https://123go.taxi/#v=1&lat=…&lon=…&n=…`): what the driver sees after scanning. It shows the name, a small map and big "Open with" buttons for Google Maps, Yandex, Waze, Apple Maps and "Other app". It can remember the driver's choice.
 
 No server code, no database, no accounts, no analytics. Everything runs in the browser.
 
@@ -26,7 +26,7 @@ No server code, no database, no accounts, no analytics. Everything runs in the b
 | Map | **MapLibre GL JS** + **OpenFreeMap** tiles | OpenFreeMap is free, needs no API key, has no request limits, allows commercial use and needs no cookies. It only requires the "© OpenStreetMap" credit, which MapLibre shows automatically. The map is loaded only when needed, so the first screen stays fast. |
 | QR code | **`qrcode`** (node-qrcode) | Mature, widely used, works offline in the browser, outputs canvas (for PNG) and SVG (for crisp print). |
 | Tests | **Vitest** (unit) + **Playwright** (a few end-to-end smoke tests in a headless browser) | Vitest is the natural partner of Vite. Playwright catches "the page doesn't load" mistakes before deploy. |
-| Hosting | **GitHub Pages**, deployed by GitHub Actions | Code, CI and hosting all live in one place. Free, HTTPS included, custom-domain support is built in. Cloudflare Pages is a fine alternative but needs your DNS moved to Cloudflare for the bare `gogogo.rodeo` address to work well. |
+| Hosting | **GitHub Pages**, deployed by GitHub Actions | Code, CI and hosting all live in one place. Free, HTTPS included, custom-domain support is built in. Cloudflare Pages is a fine alternative but needs your DNS moved to Cloudflare for the bare `123go.taxi` address to work well. |
 
 Rough page weight goal: create page under ~100 KB before the map loads; map adds ~250 KB, loaded on demand.
 
@@ -39,10 +39,10 @@ gogogo-rodeo/
 ├── README.md  LICENSE  CONTRIBUTING.md  PLAN.md
 ├── index.html                  # single entry; decides create vs destination
 ├── public/
-│   ├── CNAME                   # "gogogo.rodeo" for GitHub Pages
+│   ├── CNAME                   # "123go.taxi" for GitHub Pages
 │   └── favicon, og-image, robots.txt
 ├── src/
-│   ├── config.ts               # BASE_URL = "https://gogogo.rodeo" + provider choice (one place)
+│   ├── config.ts               # BASE_URL = "https://123go.taxi" + provider choice (one place)
 │   ├── main.ts                 # router: params present → destination page, else create page
 │   ├── destination-url/        # build + parse our own #v=1&lat=… URLs (versioned)
 │   ├── geocoding/              # GeocodingProvider interface + photon.ts, geoapify.ts adapters
@@ -70,7 +70,7 @@ gogogo-rodeo/
 ## 4. The QR / destination URL format
 
 ```
-https://gogogo.rodeo/#v=1&lat=41.0342&lon=28.9844&n=Ev%20-%20Cihangir
+https://123go.taxi/#v=1&lat=41.0342&lon=28.9844&n=Ev%20-%20Cihangir
 ```
 
 - Everything sits after `#`. Browsers never send that part to the server, so **the hosting provider never sees or logs any destination**. Old `?lat=` links are still read.
@@ -94,7 +94,7 @@ Plain-language rules:
 3. **`&choose=1` in the URL, or the driver taps "Choose another app"** → always show the chooser.
 4. **"Forget my choice"** link is always on the page; it wipes everything we stored.
 
-Storage: `localStorage` on gogogo.rodeo only (first-party, never sent to any server). We don't use cookies at all, which is simpler and more private than a cookie.
+Storage: `localStorage` on 123go.taxi only (first-party, never sent to any server). We don't use cookies at all, which is simpler and more private than a cookie.
 
 **No-cookies mode:** it's the default. We store nothing unless the driver ticks "Remember". A "Forget everything" button deletes what's there. If the browser blocks storage (private mode, some in-app QR scanners), the remember option is hidden and the chooser always appears.
 
@@ -111,7 +111,7 @@ Checked against official docs this week. Each will be re-verified with a unit te
 | App | Link | Status |
 |---|---|---|
 | Google Maps | `https://www.google.com/maps/dir/?api=1&destination=LAT%2CLON&travelmode=driving&dir_action=navigate` | Official docs confirmed. The comma must be encoded. `dir_action=navigate` starts turn-by-turn directly. |
-| Waze | `https://waze.com/ul?ll=LAT,LON&navigate=yes&utm_source=gogogo.rodeo` | Official docs confirmed (updated June 2026). `utm_source` is recommended by Waze, not required. |
+| Waze | `https://waze.com/ul?ll=LAT,LON&navigate=yes&utm_source=123go.taxi` | Official docs confirmed (updated June 2026). `utm_source` is recommended by Waze, not required. |
 | Apple Maps | `https://maps.apple.com/?daddr=LAT,LON&dirflg=d` | Long-standing format. Apple recently published "unified Maps URLs"; I'll confirm on a real iPhone and switch to the newer form if it's better. |
 | Yandex Maps (web/app) | `https://yandex.com.tr/maps/?rtext=~LAT,LON&rtt=auto` | Opens the Yandex Maps app when installed, otherwise the website. Using the `.com.tr` domain suits Istanbul. |
 | Yandex Navigator | Android: `intent://build_route_on_map?lat_to=LAT&lon_to=LON#Intent;scheme=yandexnavi;package=ru.yandex.yandexnavi;S.browser_fallback_url=…;end` · iPhone: `yandexnavi://build_route_on_map?lat_to=LAT&lon_to=LON` | **Weakest link.** Yandex's public docs for this are thin. On Android, the `intent://` form falls back cleanly to the web if Navigator is missing. On iPhone, a missing app gives an error, so we label it clearly. Needs real-phone testing. |
@@ -130,7 +130,7 @@ Checked against official docs this week. Each will be re-verified with a unit te
 
 **Fallback / upgrade path: Geoapify** (commercial, OSM-based)
 - Free plan: 3,000 requests a day, commercial use allowed, attribution required ("Powered by Geoapify").
-- Needs an API key. On a static site the key is visible to anyone, so we restrict it to the gogogo.rodeo domain in Geoapify's dashboard. Paid plans start if we outgrow the free tier.
+- Needs an API key. On a static site the key is visible to anyone, so we restrict it to the 123go.taxi domain in Geoapify's dashboard. Paid plans start if we outgrow the free tier.
 - Switching is a one-line change in `config.ts`. Self-hosters can also point Photon at their own server.
 
 **How we stay polite:**
@@ -229,6 +229,7 @@ I can set up the live deploy at the end of Milestone 1 on the default `*.github.
 13. **Multi-stop journeys** (up to 4 stops): `via=lat,lon~lat,lon` lists earlier stops, `lat`/`lon` stays the final one, so the v1 format is unchanged. Only apps that follow every stop are offered (Google Maps, Yandex Navigator, Yandex Maps).
 14. **Driver page stays** (drivers can come back to it and share it). "Put my app first next time" moves the remembered app to the top; no auto-redirect.
 15. **Saved places** have an optional name and an optional note. Both are private: they stay on the device and are never put in the QR (the QR carries only the stops). Export/import as a JSON file.
+18. **Domain: 123go.taxi** (decided 2026-10-19, registering at Njalla). Setup steps in `docs/DNS-SETUP.md`. Repository keeps the name `gogogo-rodeo` for now.
 17. **No "Make" button:** the QR appears as soon as a place is pasted or typed. Name and note sit under the QR.
 16. Footer: "Made with ♥ by 0xhorizon.xyz". Slogan removed from the page.
 10. **Two-tap rule:** passenger pastes or picks → QR appears; driver scans → taps app. Design directions in `docs/design-proposals.html`.
@@ -237,14 +238,14 @@ I can set up the live deploy at the end of Milestone 1 on the default `*.github.
 
 | Who | Sees the destination? | Why |
 |---|---|---|
-| gogogo.rodeo / GitHub (hosting) | **No** | Destination is after `#`, which is never sent to the server. No analytics. |
+| 123go.taxi / GitHub (hosting) | **No** | Destination is after `#`, which is never sent to the server. No analytics. |
 | Anyone who scans or gets the QR link | Yes | That's the point of the code. The UI warns about home addresses. |
 | The nav app the driver picks | Yes | It has to, to route there. |
 | Search provider (Photon, from Milestone 4) | What you type into search | Unavoidable for live suggestions. Pasting a link or coordinates sends nothing. Disclosed next to the search box. |
 | Map tiles (OpenFreeMap, from Milestone 3) | Roughly which area is on screen | Tiles are fetched per area. No cookies, no key. |
 | Saved places | Only this browser | `localStorage`, never transmitted. Clearing browser data deletes them. |
 
-All traffic is HTTPS. There is no gogogo.rodeo server to encrypt *to*: the app never sends the address anywhere itself.
+All traffic is HTTPS. There is no 123go.taxi server to encrypt *to*: the app never sends the address anywhere itself.
 
 **Enforced, not just promised:**
 - The published page carries a Content-Security-Policy with `connect-src 'none'`. The browser itself refuses any attempt by the page to send data to a server, even from a buggy or compromised library. Milestones 3–4 open it only to the named search and map-tile hosts.

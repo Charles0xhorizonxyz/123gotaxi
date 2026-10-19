@@ -259,6 +259,40 @@ button:disabled {
   height: auto !important;
 }
 
+.qr-empty {
+  width: min(100%, 300px);
+  aspect-ratio: 1;
+  border: 2px dashed #cfc4a0;
+  border-radius: 8px;
+  color: #cfc4a0;
+  display: grid;
+  place-items: center;
+  position: relative;
+}
+
+.qr-empty svg {
+  position: absolute;
+  inset: 8%;
+  width: 84%;
+  height: 84%;
+}
+
+.qr-empty span {
+  color: var(--muted);
+  font-size: 0.95rem;
+  background: var(--paper);
+  padding: 0.25rem 0.5rem;
+  position: relative;
+}
+
+.result-details {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+}
+
 .result-title {
   font-size: 1.6rem;
   overflow-wrap: anywhere;

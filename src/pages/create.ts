@@ -16,6 +16,13 @@ const ERRORS = {
   invalidQr: 'That QR link looks broken. Make a fresh one below.',
 } as const;
 
+/** Three QR corner squares, drawn faintly: the "empty QR" placeholder. Static markup, no user data. */
+const EMPTY_QR_SVG = `<svg viewBox="0 0 29 29" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1">
+  <rect x="1.5" y="1.5" width="6" height="6"/><rect x="3.5" y="3.5" width="2" height="2" fill="currentColor"/>
+  <rect x="21.5" y="1.5" width="6" height="6"/><rect x="23.5" y="3.5" width="2" height="2" fill="currentColor"/>
+  <rect x="1.5" y="21.5" width="6" height="6"/><rect x="3.5" y="23.5" width="2" height="2" fill="currentColor"/>
+</svg>`;
+
 /** Wait this long after the last keystroke before trying typed text. */
 const TYPING_DELAY_MS = 500;
 
@@ -56,12 +63,17 @@ export function renderCreate(root: HTMLElement, { brokenLink = false } = {}): vo
   const saveMessage = h('p', { class: 'error', role: 'status', hidden: true });
   const saveButton = h('button', { type: 'button', class: 'go' }, 'Save');
   const shareButton = h('button', { type: 'button' }, 'Share');
-  const downloadLink = h('a', { class: 'text-link', href: '#', download: 'gogogo.png' }, 'Download PNG');
+  const downloadLink = h('a', { class: 'text-link', href: '#', download: '123go.png' }, 'Download PNG');
   const previewLink = h('a', { class: 'text-link', href: '#' }, 'See what the driver sees');
-  const result = h(
-    'section',
-    { class: 'result', hidden: true, 'aria-live': 'polite' },
-    qrCanvas,
+  // Shown until there's a place: a faded QR outline, so the page explains itself.
+  const qrEmpty = h('div', { class: 'qr-empty', role: 'img', 'aria-label': 'Your QR appears here' });
+  qrEmpty.innerHTML = EMPTY_QR_SVG;
+  qrEmpty.append(h('span', {}, 'Your QR appears here'));
+  qrCanvas.hidden = true;
+  // Everything you can do with a QR, hidden while there isn't one.
+  const resultDetails = h(
+    'div',
+    { class: 'result-details', hidden: true },
     resultStops,
     h(
       'div',
@@ -75,6 +87,7 @@ export function renderCreate(root: HTMLElement, { brokenLink = false } = {}): vo
     h('div', { class: 'actions' }, saveButton, shareButton),
     h('div', { class: 'more' }, downloadLink, previewLink),
   );
+  const result = h('section', { class: 'result', 'aria-live': 'polite' }, qrEmpty, qrCanvas, resultDetails);
   nameInput.addEventListener('input', resetSaveButton);
   noteInput.addEventListener('input', resetSaveButton);
 
@@ -87,7 +100,7 @@ export function renderCreate(root: HTMLElement, { brokenLink = false } = {}): vo
     class: 'visually-hidden',
     id: 'import-file',
   });
-  const exportLink = h('a', { class: 'text-link', href: '#', download: 'gogogo-places.json' }, 'Export list');
+  const exportLink = h('a', { class: 'text-link', href: '#', download: '123go-places.json' }, 'Export list');
   const importLabel = h('label', { for: 'import-file', class: 'text-link' }, 'Import list');
   const corralMessage = h('p', { class: 'hint', role: 'status' });
   const savedSection = h(
@@ -129,13 +142,17 @@ export function renderCreate(root: HTMLElement, { brokenLink = false } = {}): vo
       journey.stops.length > 1 ? `${journey.stops.length} stops` : pretty(journey.stops[0]!);
     previewLink.href = buildJourneyHash(journey);
     error.hidden = true;
-    result.hidden = false;
+    qrEmpty.hidden = true;
+    qrCanvas.hidden = false;
+    resultDetails.hidden = false;
     if (reveal) result.scrollIntoView({ block: 'nearest' });
   }
 
   function hideResult(): void {
     current = null;
-    result.hidden = true;
+    qrEmpty.hidden = false;
+    qrCanvas.hidden = true;
+    resultDetails.hidden = true;
   }
 
   function onChange(change: StopsChange): void {
@@ -239,7 +256,7 @@ export function renderCreate(root: HTMLElement, { brokenLink = false } = {}): vo
 
   shareButton.addEventListener('click', async () => {
     if (!current) return;
-    const outcome = await shareLink(buildJourneyUrl(publicUrl(), current), 'gogogo.rodeo');
+    const outcome = await shareLink(buildJourneyUrl(publicUrl(), current), '123go.taxi');
     shareButton.textContent = SHARE_RESULT_TEXT[outcome];
   });
 
@@ -287,7 +304,7 @@ export function renderCreate(root: HTMLElement, { brokenLink = false } = {}): vo
         added === 0 ? 'Nothing new in that file.' : `Added ${added} place${added === 1 ? '' : 's'}.`;
       renderSaved();
     } catch {
-      corralMessage.textContent = "That file isn't a gogogo.rodeo export.";
+      corralMessage.textContent = "That file isn't a 123go.taxi export.";
     }
   });
 
@@ -299,7 +316,7 @@ export function renderCreate(root: HTMLElement, { brokenLink = false } = {}): vo
         'h1',
         { class: 'wordmark' },
         h('img', { src: `${import.meta.env.BASE_URL}logo.svg`, alt: '', width: '56', height: '58' }),
-        'gogogo.rodeo',
+        '123go.taxi',
       ),
       h('p', { class: 'tagline' }, 'Hold on to your hat. Paste a place, get a QR, share it easily.'),
     ),

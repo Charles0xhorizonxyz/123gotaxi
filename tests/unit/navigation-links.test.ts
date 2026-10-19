@@ -26,7 +26,7 @@ describe('single destination', () => {
 
   it('Waze: navigate straight away', () => {
     expect(url('waze')).toBe(
-      'https://waze.com/ul?ll=41.03421,28.98441&navigate=yes&utm_source=gogogo.rodeo',
+      'https://waze.com/ul?ll=41.03421,28.98441&navigate=yes&utm_source=123go.taxi',
     );
   });
 

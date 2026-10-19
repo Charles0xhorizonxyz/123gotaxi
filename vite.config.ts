@@ -19,7 +19,7 @@ export const CONTENT_SECURITY_POLICY = [
 // Only on build: the dev server needs a live connection for hot reload.
 function securityHeaders(): Plugin {
   return {
-    name: 'gogogo-security-meta',
+    name: 'security-meta',
     apply: 'build',
     transformIndexHtml(html) {
       return html.replace(

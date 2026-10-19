@@ -4,7 +4,7 @@ import { resolvePublicUrl } from '../../src/config';
 describe('resolvePublicUrl', () => {
   it('uses the canonical domain in production', () => {
     expect(resolvePublicUrl({ dev: false, origin: 'https://example.org', basePath: '/' })).toBe(
-      'https://gogogo.rodeo',
+      'https://123go.taxi',
     );
   });
 

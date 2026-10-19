@@ -31,9 +31,9 @@ jobs:
       - run: npm run build
         env:
           # Set these as repository variables while the site lives on github.io;
-          # remove them once gogogo.rodeo is connected.
+          # remove them once 123go.taxi is connected.
           BASE_PATH: ${{ vars.BASE_PATH || '/' }}
-          VITE_PUBLIC_URL: ${{ vars.PUBLIC_URL || 'https://gogogo.rodeo' }}
+          VITE_PUBLIC_URL: ${{ vars.PUBLIC_URL || 'https://123go.taxi' }}
       - uses: actions/configure-pages@v6
       - uses: actions/upload-pages-artifact@v5
         with:

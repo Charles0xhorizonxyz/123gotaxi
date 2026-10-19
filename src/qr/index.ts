@@ -29,5 +29,5 @@ export function pngFileName(label: string | undefined): string {
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-|-$/g, '')
     .slice(0, 40);
-  return `gogogo-${slug || 'destination'}.png`;
+  return `123go-${slug || 'destination'}.png`;
 }

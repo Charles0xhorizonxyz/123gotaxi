@@ -112,6 +112,12 @@ describe('export and import', () => {
     expect(laptop.importJson(file)).toBe(0);
   });
 
+  it('still imports files exported under the old gogogo.rodeo name', () => {
+    const store = new SavedPlaces(memoryStorage());
+    const file = JSON.stringify({ format: 'gogogo.rodeo/places', version: 1, places: [{ name: 'Old', stops: [{ lat: 1, lon: 1 }] }] });
+    expect(store.importJson(file)).toBe(1);
+  });
+
   it('rejects files that are not ours', () => {
     const store = new SavedPlaces(memoryStorage());
     expect(() => store.importJson('hello')).toThrow('not-json');
@@ -121,7 +127,7 @@ describe('export and import', () => {
   it('skips broken entries in an otherwise valid file', () => {
     const store = new SavedPlaces(memoryStorage());
     const file = JSON.stringify({
-      format: 'gogogo.rodeo/places',
+      format: '123go.taxi/places',
       version: 1,
       places: [{ name: 'Ok', stops: [{ lat: 1, lon: 1 }] }, { name: 'Bad', stops: [{ lat: 500, lon: 1 }] }, { name: 'No stops' }],
     });

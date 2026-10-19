@@ -21,7 +21,7 @@ function route(): void {
   const parsed = parseJourney(location.hash || location.search);
   if (parsed.kind === 'ok') {
     if (!createView.hidden) createScroll = window.scrollY;
-    document.title = 'Next stop · gogogo.rodeo';
+    document.title = 'Next stop · 123go.taxi';
     renderDestination(destinationView, parsed.journey, {
       // Opened from our own create screen: the back arrow returns to it as it was.
       backToCreate: createBuilt ? () => history.back() : undefined,
@@ -30,7 +30,7 @@ function route(): void {
     destinationView.hidden = false;
     window.scrollTo(0, 0);
   } else {
-    document.title = 'gogogo.rodeo';
+    document.title = '123go.taxi';
     if (!createBuilt) {
       renderCreate(createView, { brokenLink: parsed.kind === 'invalid' });
       createBuilt = true;

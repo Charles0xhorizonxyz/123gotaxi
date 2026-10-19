@@ -1,6 +1,6 @@
 // Our own QR link format:
-//   one stop:   https://gogogo.rodeo/#v=1&lat=41.0342&lon=28.9844&n=Label
-//   more stops: https://gogogo.rodeo/#v=1&lat=41.0342&lon=28.9844&n=Label&via=41.03,28.98~41.04,28.99
+//   one stop:   https://123go.taxi/#v=1&lat=41.0342&lon=28.9844&n=Label
+//   more stops: https://123go.taxi/#v=1&lat=41.0342&lon=28.9844&n=Label&via=41.03,28.98~41.04,28.99
 //
 // lat/lon is always the final destination and "via" lists the stops before it,
 // in order. A reader that ignores "via" still takes the driver to the right end.

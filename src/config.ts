@@ -1,6 +1,6 @@
 // Single place for values a self-hoster may want to change.
 
-export const CANONICAL_URL = 'https://gogogo.rodeo';
+export const CANONICAL_URL = 'https://123go.taxi';
 
 interface PublicUrlInputs {
   /** VITE_PUBLIC_URL, set at build time. */

@@ -66,7 +66,7 @@ test('a multi-stop journey can be reordered, previewed and come back intact', as
   );
   await expect(page.getByRole('link', { name: 'Waze' })).toHaveCount(0);
 
-  await page.getByRole('link', { name: 'Back to gogogo.rodeo' }).click();
+  await page.getByRole('link', { name: 'Back to 123go.taxi' }).click();
   await expect(page.getByLabel('Stop 1', { exact: true })).toHaveValue('41.02, 28.98');
   await expect(page.getByLabel('Final stop', { exact: true })).toHaveValue('41.01, 28.97');
   await expect(page.getByLabel(/^Note/)).toHaveValue('Groceries first');
@@ -107,8 +107,16 @@ test('a broken QR link falls back to the create screen', async ({ page }) => {
   await expect(page.getByRole('alert')).toContainText('looks broken');
 });
 
-test('before anything is entered there is no QR card', async ({ page }) => {
+test('before anything is entered the card shows an empty QR and nothing else', async ({ page }) => {
   await page.goto('./');
+  await expect(page.getByRole('img', { name: 'Your QR appears here' })).toBeVisible();
   await expect(page.getByRole('img', { name: /QR code/ })).toBeHidden();
   await expect(page.getByRole('button', { name: 'Save', exact: true })).toBeHidden();
+
+  await page.getByLabel('Where to?').fill('41.0342, 28.9844');
+  await expect(page.getByRole('img', { name: /QR code/ })).toBeVisible();
+  await expect(page.getByRole('img', { name: 'Your QR appears here' })).toBeHidden();
+
+  await page.getByLabel('Where to?').fill('');
+  await expect(page.getByRole('img', { name: 'Your QR appears here' })).toBeVisible();
 });
