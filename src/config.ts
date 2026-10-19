@@ -39,7 +39,7 @@ export const PHOTON_URL = 'https://photon.komoot.io';
  * The link expander (worker/) that turns short map links into long ones.
  * Empty: short links show "open it and copy the long link" instead.
  */
-export const EXPANDER_URL = '';
+export const EXPANDER_URL = 'https://123go-expand.123go-taxi.workers.dev';
 
 /** Where the source code lives; linked from the footer. */
 export const SOURCE_URL = 'https://github.com/Charles0xhorizonxyz/123gotaxi';

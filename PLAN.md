@@ -144,7 +144,7 @@ Checked against official docs this week. Each will be re-verified with a unit te
 
 **Other inputs:**
 - Paste a link. We parse Google Maps (`@lat,lon`, `?q=lat,lon`, `!3d…!4d…`), Yandex (`ll=` *(note: lon,lat order!)*, `pt=`, `rtext=`), OSM, Apple Maps and `geo:` links.
-- **Limitation:** short links like `maps.app.goo.gl/…` or `yandex.com.tr/maps/-/…` hide the coordinates behind a redirect, and a static site can't follow it (the browser blocks it). We'll show: "Short link detected. Open it, then copy the long link from the address bar," with a pictured hint. A tiny optional "link-expander" serverless function could solve this later. That's an open question for you below.
+- **Limitation:** short links like `maps.app.goo.gl/…` or `yandex.com.tr/maps/-/…` hide the coordinates behind a redirect, and a static site can't follow it (the browser blocks it). We'll show: "Short link detected. Open it, then copy the long link from the address bar," with a pictured hint. A tiny optional "link-expander" serverless function could solve this later. **Done 2026-10-20:** the expander runs at `https://123go-expand.123go-taxi.workers.dev` (`worker/`); short links now just work.
 - Raw lat/lon in any common format (`41.0342, 28.9844`, with or without degree signs).
 
 ---
@@ -205,7 +205,7 @@ I can set up the live deploy at the end of Milestone 1 on the default `*.github.
 |---|---|---|
 | Yandex Navigator deep link is poorly documented / behaves differently per OS | Most-used app with Istanbul drivers may be flaky | Use the Yandex Maps universal link as the main "Yandex" button, offer Navigator as a second button, and test on real phones early (Milestone 3, not 6). |
 | Photon public server is slow, down or rate-limits us | Search stops working | Provider is swappable in one line; Geoapify adapter ready; raw coords and pasted links always work. |
-| Short map links can't be expanded on a static site | Users paste `maps.app.goo.gl` links and get an error | Clear instructions; optional tiny serverless expander later (your call). |
+| Short map links can't be expanded on a static site | Users paste `maps.app.goo.gl` links and get an error | Solved: the link expander in `worker/` (Cloudflare Worker) follows the redirect. If it is down, the old "open it and copy the long link" hint shows. |
 | Some in-app QR scanners block custom schemes or storage | Remember-choice or Navigator button fails in those browsers | Detect blocked storage; prefer `https` links that work everywhere; document in the checklist. |
 | Coordinates in the URL reveal a home address | Privacy | Plain warning on the create page; label optional; no logging anywhere (static hosting). |
 | Apple changes its Maps URL format | iPhone button breaks | Format is isolated in one file with a test; a fix doesn't require reprinting QR codes (that's the whole point of decision #3). |
@@ -248,7 +248,7 @@ I can set up the live deploy at the end of Milestone 1 on the default `*.github.
 All traffic is HTTPS. There is no 123go.taxi server to encrypt *to*: the app never sends the address anywhere itself.
 
 **Enforced, not just promised:**
-- The published page carries a Content-Security-Policy whose `connect-src` allows only `https://photon.komoot.io`. The browser itself refuses any attempt by the page to send data anywhere else, even from a buggy or compromised library.
+- The published page carries a Content-Security-Policy whose `connect-src` allows only `https://photon.komoot.io` and the link expander (`https://123go-expand.123go-taxi.workers.dev`, only ever sent a pasted short link). The browser itself refuses any attempt by the page to send data anywhere else, even from a buggy or compromised library.
 - `referrer: no-referrer`, so the nav app isn't told which page sent the driver.
 - Automated tests (`tests/e2e/privacy.spec.ts`) fail the build if making or saving a QR sends anything other than one coordinates-only lookup, if the page can send data elsewhere, if the driver's screen looks anything up, or if the destination appears in any URL sent to our server.
 
