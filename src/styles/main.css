@@ -585,3 +585,9 @@ label.text-link {
   border: 2px dashed var(--asphalt);
   background: var(--paper);
 }
+
+/* QR actions before there's a QR: visible, clearly not tappable */
+.text-link.disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}

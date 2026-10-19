@@ -109,15 +109,22 @@ test('a broken QR link falls back to the create screen', async ({ page }) => {
   await expect(page.getByRole('alert')).toContainText('looks broken');
 });
 
-test('before anything is entered the card shows an empty QR and nothing else', async ({ page }) => {
+test('before anything is entered the full card shows, with an empty QR and actions off', async ({ page }) => {
   await page.goto('./');
   await expect(page.getByRole('img', { name: 'Your QR appears here' })).toBeVisible();
   await expect(page.getByRole('img', { name: /QR code/ })).toBeHidden();
-  await expect(page.getByRole('button', { name: 'Save', exact: true })).toBeHidden();
+  await expect(page.getByRole('button', { name: 'Save', exact: true })).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'Share' })).toBeDisabled();
+  await expect(page.getByLabel(/^Name/)).toBeEditable();
+
+  // A name typed before the place is kept.
+  await page.getByLabel(/^Name/).fill('Office');
 
   await page.getByLabel('Where to?').fill('41.0342, 28.9844');
   await expect(page.getByRole('img', { name: /QR code/ })).toBeVisible();
   await expect(page.getByRole('img', { name: 'Your QR appears here' })).toBeHidden();
+  await expect(page.getByRole('button', { name: 'Save', exact: true })).toBeEnabled();
+  await expect(page.getByLabel(/^Name/)).toHaveValue('Office');
 
   await page.getByLabel('Where to?').fill('');
   await expect(page.getByRole('img', { name: 'Your QR appears here' })).toBeVisible();

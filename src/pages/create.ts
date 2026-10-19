@@ -70,10 +70,10 @@ export function renderCreate(root: HTMLElement, { brokenLink = false } = {}): vo
   qrEmpty.innerHTML = EMPTY_QR_SVG;
   qrEmpty.append(h('span', {}, 'Your QR appears here'));
   qrCanvas.hidden = true;
-  // Everything you can do with a QR, hidden while there isn't one.
+  // Always shown. Name and note can be filled in first; the actions wait for a QR.
   const resultDetails = h(
     'div',
-    { class: 'result-details', hidden: true },
+    { class: 'result-details' },
     resultStops,
     h(
       'div',
@@ -129,6 +129,18 @@ export function renderCreate(root: HTMLElement, { brokenLink = false } = {}): vo
     );
   }
 
+  /** Turn the QR actions on or off. They stay visible either way, so the card's layout never jumps. */
+  function setReady(ready: boolean): void {
+    saveButton.disabled = !ready;
+    shareButton.disabled = !ready;
+    for (const link of [downloadLink, previewLink]) {
+      link.classList.toggle('disabled', !ready);
+      if (ready) link.removeAttribute('aria-disabled');
+      else link.setAttribute('aria-disabled', 'true');
+      link.tabIndex = ready ? 0 : -1;
+    }
+  }
+
   function resetSaveButton(): void {
     saveButton.textContent = 'Save';
     saveMessage.hidden = true;
@@ -153,7 +165,7 @@ export function renderCreate(root: HTMLElement, { brokenLink = false } = {}): vo
     error.hidden = true;
     qrEmpty.hidden = true;
     qrCanvas.hidden = false;
-    resultDetails.hidden = false;
+    setReady(true);
     if (reveal) result.scrollIntoView({ block: 'nearest' });
   }
 
@@ -161,7 +173,11 @@ export function renderCreate(root: HTMLElement, { brokenLink = false } = {}): vo
     current = null;
     qrEmpty.hidden = false;
     qrCanvas.hidden = true;
-    resultDetails.hidden = true;
+    resultStops.textContent = 'No place yet';
+    previewLink.href = '#';
+    resetSaveButton();
+    shareButton.textContent = 'Share';
+    setReady(false);
   }
 
   function onChange(change: StopsChange): void {
@@ -271,8 +287,16 @@ export function renderCreate(root: HTMLElement, { brokenLink = false } = {}): vo
   });
 
   // Build the big PNG only when asked, so the page stays fast.
+  previewLink.addEventListener('click', (event) => {
+    if (!current) event.preventDefault();
+  });
+
   downloadLink.addEventListener('click', async (event) => {
-    if (!current || downloadLink.dataset.ready) {
+    if (!current) {
+      event.preventDefault();
+      return;
+    }
+    if (downloadLink.dataset.ready) {
       delete downloadLink.dataset.ready;
       return;
     }
@@ -336,4 +360,5 @@ export function renderCreate(root: HTMLElement, { brokenLink = false } = {}): vo
     creditFooter(),
   );
   renderSaved();
+  hideResult();
 }
