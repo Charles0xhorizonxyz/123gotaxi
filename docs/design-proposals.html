@@ -1,0 +1,636 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>gogogo.rodeo Design Directions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@400;600;700&family=Rye&family=Work+Sans:wght@400;600;700&family=Bricolage+Grotesque:opsz,wght@12..96,400;600;800&family=Instrument+Sans:wght@400;600;700&family=JetBrains+Mono:wght@400;600&family=Familjen+Grotesk:wght@400;600;700&display=swap">
+<style>
+/* Layout: a studio proposal sheet — one long column, each direction a full-width band with two phone mockups and a notes rail. */
+:root {
+  --paper: #f6f5f1;
+  --ink: #1b1c1f;
+  --ink-soft: #5a5c63;
+  --rule: #dcdad2;
+  --card: #ffffff;
+  --mark: #2d5be3;
+  --f-chrome: 'Familjen Grotesk', 'Helvetica Neue', Arial, sans-serif;
+  --f-mono: 'JetBrains Mono', ui-monospace, Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #141518; --ink: #ecebe6; --ink-soft: #a3a4aa; --rule: #2c2d33; --card: #1d1e22; --mark: #8aa6ff;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #141518; --ink: #ecebe6; --ink-soft: #a3a4aa; --rule: #2c2d33; --card: #1d1e22; --mark: #8aa6ff;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font: 400 1rem/1.55 var(--f-chrome);
+}
+.wrap {
+  max-width: 72rem;
+  margin: 0 auto;
+  padding-block: 2.5rem 4rem;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: flex;
+  flex-direction: column;
+  gap: 3.5rem;
+}
+h1, h2, h3 { margin: 0; text-wrap: balance; line-height: 1.15; }
+p { margin: 0; }
+.eyebrow {
+  font: 600 0.75rem/1 var(--f-mono);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+.lede { max-width: 62ch; color: var(--ink-soft); font-size: 1.1rem; }
+
+/* Intro */
+.intro { display: flex; flex-direction: column; gap: 1rem; }
+.intro h1 { font-size: clamp(2.2rem, 6vw, 3.6rem); font-weight: 700; letter-spacing: -0.02em; }
+
+/* Two-tap rule */
+.rule-box {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  gap: 1rem;
+}
+.flow {
+  background: var(--card);
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+.flow h2 { font-size: 1.05rem; }
+.flow ol { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 0.6rem; }
+.flow ol li { display: grid; grid-template-columns: 2rem 1fr; gap: 0.6rem; align-items: start; }
+.tap {
+  width: 2rem; height: 2rem; border-radius: 50%;
+  display: grid; place-items: center;
+  font: 600 0.85rem/1 var(--f-mono);
+  background: var(--ink); color: var(--paper);
+}
+.flow small { color: var(--ink-soft); display: block; }
+.principles { margin: 0; padding-left: 1.1rem; display: flex; flex-direction: column; gap: 0.4rem; color: var(--ink-soft); }
+.principles strong { color: var(--ink); }
+
+/* Direction band */
+.direction {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding-top: 2.5rem;
+  border-top: 1px solid var(--rule);
+}
+.dir-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.5rem 1rem; }
+.dir-head h2 { font-size: clamp(1.6rem, 4vw, 2.3rem); letter-spacing: -0.01em; }
+.dir-head .pitch { flex-basis: 100%; max-width: 62ch; color: var(--ink-soft); font-size: 1.05rem; }
+.badge {
+  font: 600 0.72rem/1 var(--f-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.4rem 0.6rem;
+  border-radius: 999px;
+  border: 1px solid var(--mark);
+  color: var(--mark);
+}
+.dir-body {
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr);
+  gap: 1.5rem;
+  align-items: start;
+}
+@media (max-width: 860px) {
+  .dir-body { grid-template-columns: 1fr 1fr; }
+  .notes { grid-column: 1 / -1; }
+}
+@media (max-width: 520px) {
+  .dir-body { grid-template-columns: 1fr; justify-items: center; }
+  .notes { justify-self: stretch; }
+}
+
+/* Phone mockup — every color here comes from the direction's own --m-* tokens */
+figure { margin: 0; display: flex; flex-direction: column; gap: 0.5rem; align-items: center; }
+figcaption { font: 400 0.78rem/1.3 var(--f-mono); color: var(--ink-soft); text-align: center; }
+.phone {
+  width: 15.5rem;
+  max-width: 100%;
+  border-radius: 2rem;
+  padding: 0.55rem;
+  background: #0d0d0f;
+  box-shadow: 0 1px 0 rgba(255,255,255,0.06) inset, 0 12px 30px -12px rgba(0,0,0,0.35);
+}
+.screen {
+  border-radius: 1.55rem;
+  min-height: 30rem;
+  padding: 1.4rem 1rem 1rem;
+  background: var(--m-bg);
+  color: var(--m-fg);
+  font-family: var(--m-body);
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  overflow: hidden;
+  position: relative;
+}
+.m-logo { display: flex; align-items: center; gap: 0.45rem; font: var(--m-logo-weight, 700) 1.05rem/1 var(--m-display); color: var(--m-logo-fg, var(--m-fg)); }
+.m-logo svg { width: 1.9rem; height: 1.9rem; flex: none; }
+.m-tag { font-size: 0.8rem; line-height: 1.35; color: var(--m-muted); }
+.m-input {
+  font: 400 0.72rem/1.2 var(--f-mono);
+  padding: 0.65rem 0.7rem;
+  border-radius: var(--m-radius);
+  background: var(--m-surface);
+  border: 1.5px solid var(--m-line);
+  color: var(--m-muted);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.m-qr {
+  background: #ffffff;
+  border-radius: calc(var(--m-radius) * 0.7);
+  padding: 0.65rem;
+  align-self: center;
+  width: 9.5rem;
+  border: var(--m-qr-border, 0);
+}
+.m-qr svg { display: block; width: 100%; height: auto; }
+.m-name { font: var(--m-name-weight, 700) 1.15rem/1.15 var(--m-display); text-align: center; }
+.m-coords { font: 400 0.68rem/1 var(--f-mono); color: var(--m-muted); text-align: center; margin-top: -0.4rem; }
+.m-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem; }
+.m-btn {
+  font: 600 0.75rem/1.1 var(--m-body);
+  padding: 0.7rem 0.5rem;
+  border-radius: var(--m-radius);
+  background: var(--m-surface);
+  border: 1.5px solid var(--m-line);
+  color: var(--m-fg);
+  text-align: center;
+}
+.m-btn.go { background: var(--m-accent); color: var(--m-accent-fg); border-color: var(--m-accent); }
+.m-eyebrow { font: 700 0.68rem/1 var(--m-body); letter-spacing: 0.1em; text-transform: uppercase; color: var(--m-eyebrow, var(--m-accent)); }
+.m-dest { font: var(--m-name-weight, 700) 1.7rem/1.05 var(--m-display); }
+.m-apps { display: flex; flex-direction: column; gap: 0.45rem; margin-top: 0.3rem; }
+.m-app {
+  font: 600 0.9rem/1 var(--m-body);
+  padding: 0.95rem 0.8rem;
+  border-radius: var(--m-radius);
+  background: var(--m-surface);
+  border: 1.5px solid var(--m-line);
+  display: flex; justify-content: space-between; align-items: center;
+}
+.m-app::after { content: "→"; color: var(--m-muted); }
+.m-app.first { background: var(--m-accent); color: var(--m-accent-fg); border-color: var(--m-accent); }
+.m-app.first::after { color: inherit; }
+.m-check { font-size: 0.72rem; color: var(--m-muted); display: flex; gap: 0.4rem; align-items: center; margin-top: auto; }
+.m-check::before { content: ""; width: 0.85rem; height: 0.85rem; border: 1.5px solid var(--m-line); border-radius: 3px; background: var(--m-surface); flex: none; }
+.m-foot { font-size: 0.68rem; color: var(--m-muted); font-style: italic; text-align: center; }
+
+/* Notes rail */
+.notes { display: flex; flex-direction: column; gap: 1.1rem; min-width: 0; }
+.notes h3 { font: 600 0.75rem/1 var(--f-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-soft); }
+.notes section { display: flex; flex-direction: column; gap: 0.5rem; }
+.swatches { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.sw { display: flex; flex-direction: column; gap: 0.25rem; font: 400 0.7rem/1.2 var(--f-mono); color: var(--ink-soft); width: 4.6rem; }
+.sw i { display: block; height: 2.4rem; border-radius: 6px; border: 1px solid var(--rule); }
+.type-sample { display: flex; flex-direction: column; gap: 0.15rem; }
+.type-sample .big { font-size: 1.6rem; line-height: 1.1; }
+.type-sample .small { color: var(--ink-soft); font-size: 0.85rem; }
+.copy { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 0.35rem; }
+.copy li { display: grid; grid-template-columns: 7.5rem minmax(0, 1fr); gap: 0.6rem; font-size: 0.92rem; }
+.copy li span:first-child { font: 400 0.75rem/1.6 var(--f-mono); color: var(--ink-soft); }
+.copy q { quotes: "“" "”"; }
+.fit { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; font-size: 0.92rem; }
+.fit ul { margin: 0; padding-left: 1rem; display: flex; flex-direction: column; gap: 0.2rem; }
+.fit b { display: block; font: 600 0.72rem/1.4 var(--f-mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-soft); }
+@media (max-width: 420px) { .fit { grid-template-columns: 1fr; } .copy li { grid-template-columns: 1fr; gap: 0; } }
+
+/* Comparison */
+.compare { display: flex; flex-direction: column; gap: 1rem; padding-top: 2.5rem; border-top: 1px solid var(--rule); }
+.compare h2 { font-size: clamp(1.5rem, 4vw, 2rem); }
+.table-scroll { overflow-x: auto; border: 1px solid var(--rule); border-radius: 10px; background: var(--card); }
+table { border-collapse: collapse; width: 100%; min-width: 38rem; font-size: 0.92rem; }
+th, td { text-align: left; padding: 0.7rem 0.9rem; border-bottom: 1px solid var(--rule); vertical-align: top; }
+thead th { font: 600 0.72rem/1.3 var(--f-mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-soft); }
+tbody tr:last-child td, tbody tr:last-child th { border-bottom: 0; }
+.dots { font-family: var(--f-mono); letter-spacing: 0.15em; white-space: nowrap; }
+.pick {
+  background: var(--card);
+  border: 1.5px solid var(--mark);
+  border-radius: 10px;
+  padding: 1.25rem;
+  display: flex; flex-direction: column; gap: 0.6rem;
+  max-width: 62ch;
+}
+.pick h3 { font-size: 1.2rem; }
+.pick p { color: var(--ink-soft); }
+.pick p strong { color: var(--ink); }
+
+/* ---------- Direction tokens ---------- */
+.d-taxi {
+  --m-bg: #ffc61a; --m-fg: #141414; --m-muted: #4a3f12; --m-surface: #fff8dc; --m-line: #141414;
+  --m-accent: #141414; --m-accent-fg: #ffc61a; --m-radius: 4px; --m-eyebrow: #141414;
+  --m-display: 'Archivo Black', 'Arial Black', sans-serif; --m-body: 'Archivo', Arial, sans-serif;
+  --m-logo-weight: 400; --m-name-weight: 400;
+}
+.d-taxi .screen { background-image: repeating-linear-gradient(90deg, #141414 0 10px, #ffc61a 10px 20px); background-size: 100% 10px; background-repeat: no-repeat; background-position: 0 100%; padding-bottom: 1.6rem; }
+.d-taxi .m-btn, .d-taxi .m-app, .d-taxi .m-input { border-width: 2px; }
+
+.d-sheriff {
+  --m-bg: #1e2a44; --m-fg: #f4efe4; --m-muted: #aeb5c6; --m-surface: #28375a; --m-line: #3d4d73;
+  --m-accent: #d9a441; --m-accent-fg: #1e2a44; --m-radius: 10px; --m-logo-fg: #d9a441;
+  --m-display: 'Rye', Georgia, serif; --m-body: 'Work Sans', Arial, sans-serif;
+  --m-logo-weight: 400; --m-name-weight: 400; --m-qr-border: 3px solid #d9a441;
+}
+
+.d-nazar {
+  --m-bg: #f3f8ff; --m-fg: #0a2a5c; --m-muted: #50678f; --m-surface: #ffffff; --m-line: #c9daf3;
+  --m-accent: #0b4da2; --m-accent-fg: #ffffff; --m-radius: 999px; --m-eyebrow: #0b4da2;
+  --m-display: 'Bricolage Grotesque', 'Trebuchet MS', sans-serif; --m-body: 'Bricolage Grotesque', 'Trebuchet MS', sans-serif;
+  --m-logo-weight: 800; --m-name-weight: 800;
+}
+.d-nazar .m-qr { border-radius: 18px; }
+.d-nazar .m-input { border-radius: 14px; }
+
+.d-lasso {
+  --m-bg: #ffffff; --m-fg: #111111; --m-muted: #6d6d6d; --m-surface: #f3f3f1; --m-line: #e2e2de;
+  --m-accent: #0f7b4f; --m-accent-fg: #ffffff; --m-radius: 12px; --m-eyebrow: #0f7b4f;
+  --m-display: 'Instrument Sans', Arial, sans-serif; --m-body: 'Instrument Sans', Arial, sans-serif;
+  --m-logo-weight: 700; --m-name-weight: 700;
+}
+.d-lasso .m-dest { font-size: 2.6rem; letter-spacing: -0.03em; }
+
+a { color: var(--mark); }
+:focus-visible { outline: 3px solid var(--mark); outline-offset: 2px; }
+@media (prefers-reduced-motion: no-preference) {
+  .d-nazar .m-logo svg { animation: wink 5s ease-in-out infinite; transform-origin: 50% 40%; }
+  @keyframes wink { 0%, 92%, 100% { transform: scaleY(1); } 95% { transform: scaleY(0.1); } }
+}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="qr" viewBox="0 0 41 41"><path fill="#ffffff" d="M0 0h41v41H0z"/><path stroke="#000000" d="M0 0.5h7m1 0h1m2 0h1m4 0h1m1 0h1m3 0h1m6 0h1m1 0h1m2 0h7M0 1.5h1m5 0h1m2 0h2m6 0h1m1 0h2m2 0h2m2 0h1m1 0h1m4 0h1m5 0h1M0 2.5h1m1 0h3m1 0h1m2 0h1m1 0h3m1 0h2m3 0h1m1 0h1m1 0h1m1 0h1m1 0h5m1 0h1m1 0h3m1 0h1M0 3.5h1m1 0h3m1 0h1m2 0h1m1 0h2m1 0h1m2 0h1m2 0h1m3 0h1m2 0h1m3 0h1m2 0h1m1 0h3m1 0h1M0 4.5h1m1 0h3m1 0h1m1 0h2m2 0h2m1 0h1m1 0h1m1 0h1m2 0h2m1 0h2m3 0h3m1 0h1m1 0h3m1 0h1M0 5.5h1m5 0h1m1 0h3m2 0h4m2 0h2m2 0h7m4 0h1m5 0h1M0 6.5h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7M11 7.5h1m1 0h4m1 0h4m1 0h2m1 0h2m4 0h1M1 8.5h7m3 0h4m1 0h1m1 0h1m2 0h2m1 0h2m1 0h1m1 0h1m1 0h1m3 0h2m3 0h1M0 9.5h3m1 0h1m2 0h5m2 0h1m1 0h3m4 0h1m1 0h1m2 0h1m1 0h3m1 0h1m1 0h1m1 0h3M1 10.5h4m1 0h7m2 0h2m1 0h4m3 0h4m1 0h1m1 0h3M2 11.5h1m2 0h1m2 0h4m7 0h2m7 0h1m2 0h2m2 0h1m1 0h1m1 0h1M0 12.5h1m3 0h1m1 0h1m4 0h2m1 0h1m2 0h3m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h2m2 0h1m1 0h4M2 13.5h1m1 0h2m2 0h2m2 0h1m2 0h1m1 0h3m2 0h1m1 0h1m1 0h4m4 0h1m1 0h5M0 14.5h1m3 0h1m1 0h2m1 0h7m1 0h2m1 0h3m2 0h2m3 0h1m1 0h2m3 0h3M0 15.5h2m1 0h3m1 0h6m5 0h1m5 0h1m3 0h1m5 0h3m2 0h2M0 16.5h1m1 0h1m3 0h1m1 0h2m1 0h2m6 0h1m2 0h1m1 0h3m1 0h3m2 0h1m1 0h1m2 0h1M1 17.5h1m8 0h1m2 0h3m6 0h2m1 0h1m5 0h1m2 0h4m1 0h2M1 18.5h2m3 0h2m3 0h1m1 0h1m1 0h1m1 0h2m1 0h3m2 0h4m1 0h1m3 0h1m1 0h1m1 0h1M0 19.5h2m3 0h1m1 0h4m2 0h1m1 0h3m1 0h3m1 0h3m1 0h1m8 0h2M1 20.5h1m2 0h3m1 0h3m2 0h3m2 0h1m7 0h3m1 0h2m1 0h1m4 0h1M0 21.5h1m2 0h2m3 0h1m4 0h2m2 0h1m4 0h4m3 0h1m1 0h2m1 0h3m2 0h2M3 22.5h2m1 0h2m3 0h2m2 0h3m1 0h2m1 0h1m2 0h3m1 0h1m4 0h2m1 0h1M0 23.5h2m1 0h3m1 0h3m1 0h4m1 0h1m1 0h2m4 0h1m2 0h2m2 0h2m2 0h3m1 0h2M3 24.5h1m1 0h2m3 0h1m1 0h2m1 0h1m1 0h2m5 0h4m1 0h1m3 0h1m4 0h1m1 0h1M0 25.5h2m3 0h1m1 0h2m1 0h2m1 0h3m1 0h1m3 0h1m1 0h1m2 0h1m1 0h1m1 0h2m2 0h4m1 0h2M0 26.5h1m1 0h1m1 0h7m1 0h2m2 0h1m1 0h1m2 0h1m5 0h2m3 0h2m1 0h1M2 27.5h4m5 0h1m1 0h1m2 0h1m3 0h1m1 0h2m4 0h1m1 0h6m1 0h1M0 28.5h2m3 0h3m2 0h1m4 0h3m2 0h1m2 0h3m2 0h4m1 0h1m1 0h1m1 0h4M0 29.5h1m6 0h3m2 0h4m1 0h3m1 0h2m2 0h3m1 0h1m2 0h2m1 0h4m1 0h1M0 30.5h1m1 0h1m1 0h4m1 0h8m1 0h1m2 0h8m1 0h2m1 0h3m1 0h3M0 31.5h1m2 0h1m1 0h1m2 0h5m1 0h1m2 0h1m1 0h2m1 0h2m3 0h1m2 0h5m1 0h1m3 0h1M0 32.5h1m1 0h3m1 0h2m2 0h3m1 0h1m1 0h1m1 0h1m4 0h3m1 0h10m1 0h1M8 33.5h4m1 0h3m2 0h1m2 0h2m3 0h1m2 0h1m1 0h2m3 0h5M0 34.5h7m1 0h1m2 0h2m1 0h1m1 0h1m1 0h1m2 0h1m5 0h1m1 0h1m1 0h2m1 0h1m1 0h1M0 35.5h1m5 0h1m1 0h1m3 0h8m2 0h1m3 0h1m2 0h2m1 0h1m3 0h2m1 0h1M0 36.5h1m1 0h3m1 0h1m1 0h1m2 0h4m1 0h3m1 0h2m1 0h1m3 0h2m3 0h5m1 0h1M0 37.5h1m1 0h3m1 0h1m1 0h1m2 0h1m1 0h3m7 0h2m1 0h1m3 0h1m1 0h2m1 0h1m1 0h2m1 0h1M0 38.5h1m1 0h3m1 0h1m1 0h3m1 0h1m1 0h1m3 0h1m6 0h1m1 0h3m3 0h4m1 0h2M0 39.5h1m5 0h1m1 0h2m3 0h5m2 0h2m1 0h2m2 0h2m3 0h2m2 0h2m1 0h1M0 40.5h7m2 0h1m2 0h1m1 0h1m1 0h3m1 0h1m1 0h1m1 0h3m2 0h1m5 0h2m1 0h1"/></symbol>
+</svg>
+
+<div class="wrap">
+
+  <header class="intro">
+    <p class="eyebrow">gogogo.rodeo · look &amp; feel · 4 directions</p>
+    <h1>Four ways to look like a taxi app with a sense of humour</h1>
+    <p class="lede">Each direction keeps the same two-tap flow and the same screens. Only the logo, colours, type and jokes change. Pick one, or mix them, and the working site gets restyled to match.</p>
+  </header>
+
+  <section class="rule-box" aria-label="The two-tap rule">
+    <div class="flow">
+      <h2>Passenger: two taps</h2>
+      <ol>
+        <li><span class="tap">1</span><span>Paste a map link, or pick a search suggestion<small>The QR appears on its own. No "generate" step.</small></span></li>
+        <li><span class="tap">2</span><span>Turn the phone around<small>Save and download are there, but never in the way.</small></span></li>
+      </ol>
+    </div>
+    <div class="flow">
+      <h2>Driver: two taps</h2>
+      <ol>
+        <li><span class="tap">1</span><span>Scan with the camera<small>Opens the gogogo.rodeo page, nothing to install.</small></span></li>
+        <li><span class="tap">2</span><span>Tap their navigation app<small>The route starts. With "remember", next time it's zero taps.</small></span></li>
+      </ol>
+    </div>
+    <div class="flow">
+      <h2>Rules every direction keeps</h2>
+      <ul class="principles">
+        <li><strong>Jokes live in words and the logo,</strong> never in the buttons. A button always says what it does.</li>
+        <li><strong>The QR is always black on white,</strong> whatever the theme. Cameras need contrast.</li>
+        <li><strong>Buttons are thumb-sized</strong> and readable at arm's length in a dark car.</li>
+        <li><strong>The driver screen reads in two seconds:</strong> where to, then which app.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 1. Yellow Cab Rodeo -->
+  <article class="direction d-taxi" aria-labelledby="d1">
+    <div class="dir-head">
+      <p class="eyebrow">Direction 1</p>
+      <h2 id="d1">Sarı Rodeo</h2>
+      <span class="badge">Recommended</span>
+      <p class="pitch">Istanbul's yellow taxi, roped in. Taxi yellow, asphalt black and the checker strip from the cab door. The logo is a cowboy hat with a checker band. Drivers recognise "taxi thing" before they read a word.</p>
+    </div>
+    <div class="dir-body">
+      <figure>
+        <div class="phone"><div class="screen">
+          <div class="m-logo">
+            <svg viewBox="0 0 64 64" aria-hidden="true"><path d="M20 38c-1-12 3-20 7-21 2 3 8 3 10 0 4 1 8 9 7 21z" fill="#141414"/><rect x="19" y="32" width="26" height="5" fill="#fff8dc"/><path d="M21 32h4v5h-4zM29 32h4v5h-4zM37 32h4v5h-4z" fill="#141414"/><path d="M4 39c8 7 48 7 56 0-2 7-14 10-28 10S6 46 4 39z" fill="#141414"/></svg>
+            gogogo.rodeo
+          </div>
+          <p class="m-tag">Paste it. Show it. Yeehaw.</p>
+          <div class="m-input">google.com/maps/place/Cihangir…</div>
+          <div class="m-qr"><svg><use href="#qr"/></svg></div>
+          <p class="m-name">CIHANGIR</p>
+          <p class="m-coords">41.03176, 28.98216</p>
+          <div class="m-row"><span class="m-btn go">Save</span><span class="m-btn">Download</span></div>
+          <p class="m-foot">For a smooth ride, or at least a smooth start.</p>
+        </div></div>
+        <figcaption>Passenger, after one paste</figcaption>
+      </figure>
+      <figure>
+        <div class="phone"><div class="screen">
+          <p class="m-eyebrow">Saddle up, driver</p>
+          <p class="m-dest">CIHANGIR</p>
+          <p class="m-coords" style="text-align:left;margin:0">41.03176, 28.98216</p>
+          <div class="m-apps">
+            <span class="m-app first">Yandex Navigator</span>
+            <span class="m-app">Google Maps</span>
+            <span class="m-app">Waze</span>
+            <span class="m-app">Other app</span>
+          </div>
+          <p class="m-check">Remember my steed on this phone</p>
+        </div></div>
+        <figcaption>Driver, after scanning</figcaption>
+      </figure>
+      <div class="notes">
+        <section>
+          <h3>Palette</h3>
+          <div class="swatches">
+            <span class="sw"><i style="background:#ffc61a"></i>Taxi yellow</span>
+            <span class="sw"><i style="background:#141414"></i>Asphalt</span>
+            <span class="sw"><i style="background:#fff8dc"></i>Seat cover</span>
+            <span class="sw"><i style="background:repeating-linear-gradient(90deg,#141414 0 8px,#ffc61a 8px 16px)"></i>Checker</span>
+          </div>
+        </section>
+        <section>
+          <h3>Type</h3>
+          <div class="type-sample">
+            <span class="big" style="font-family:'Archivo Black','Arial Black',sans-serif">CIHANGIR</span>
+            <span class="small" style="font-family:Archivo,Arial,sans-serif">Archivo Black for names, Archivo for everything else. Wide, heavy, readable from the driver's seat.</span>
+          </div>
+        </section>
+        <section>
+          <h3>Voice</h3>
+          <ul class="copy">
+            <li><span>Tagline</span><q>Paste it. Show it. Yeehaw.</q></li>
+            <li><span>Saved places</span><q>Your stable</q></li>
+            <li><span>Short-link error</span><q>That short link bucked us off. Open it and copy the long one.</q></li>
+            <li><span>Taxi card</span><q>Scan me, driver. I know where I'm going.</q></li>
+          </ul>
+        </section>
+        <div class="fit">
+          <div><b>Works because</b><ul><li>Reads as "taxi" instantly in Istanbul</li><li>Highest contrast of the four</li><li>Print card looks great on yellow stock</li></ul></div>
+          <div><b>Watch out</b><ul><li>Yellow is loud; dark mode becomes black with yellow details</li></ul></div>
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <!-- 2. Sheriff -->
+  <article class="direction d-sheriff" aria-labelledby="d2">
+    <div class="dir-head">
+      <p class="eyebrow">Direction 2</p>
+      <h2 id="d2">Sheriff of the Bosphorus</h2>
+      <p class="pitch">Full western, at night. Denim navy, a brass sheriff's star with a map-pin hole and wood-type headings. The passenger "deputizes" the driver. It's the most rodeo of the four, and the slowest-feeling.</p>
+    </div>
+    <div class="dir-body">
+      <figure>
+        <div class="phone"><div class="screen">
+          <div class="m-logo">
+            <svg viewBox="0 0 64 64" aria-hidden="true"><path d="M32 4l7 15 16-3-9 13 11 12-16 1-2 16-7-12-7 12-2-16-16-1 11-12-9-13 16 3z" fill="#d9a441"/><circle cx="32" cy="31" r="7" fill="#1e2a44"/><circle cx="32" cy="31" r="3" fill="#d9a441"/></svg>
+            gogogo.rodeo
+          </div>
+          <p class="m-tag">Deputize your driver. Two taps, no posse required.</p>
+          <div class="m-input">yandex.com.tr/maps/?ll=28.98…</div>
+          <div class="m-qr"><svg><use href="#qr"/></svg></div>
+          <p class="m-name">Cihangir</p>
+          <p class="m-coords">41.03176, 28.98216</p>
+          <div class="m-row"><span class="m-btn go">Save</span><span class="m-btn">Download</span></div>
+        </div></div>
+        <figcaption>Passenger, after one paste</figcaption>
+      </figure>
+      <figure>
+        <div class="phone"><div class="screen">
+          <p class="m-eyebrow">Deputy, ride to</p>
+          <p class="m-dest">Cihangir</p>
+          <div class="m-apps">
+            <span class="m-app first">Yandex Navigator</span>
+            <span class="m-app">Google Maps</span>
+            <span class="m-app">Waze</span>
+            <span class="m-app">Other app</span>
+          </div>
+          <p class="m-check">Remember my horse on this phone</p>
+        </div></div>
+        <figcaption>Driver, after scanning</figcaption>
+      </figure>
+      <div class="notes">
+        <section>
+          <h3>Palette</h3>
+          <div class="swatches">
+            <span class="sw"><i style="background:#1e2a44"></i>Denim</span>
+            <span class="sw"><i style="background:#d9a441"></i>Brass</span>
+            <span class="sw"><i style="background:#f4efe4"></i>Bone</span>
+            <span class="sw"><i style="background:#28375a"></i>Saddle</span>
+          </div>
+        </section>
+        <section>
+          <h3>Type</h3>
+          <div class="type-sample">
+            <span class="big" style="font-family:Rye,Georgia,serif">Cihangir</span>
+            <span class="small" style="font-family:'Work Sans',Arial,sans-serif">Rye wood type for names only, Work Sans for buttons and text.</span>
+          </div>
+        </section>
+        <section>
+          <h3>Voice</h3>
+          <ul class="copy">
+            <li><span>Tagline</span><q>Deputize your driver.</q></li>
+            <li><span>Saved places</span><q>Known hideouts</q></li>
+            <li><span>Short-link error</span><q>This link is wearing a disguise. Open it and copy the real one.</q></li>
+            <li><span>Taxi card</span><q>WANTED: one ride to Cihangir. Reward: a tip.</q></li>
+          </ul>
+        </section>
+        <div class="fit">
+          <div><b>Works because</b><ul><li>Strongest, most memorable joke</li><li>Calm at night in a dark cab</li></ul></div>
+          <div><b>Watch out</b><ul><li>Western type gets hard to read on long Turkish names</li><li>Feels "themed", less "tool"</li></ul></div>
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <!-- 3. Nazar -->
+  <article class="direction d-nazar" aria-labelledby="d3">
+    <div class="dir-head">
+      <p class="eyebrow">Direction 3</p>
+      <h2 id="d3">Nazar Express</h2>
+      <p class="pitch">The evil-eye bead every Istanbul taxi already has hanging from its mirror, turned into a map pin that occasionally winks. Friendly, rounded and local. The joke: your route is protected from wrong turns.</p>
+    </div>
+    <div class="dir-body">
+      <figure>
+        <div class="phone"><div class="screen">
+          <div class="m-logo">
+            <svg viewBox="0 0 64 64" aria-hidden="true"><path d="M32 4C19 4 10 13 10 25c0 15 22 35 22 35s22-20 22-35C54 13 45 4 32 4z" fill="#0b4da2"/><circle cx="32" cy="25" r="13" fill="#ffffff"/><circle cx="32" cy="25" r="8.5" fill="#6ec1f0"/><circle cx="32" cy="25" r="4.5" fill="#0a1a33"/></svg>
+            gogogo.rodeo
+          </div>
+          <p class="m-tag">Protected from wrong turns since today.</p>
+          <div class="m-input">Cihangir, Beyoğlu</div>
+          <div class="m-qr"><svg><use href="#qr"/></svg></div>
+          <p class="m-name">Cihangir</p>
+          <p class="m-coords">41.03176, 28.98216</p>
+          <div class="m-row"><span class="m-btn go">Save</span><span class="m-btn">Download</span></div>
+        </div></div>
+        <figcaption>Passenger, after picking a suggestion</figcaption>
+      </figure>
+      <figure>
+        <div class="phone"><div class="screen">
+          <p class="m-eyebrow">Nazar değmesin. Going to</p>
+          <p class="m-dest">Cihangir</p>
+          <div class="m-apps">
+            <span class="m-app first">Yandex Navigator</span>
+            <span class="m-app">Google Maps</span>
+            <span class="m-app">Waze</span>
+            <span class="m-app">Other app</span>
+          </div>
+          <p class="m-check">Remember my app on this phone</p>
+        </div></div>
+        <figcaption>Driver, after scanning</figcaption>
+      </figure>
+      <div class="notes">
+        <section>
+          <h3>Palette</h3>
+          <div class="swatches">
+            <span class="sw"><i style="background:#0b4da2"></i>Nazar blue</span>
+            <span class="sw"><i style="background:#6ec1f0"></i>Iris</span>
+            <span class="sw"><i style="background:#0a1a33"></i>Pupil</span>
+            <span class="sw"><i style="background:#f3f8ff"></i>Glass</span>
+          </div>
+        </section>
+        <section>
+          <h3>Type</h3>
+          <div class="type-sample">
+            <span class="big" style="font-family:'Bricolage Grotesque','Trebuchet MS',sans-serif;font-weight:800">Cihangir</span>
+            <span class="small" style="font-family:'Bricolage Grotesque','Trebuchet MS',sans-serif">Bricolage Grotesque throughout: warm, a little quirky, handles ğ ş İ well.</span>
+          </div>
+        </section>
+        <section>
+          <h3>Voice</h3>
+          <ul class="copy">
+            <li><span>Tagline</span><q>Protected from wrong turns since today.</q></li>
+            <li><span>Saved places</span><q>Your lucky spots</q></li>
+            <li><span>Short-link error</span><q>This short link has the evil eye. Open it and copy the long one.</q></li>
+            <li><span>Taxi card</span><q>Scan for a blessed route.</q></li>
+          </ul>
+        </section>
+        <div class="fit">
+          <div><b>Works because</b><ul><li>Deeply local, made-in-Istanbul feel</li><li>Pin logo works tiny as an app icon</li></ul></div>
+          <div><b>Watch out</b><ul><li>Drops the rodeo theme; the name and look drift apart</li><li>Blue is also Google's and Yandex's colour</li></ul></div>
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <!-- 4. Lasso -->
+  <article class="direction d-lasso" aria-labelledby="d4">
+    <div class="dir-head">
+      <p class="eyebrow">Direction 4</p>
+      <h2 id="d4">One Lasso</h2>
+      <p class="pitch">Almost no decoration. The logo is a single rope stroke that loops into a map pin. Green means go, and the destination is huge. The humour is only in the slogan and the occasional line of copy. It's the fastest-feeling and the easiest to trust.</p>
+    </div>
+    <div class="dir-body">
+      <figure>
+        <div class="phone"><div class="screen">
+          <div class="m-logo">
+            <svg viewBox="0 0 64 64" aria-hidden="true" fill="none" stroke="#111111" stroke-width="4.5" stroke-linecap="round"><path d="M32 58C27 46 14 37 14 24a18 18 0 1 1 36 0c0 13-13 22-18 34"/><path d="M32 58c6 3 14 2 20-5"/><circle cx="32" cy="24" r="5" fill="#0f7b4f" stroke="none"/></svg>
+            gogogo.rodeo
+          </div>
+          <p class="m-tag">Two taps. No chit-chat.</p>
+          <div class="m-input">41.03176, 28.98216</div>
+          <div class="m-qr"><svg><use href="#qr"/></svg></div>
+          <p class="m-name">Cihangir</p>
+          <p class="m-coords">41.03176, 28.98216</p>
+          <div class="m-row"><span class="m-btn go">Save</span><span class="m-btn">Download</span></div>
+        </div></div>
+        <figcaption>Passenger, after one paste</figcaption>
+      </figure>
+      <figure>
+        <div class="phone"><div class="screen">
+          <p class="m-eyebrow">Go to</p>
+          <p class="m-dest">Cihangir</p>
+          <div class="m-apps">
+            <span class="m-app first">Yandex Navigator</span>
+            <span class="m-app">Google Maps</span>
+            <span class="m-app">Waze</span>
+            <span class="m-app">Other app</span>
+          </div>
+          <p class="m-check">Remember my app on this phone</p>
+        </div></div>
+        <figcaption>Driver, after scanning</figcaption>
+      </figure>
+      <div class="notes">
+        <section>
+          <h3>Palette</h3>
+          <div class="swatches">
+            <span class="sw"><i style="background:#ffffff"></i>Paper</span>
+            <span class="sw"><i style="background:#111111"></i>Rope</span>
+            <span class="sw"><i style="background:#0f7b4f"></i>Go green</span>
+            <span class="sw"><i style="background:#f3f3f1"></i>Kerb</span>
+          </div>
+        </section>
+        <section>
+          <h3>Type</h3>
+          <div class="type-sample">
+            <span class="big" style="font-family:'Instrument Sans',Arial,sans-serif;font-weight:700;letter-spacing:-0.03em">Cihangir</span>
+            <span class="small" style="font-family:'Instrument Sans',Arial,sans-serif">Instrument Sans, plus a monospace face for coordinates.</span>
+          </div>
+        </section>
+        <section>
+          <h3>Voice</h3>
+          <ul class="copy">
+            <li><span>Tagline</span><q>Two taps. No chit-chat.</q></li>
+            <li><span>Saved places</span><q>Saved</q></li>
+            <li><span>Short-link error</span><q>Short links hide the location. Open it and copy the long link.</q></li>
+            <li><span>Taxi card</span><q>Scan to navigate.</q></li>
+          </ul>
+        </section>
+        <div class="fit">
+          <div><b>Works because</b><ul><li>Feels fastest and most trustworthy</li><li>Easiest to keep consistent</li></ul></div>
+          <div><b>Watch out</b><ul><li>Least funny; could be any app</li><li>Easy to forget</li></ul></div>
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <section class="compare" aria-labelledby="cmp">
+    <h2 id="cmp">Side by side</h2>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th scope="col">Direction</th><th scope="col">Humour</th><th scope="col">Feels fast</th><th scope="col">Istanbul fit</th><th scope="col">Readable in a dark cab</th><th scope="col">Taxi card</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">1 · Sarı Rodeo</th><td class="dots">●●●○</td><td class="dots">●●●○</td><td class="dots">●●●●</td><td class="dots">●●●●</td><td>Yellow card, checker edge</td></tr>
+          <tr><th scope="row">2 · Sheriff of the Bosphorus</th><td class="dots">●●●●</td><td class="dots">●●○○</td><td class="dots">●●○○</td><td class="dots">●●●○</td><td>Wanted poster</td></tr>
+          <tr><th scope="row">3 · Nazar Express</th><td class="dots">●●●○</td><td class="dots">●●●○</td><td class="dots">●●●●</td><td class="dots">●●●○</td><td>Blue bead card</td></tr>
+          <tr><th scope="row">4 · One Lasso</th><td class="dots">●○○○</td><td class="dots">●●●●</td><td class="dots">●●○○</td><td class="dots">●●●●</td><td>Plain, black on white</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="pick">
+      <p class="eyebrow">My pick</p>
+      <h3>Sarı Rodeo, with the nazar bead as a hidden extra</h3>
+      <p><strong>It's the only direction that says "taxi" before anyone reads a word,</strong> and its contrast is the best for a driver glancing at a phone at night. The jokes stay in the copy, so the buttons stay obvious. One idea from Direction 3 is worth borrowing: a tiny nazar bead in the footer that winks once.</p>
+      <p>Reply with a number, or mix them (for example, "1 with the logo from 4"). I'll then restyle the working site and make the taxi card to match.</p>
+    </div>
+  </section>
+
+</div>
+</body>
+</html>

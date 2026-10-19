@@ -1,7 +1,33 @@
 // Single place for values a self-hoster may want to change.
 
-/** Canonical public address. QR codes point here. Override with VITE_PUBLIC_URL at build time. */
-export const PUBLIC_URL: string = (import.meta.env.VITE_PUBLIC_URL || 'https://gogogo.rodeo').replace(
-  /\/+$/,
-  '',
-);
+export const CANONICAL_URL = 'https://gogogo.rodeo';
+
+interface PublicUrlInputs {
+  /** VITE_PUBLIC_URL, set at build time. */
+  envUrl?: string;
+  /** True on the local dev server. */
+  dev: boolean;
+  /** location.origin of the page that is running. */
+  origin?: string;
+  /** Vite's BASE_URL, e.g. "/" or "/gogogo-rodeo/". */
+  basePath: string;
+}
+
+/**
+ * Address that QR codes point to, without a trailing slash.
+ * On the dev server it follows the current address, so a phone on the same
+ * Wi-Fi can scan codes made from the network URL.
+ */
+export function resolvePublicUrl({ envUrl, dev, origin, basePath }: PublicUrlInputs): string {
+  const url = envUrl || (dev && origin ? origin + basePath : CANONICAL_URL);
+  return url.replace(/\/+$/, '');
+}
+
+export function publicUrl(): string {
+  return resolvePublicUrl({
+    envUrl: import.meta.env.VITE_PUBLIC_URL,
+    dev: import.meta.env.DEV,
+    origin: globalThis.location?.origin,
+    basePath: import.meta.env.BASE_URL,
+  });
+}

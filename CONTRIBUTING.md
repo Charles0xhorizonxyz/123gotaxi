@@ -1,6 +1,6 @@
 # Contributing to gogogo.rodeo
 
-Thanks for helping! Bug reports, translations and real-phone test results are especially welcome.
+Thanks for helping! Bug reports and real-phone test results are especially welcome.
 
 ## Ground rules
 
@@ -23,12 +23,6 @@ npm run typecheck && npm run lint && npm test && npm run test:e2e
 ```
 
 CI runs the same checks on every pull request.
-
-## Adding a language
-
-1. Copy `src/i18n/en.ts` to `src/i18n/<code>.ts` and translate the values (keep the keys).
-2. Register it in `src/i18n/index.ts`.
-3. The unit tests check that no key is missing.
 
 ## Navigation-app links
 

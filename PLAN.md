@@ -11,7 +11,7 @@ Status: **draft, waiting for product-owner approval.** Nothing is built yet.
 A static website with two faces on the same address:
 
 - **Create page** (`https://gogogo.rodeo/`): the passenger searches for or pastes a place, drags a pin to the exact entrance, and gets a QR code to show, download or print.
-- **Destination page** (`https://gogogo.rodeo/?v=1&lat=…&lon=…&n=…`): what the driver sees after scanning. It shows the name, a small map and big "Open with" buttons for Google Maps, Yandex, Waze, Apple Maps and "Other app". It can remember the driver's choice.
+- **Destination page** (`https://gogogo.rodeo/#v=1&lat=…&lon=…&n=…`): what the driver sees after scanning. It shows the name, a small map and big "Open with" buttons for Google Maps, Yandex, Waze, Apple Maps and "Other app". It can remember the driver's choice.
 
 No server code, no database, no accounts, no analytics. Everything runs in the browser.
 
@@ -44,7 +44,7 @@ gogogo-rodeo/
 ├── src/
 │   ├── config.ts               # BASE_URL = "https://gogogo.rodeo" + provider choice (one place)
 │   ├── main.ts                 # router: params present → destination page, else create page
-│   ├── destination-url/        # build + parse our own ?v=1&lat=… URLs (versioned)
+│   ├── destination-url/        # build + parse our own #v=1&lat=… URLs (versioned)
 │   ├── geocoding/              # GeocodingProvider interface + photon.ts, geoapify.ts adapters
 │   ├── navigation-links/       # google.ts, yandex.ts, waze.ts, apple.ts, geo.ts
 │   ├── link-parsing/           # pull coordinates out of pasted Google / Yandex / OSM / Apple links
@@ -52,7 +52,7 @@ gogogo-rodeo/
 │   ├── preferences/            # remembered app, "ask every time", forget-me
 │   ├── map/                    # lazy-loaded MapLibre wrapper, draggable pin
 │   ├── pages/                  # create.ts, destination.ts
-│   ├── i18n/                   # en.json, tr.json, tiny t() helper
+│   ├── saved-places/           # places saved in this browser only
 │   └── styles/
 ├── tests/
 │   ├── unit/                   # link builders, parsers, URL format, preferences
@@ -70,8 +70,10 @@ gogogo-rodeo/
 ## 4. The QR / destination URL format
 
 ```
-https://gogogo.rodeo/?v=1&lat=41.03420&lon=28.98440&n=Ev%20-%20Cihangir
+https://gogogo.rodeo/#v=1&lat=41.0342&lon=28.9844&n=Ev%20-%20Cihangir
 ```
+
+- Everything sits after `#`. Browsers never send that part to the server, so **the hosting provider never sees or logs any destination**. Old `?lat=` links are still read.
 
 - `v` — format version. Missing `v` is treated as `1`. If we ever change the format we bump to `v=2`, and the page keeps understanding `v=1` forever, so **printed codes never break**.
 - `lat`, `lon` — WGS84 decimal degrees, rounded to **5 decimals** (about 1 metre). Enough precision for a door, and it keeps the QR small and easy to scan.
@@ -157,10 +159,9 @@ Checked against official docs this week. Each will be re-verified with a unit te
 
 ---
 
-## 9. Languages and accessibility
+## 9. Language and accessibility
 
-- English and Turkish from day one. Auto-picked from the phone's language, with a visible TR/EN switch. Strings live in JSON files, so adding Russian, Arabic or others later means adding one file. Arabic would need right-to-left layout; the CSS will be written so that's easy later.
-- **The destination page uses the driver's phone language**, not the passenger's.
+- **English only** (decision 2026-10-19). People use their browser's built-in translation. Copy stays short and plain so machine translation handles it well.
 - Big tap targets, high contrast, keyboard and screen-reader friendly autocomplete (standard "combobox" pattern), and it works without the map if the map fails to load.
 
 ---
@@ -178,7 +179,7 @@ Checked against official docs this week. Each will be re-verified with a unit te
 - Phones: one Android (recent, plus ideally an older one) and one iPhone.
 - Scanners: built-in camera, Google Lens, plus a common third-party scanner app.
 - For **each app** (Google Maps, Yandex Maps, Yandex Navigator, Waze, Apple Maps), test both **installed** and **not installed**. Does the right app open, in navigation mode, at the right spot? Does a missing app fall back to web or the store gracefully?
-- Remember-choice flow, change, forget. Turkish/English switching. Printed card scanned at arm's length in a dim car.
+- Remember-choice flow, change, forget. Browser translation (Chrome "Translate to Türkçe") keeps the page usable. Printed card scanned at arm's length in a dim car.
 - Run it once on a local preview, then again on the live domain (Milestone 6).
 
 ---
@@ -220,7 +221,23 @@ I can set up the live deploy at the end of Milestone 1 on the default `*.github.
 5. Fallback language: **English**.
 6. **One-pager:** a single `index.html`. With no parameters it's the create screen; with `lat`/`lon` it's the driver's "Open with" screen.
 
-Still open: which registrar holds the domain (needed for the DNS guide in Milestone 6).
+7. **No translations:** English only; browser translation covers the rest.
+8. **Registrar: Njalla.** DNS guide will target Njalla's DNS panel.
+9. **Saved places** live only in the browser (`localStorage`), never sent anywhere.
+10. **Two-tap rule:** passenger pastes or picks → QR appears; driver scans → taps app. Design directions in `docs/design-proposals.html`.
+
+### Privacy model (who can see an address)
+
+| Who | Sees the destination? | Why |
+|---|---|---|
+| gogogo.rodeo / GitHub (hosting) | **No** | Destination is after `#`, which is never sent to the server. No analytics. |
+| Anyone who scans or gets the QR link | Yes | That's the point of the code. The UI warns about home addresses. |
+| The nav app the driver picks | Yes | It has to, to route there. |
+| Search provider (Photon, from Milestone 4) | What you type into search | Unavoidable for live suggestions. Pasting a link or coordinates sends nothing. Disclosed next to the search box. |
+| Map tiles (OpenFreeMap, from Milestone 3) | Roughly which area is on screen | Tiles are fetched per area. No cookies, no key. |
+| Saved places | Only this browser | `localStorage`, never transmitted. Clearing browser data deletes them. |
+
+All traffic is HTTPS. There is no gogogo.rodeo server to encrypt *to*: the app never sends the address anywhere itself.
 
 ### Why the QR doesn't open the driver's app directly
 
