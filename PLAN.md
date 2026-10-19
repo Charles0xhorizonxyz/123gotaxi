@@ -35,7 +35,7 @@ Rough page weight goal: create page under ~100 KB before the map loads; map adds
 ## 3. Repository structure
 
 ```
-gogogo-rodeo/
+123gotaxi/
 ├── README.md  LICENSE  CONTRIBUTING.md  PLAN.md
 ├── index.html                  # single entry; decides create vs destination
 ├── public/
@@ -215,7 +215,7 @@ I can set up the live deploy at the end of Milestone 1 on the default `*.github.
 ## 13. Decisions (approved 2026-10-19)
 
 1. Licence: **MIT**.
-2. Repo: public `Charles0xhorizonxyz/gogogo-rodeo`.
+2. Repo: public `Charles0xhorizonxyz/123gotaxi`.
 3. Hosting: **GitHub Pages**.
 4. Short links: "copy the long link" instructions for v1; no server piece.
 5. Fallback language: **English**.
@@ -229,7 +229,7 @@ I can set up the live deploy at the end of Milestone 1 on the default `*.github.
 13. **Multi-stop journeys** (up to 4 stops): `via=lat,lon~lat,lon` lists earlier stops, `lat`/`lon` stays the final one, so the v1 format is unchanged. Only apps that follow every stop are offered (Google Maps, Yandex Navigator, Yandex Maps).
 14. **Driver page stays** (drivers can come back to it and share it). "Put my app first next time" moves the remembered app to the top; no auto-redirect.
 15. **Saved places** have an optional name and an optional note. Both are private: they stay on the device and are never put in the QR (the QR carries only the stops). Export/import as a JSON file.
-18. **Domain: 123go.taxi** (decided 2026-10-19, registering at Njalla). Setup steps in `docs/DNS-SETUP.md`. Repository keeps the name `gogogo-rodeo` for now.
+18. **Domain: 123go.taxi** (decided 2026-10-19, registering at Njalla). Setup steps in `docs/DNS-SETUP.md`. Repository renamed to `123gotaxi` (2026-10-19).
 17. **No "Make" button:** the QR appears as soon as a place is pasted or typed. Name and note sit under the QR.
 16. Footer: "Made with ♥ by 0xhorizon.xyz". Slogan removed from the page.
 10. **Two-tap rule:** passenger pastes or picks → QR appears; driver scans → taps app. Design directions in `docs/design-proposals.html`.

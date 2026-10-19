@@ -1,4 +1,4 @@
-import { PHOTON_URL, publicUrl } from '../config';
+import { EXPANDER_URL, PHOTON_URL, publicUrl } from '../config';
 import { h } from '../dom';
 import {
   buildJourneyHash,
@@ -9,7 +9,8 @@ import {
   type Point,
 } from '../destination-url';
 import { photonGeocoder } from '../geocoding';
-import { parseLocation } from '../link-parsing';
+import { parseLocation, type ParseResult } from '../link-parsing';
+import { expandShortLink } from '../link-parsing/expand';
 import { drawQr, pngFileName, qrPngUrl } from '../qr';
 import { browserStorage, SavedPlaces, type SavedPlace } from '../saved-places';
 import { creditFooter, SHARE_RESULT_TEXT, shareLink } from './common';
@@ -55,6 +56,10 @@ export function renderCreate(root: HTMLElement, { brokenLink = false } = {}): vo
 
   const stops = createStopsEditor({ onChange });
   const error = h('p', { class: 'error', role: 'alert', hidden: !brokenLink });
+  const notice = h('p', { class: 'hint', role: 'status', hidden: true });
+  // Short links already asked about: the long link, or null if it couldn't be opened.
+  const expanded = new Map<string, string | null>();
+  const expanding = new Set<string>();
   if (brokenLink) error.textContent = ERRORS.invalidQr;
 
   // Result card: address, QR, then what you'd want to keep it under, then actions.
@@ -255,8 +260,22 @@ export function renderCreate(root: HTMLElement, { brokenLink = false } = {}): vo
     }
     const points: Point[] = [];
     let foundLabel: string | undefined;
+    notice.hidden = true;
     for (const { text, number } of filled) {
-      const parsed = parseLocation(text);
+      let parsed: ParseResult = parseLocation(text);
+      if (!parsed.ok && parsed.reason === 'short-link' && EXPANDER_URL) {
+        const key = text.trim();
+        if (!expanded.has(key)) {
+          openShortLink(key, reveal);
+          hideResult();
+          error.hidden = true;
+          notice.textContent = 'Opening the short link…';
+          notice.hidden = false;
+          return;
+        }
+        const long = expanded.get(key);
+        if (long) parsed = parseLocation(long);
+      }
       if (!parsed.ok) {
         hideResult();
         if (explain) {
@@ -272,6 +291,17 @@ export function renderCreate(root: HTMLElement, { brokenLink = false } = {}): vo
     // A pasted place link often carries the place's name: offer it as the name to save under.
     if (!nameInput.value.trim() && foundLabel && points.length === 1) nameInput.value = foundLabel;
     void show({ stops: points }, { reveal });
+  }
+
+  /** Ask the link expander once per short link, then try again with the answer. */
+  function openShortLink(shortLink: string, reveal: boolean): void {
+    if (expanding.has(shortLink)) return;
+    expanding.add(shortLink);
+    void expandShortLink(shortLink, EXPANDER_URL).then((long) => {
+      expanding.delete(shortLink);
+      expanded.set(shortLink, long);
+      update(true, reveal);
+    });
   }
 
   function renderSaved(): void {
@@ -410,7 +440,7 @@ export function renderCreate(root: HTMLElement, { brokenLink = false } = {}): vo
       ),
       h('p', { class: 'tagline' }, 'Hold on to your hat. Paste a place, get a QR, share it easily.'),
     ),
-    h('div', { class: 'place-form' }, h('p', { class: 'field-label' }, 'Where to?'), stops.element, error),
+    h('div', { class: 'place-form' }, h('p', { class: 'field-label' }, 'Where to?'), stops.element, notice, error),
     result,
     savedSection,
     creditFooter(),

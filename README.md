@@ -2,7 +2,7 @@
 
 *For a smooth ride — or it might get rocky, but at least it started smoothly.*
 
-**123go.taxi** turns an address into a QR code that a taxi driver can scan to start navigation in their own app: Google Maps, Yandex, Waze, Apple Maps or any other.
+**123go.taxi** is a fully open-source web app ([MIT](LICENSE)) that turns an address into a QR code that a taxi driver can scan to start navigation in their own app: Google Maps, Yandex, Waze, Apple Maps or any other.
 
 > Status: early development. See [PLAN.md](PLAN.md) for the roadmap.
 
@@ -44,7 +44,7 @@ It's a static site: build it and serve `dist/` from anywhere. Two build-time set
 | Variable | Default | Purpose |
 |---|---|---|
 | `VITE_PUBLIC_URL` | `https://123go.taxi` | Address that QR codes point to. |
-| `BASE_PATH` | `/` | Sub-path if the site isn't at the root of its domain, e.g. `/gogogo-rodeo/`. |
+| `BASE_PATH` | `/` | Sub-path if the site isn't at the root of its domain, e.g. `/123gotaxi/`. |
 
 ## Credits
 

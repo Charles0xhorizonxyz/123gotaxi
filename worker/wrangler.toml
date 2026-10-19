@@ -1,0 +1,10 @@
+# Cloudflare Worker that expands map short links for 123go.taxi.
+# Deploy from the repository root: npx wrangler deploy --config worker/wrangler.toml
+name = "123go-expand"
+main = "src/index.ts"
+compatibility_date = "2026-10-01"
+workers_dev = true
+
+# Keep no request logs.
+[observability]
+enabled = false

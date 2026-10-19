@@ -56,9 +56,9 @@ Leave the TTL at Njalla's default.
 
 Either ask your coding assistant to "connect 123go.taxi", or do it yourself:
 
-1. Open [the repository's Pages settings](https://github.com/Charles0xhorizonxyz/gogogo-rodeo/settings/pages).
+1. Open [the repository's Pages settings](https://github.com/Charles0xhorizonxyz/123gotaxi/settings/pages).
 2. Under **Custom domain**, type `123go.taxi` and click **Save**. GitHub checks the DNS. A green "DNS check successful" can take from a few minutes to an hour.
-3. Under [Settings → Secrets and variables → Actions → Variables](https://github.com/Charles0xhorizonxyz/gogogo-rodeo/settings/variables/actions), **delete** `BASE_PATH` and `PUBLIC_URL`. They only existed for the temporary github.io address. Without them, the site builds for `https://123go.taxi`.
+3. Under [Settings → Secrets and variables → Actions → Variables](https://github.com/Charles0xhorizonxyz/123gotaxi/settings/variables/actions), **delete** `BASE_PATH` and `PUBLIC_URL`. They only existed for the temporary github.io address. Without them, the site builds for `https://123go.taxi`.
 4. Re-run the latest **Deploy** workflow (Actions tab → Deploy → Run workflow), so the site is rebuilt for the new address.
 
 We publish with GitHub Actions, so **no `CNAME` file is needed** in the code. GitHub ignores it in this setup.
@@ -75,7 +75,7 @@ On your phone and computer:
 - [ ] `https://123go.taxi` shows the site with a padlock.
 - [ ] `http://123go.taxi` switches to `https://` by itself.
 - [ ] `https://www.123go.taxi` switches to `https://123go.taxi` by itself.
-- [ ] The old test address `https://charles0xhorizonxyz.github.io/gogogo-rodeo/` now redirects to `https://123go.taxi`.
+- [ ] The old test address `https://charles0xhorizonxyz.github.io/123gotaxi/` now redirects to `https://123go.taxi`.
 - [ ] Make a QR and scan it: it opens `https://123go.taxi/#v=1&…`.
 
 ## If something's wrong

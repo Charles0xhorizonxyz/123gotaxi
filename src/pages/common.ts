@@ -1,4 +1,4 @@
-import { CONTACT_EMAIL } from '../config';
+import { SOURCE_URL } from '../config';
 import { h } from '../dom';
 
 export function creditFooter(): HTMLElement {
@@ -13,7 +13,7 @@ export function creditFooter(): HTMLElement {
       ' by 0xhorizon.xyz',
     ),
     h('span', { class: 'credit-sep', 'aria-hidden': 'true' }, ' · '),
-    h('a', { href: `mailto:${CONTACT_EMAIL}`, class: 'credit' }, 'Contact'),
+    h('a', { href: SOURCE_URL, rel: 'noopener', target: '_blank', class: 'credit' }, 'Fully open source'),
   );
 }
 

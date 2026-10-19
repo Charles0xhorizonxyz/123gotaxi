@@ -112,9 +112,10 @@ test('the driver screen lists apps and puts the remembered one first', async ({ 
     'href',
     'https://0xhorizon.xyz',
   );
-  await expect(page.getByRole('link', { name: 'Contact' })).toHaveAttribute(
+  await expect(page.getByRole('link', { name: 'Contact' })).toHaveCount(0);
+  await expect(page.getByRole('link', { name: 'Fully open source' })).toHaveAttribute(
     'href',
-    'mailto:0xhorizonxyz@gmail.com',
+    'https://github.com/Charles0xhorizonxyz/123gotaxi',
   );
 });
 

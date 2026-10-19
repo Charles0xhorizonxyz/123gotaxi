@@ -9,7 +9,7 @@ interface PublicUrlInputs {
   dev: boolean;
   /** location.origin of the page that is running. */
   origin?: string;
-  /** Vite's BASE_URL, e.g. "/" or "/gogogo-rodeo/". */
+  /** Vite's BASE_URL, e.g. "/" or "/123gotaxi/". */
   basePath: string;
 }
 
@@ -35,5 +35,11 @@ export function publicUrl(): string {
 /** Where readable addresses come from. Any Photon server works; see src/geocoding. */
 export const PHOTON_URL = 'https://photon.komoot.io';
 
-/** Shown as "Contact" in the footer. */
-export const CONTACT_EMAIL = '0xhorizonxyz@gmail.com';
+/**
+ * The link expander (worker/) that turns short map links into long ones.
+ * Empty: short links show "open it and copy the long link" instead.
+ */
+export const EXPANDER_URL = '';
+
+/** Where the source code lives; linked from the footer. */
+export const SOURCE_URL = 'https://github.com/Charles0xhorizonxyz/123gotaxi';

@@ -51,8 +51,8 @@ describe('buildJourneyUrl', () => {
   });
 
   it('works under a sub-path', () => {
-    expect(buildJourneyUrl('https://x.github.io/gogogo-rodeo', { stops: [{ lat: 1, lon: 2 }] })).toBe(
-      'https://x.github.io/gogogo-rodeo/#v=1&lat=1&lon=2',
+    expect(buildJourneyUrl('https://x.github.io/123gotaxi', { stops: [{ lat: 1, lon: 2 }] })).toBe(
+      'https://x.github.io/123gotaxi/#v=1&lat=1&lon=2',
     );
   });
 });
