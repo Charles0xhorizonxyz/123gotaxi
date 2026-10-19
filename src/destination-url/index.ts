@@ -1,6 +1,7 @@
 // Our own QR link format:
 //   one stop:   https://123go.taxi/#v=1&lat=41.0342&lon=28.9844&n=Label
 //   more stops: https://123go.taxi/#v=1&lat=41.0342&lon=28.9844&n=Label&via=41.03,28.98~41.04,28.99
+//   address:    …&a=S%C4%B1raselviler+Caddesi+20,+Beyo%C4%9Flu (readable address of the final stop)
 //
 // lat/lon is always the final destination and "via" lists the stops before it,
 // in order. A reader that ignores "via" still takes the driver to the right end.
@@ -16,10 +17,14 @@ export interface Journey {
   /** In driving order; the last one is the final destination. */
   stops: Point[];
   label?: string;
+  /** Readable address of the final stop, looked up when the QR was made. */
+  address?: string;
 }
 
 export const FORMAT_VERSION = 1;
 export const MAX_LABEL_LENGTH = 60;
+/** Keeps the QR easy to scan: addresses are short anyway. */
+export const MAX_ADDRESS_LENGTH = 100;
 /** Google Maps accepts at most 3 extra stops when opened from a phone browser. */
 export const MAX_STOPS = 4;
 
@@ -38,9 +43,17 @@ export function isValidCoordinate(lat: number, lon: number): boolean {
   );
 }
 
-export function cleanLabel(label: string | undefined | null): string | undefined {
-  const trimmed = label?.replace(/\s+/g, ' ').trim().slice(0, MAX_LABEL_LENGTH);
+function cleanText(text: string | undefined | null, max: number): string | undefined {
+  const trimmed = text?.replace(/\s+/g, ' ').trim().slice(0, max).trim();
   return trimmed || undefined;
+}
+
+export function cleanLabel(label: string | undefined | null): string | undefined {
+  return cleanText(label, MAX_LABEL_LENGTH);
+}
+
+export function cleanAddress(address: string | undefined | null): string | undefined {
+  return cleanText(address, MAX_ADDRESS_LENGTH);
 }
 
 export function finalStop(journey: Journey): Point {
@@ -58,10 +71,13 @@ export function buildJourneyHash(journey: Journey): string {
   });
   const label = cleanLabel(journey.label);
   if (label) params.set('n', label);
+  const address = cleanAddress(journey.address);
+  if (address) params.set('a', address);
   const via = journey.stops.slice(0, -1).map(formatPoint).join('~');
   if (via) params.set('via', via);
-  // Keep "," and "~" readable: they are safe in a URL fragment and keep the QR small.
-  return `#${params.toString().replace(/\+/g, '%20').replace(/%2C/g, ',').replace(/%7E/g, '~')}`;
+  // "+" for spaces, and "," and "~" left as they are: all safe in a URL fragment,
+  // and every character saved keeps the QR simpler to scan.
+  return `#${params.toString().replace(/%2C/g, ',').replace(/%7E/g, '~')}`;
 }
 
 export function buildJourneyUrl(baseUrl: string, journey: Journey): string {
@@ -93,6 +109,10 @@ export function parseJourney(fragment: string): JourneyParse {
 
   return {
     kind: 'ok',
-    journey: { stops: [...(via as Point[]), end], label: cleanLabel(params.get('n')) },
+    journey: {
+      stops: [...(via as Point[]), end],
+      label: cleanLabel(params.get('n')),
+      address: cleanAddress(params.get('a')),
+    },
   };
 }

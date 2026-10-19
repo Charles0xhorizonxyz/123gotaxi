@@ -60,6 +60,12 @@ describe('single destination', () => {
     );
   });
 
+  it('geo: uses the address when there is no name', () => {
+    expect(url('geo', { stops: [{ lat: 1, lon: 2 }], address: 'Galata Kulesi, İstanbul' })).toBe(
+      'geo:1,2?q=1,2(Galata%20Kulesi%2C%20%C4%B0stanbul)',
+    );
+  });
+
   it('geo: works without a label', () => {
     expect(url('geo', { stops: [{ lat: 1, lon: 2 }] })).toBe('geo:1,2?q=1,2');
   });

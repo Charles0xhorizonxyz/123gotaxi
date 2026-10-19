@@ -1,6 +1,14 @@
-import { publicUrl } from '../config';
+import { PHOTON_URL, publicUrl } from '../config';
 import { h } from '../dom';
-import { buildJourneyHash, buildJourneyUrl, formatPoint, type Journey, type Point } from '../destination-url';
+import {
+  buildJourneyHash,
+  buildJourneyUrl,
+  finalStop,
+  formatPoint,
+  type Journey,
+  type Point,
+} from '../destination-url';
+import { photonGeocoder } from '../geocoding';
 import { parseLocation } from '../link-parsing';
 import { drawQr, pngFileName, qrPngUrl } from '../qr';
 import { browserStorage, SavedPlaces, type SavedPlace } from '../saved-places';
@@ -28,14 +36,19 @@ const TYPING_DELAY_MS = 500;
 
 const pretty = (p: Point) => formatPoint(p).replace(',', ', ');
 
-/** What a saved place is called in the list when it has no name. */
+/** Identifies the stops alone, ignoring name and address. */
+const stopsKey = (journey: Journey) => journey.stops.map(formatPoint).join('~');
+
+/** What a saved place is called in the list when it has no name: its address, else its coordinates. */
 function fallbackName(place: SavedPlace): string {
-  const end = place.stops[place.stops.length - 1]!;
-  return place.stops.length > 1 ? `Route to ${pretty(end)}` : pretty(end);
+  const end = place.address ?? pretty(place.stops[place.stops.length - 1]!);
+  return place.stops.length > 1 ? `Route to ${end}` : end;
 }
 
 export function renderCreate(root: HTMLElement, { brokenLink = false } = {}): void {
   const saved = new SavedPlaces(browserStorage());
+  const geocoder = photonGeocoder(PHOTON_URL);
+  let addressLookup: AbortController | undefined;
   // The QR only carries the stops. Name and note stay on this device.
   let current: Journey | null = null;
   let typingTimer: ReturnType<typeof setTimeout> | undefined;
@@ -44,7 +57,9 @@ export function renderCreate(root: HTMLElement, { brokenLink = false } = {}): vo
   const error = h('p', { class: 'error', role: 'alert', hidden: !brokenLink });
   if (brokenLink) error.textContent = ERRORS.invalidQr;
 
-  // Result card: QR, then what you'd want to keep it under, then actions.
+  // Result card: address, QR, then what you'd want to keep it under, then actions.
+  const addressLine = h('p', { class: 'address', hidden: true });
+  const attribution = h('p', { class: 'attribution', hidden: true }, geocoder.attribution);
   const qrCanvas = h('canvas', { class: 'qr', role: 'img', 'aria-label': 'QR code for this journey' });
   const resultStops = h('p', { class: 'coords' });
   const nameInput = h('input', {
@@ -87,7 +102,15 @@ export function renderCreate(root: HTMLElement, { brokenLink = false } = {}): vo
     h('div', { class: 'actions' }, saveButton, shareButton),
     h('div', { class: 'more' }, downloadLink, previewLink),
   );
-  const result = h('section', { class: 'result', 'aria-live': 'polite' }, qrEmpty, qrCanvas, resultDetails);
+  resultDetails.append(attribution);
+  const result = h(
+    'section',
+    { class: 'result', 'aria-live': 'polite' },
+    addressLine,
+    qrEmpty,
+    qrCanvas,
+    resultDetails,
+  );
   nameInput.addEventListener('input', resetSaveButton);
   noteInput.addEventListener('input', resetSaveButton);
 
@@ -152,8 +175,13 @@ export function renderCreate(root: HTMLElement, { brokenLink = false } = {}): vo
    * Save can't land while the page is still moving.
    */
   async function show(journey: Journey, { reveal = false } = {}): Promise<void> {
+    const sameStops = current !== null && stopsKey(current) === stopsKey(journey);
+    // Same stops as before: keep the address we already found.
+    if (sameStops && !journey.address && current?.address) journey = { ...journey, address: current.address };
     const changed = !current || buildJourneyHash(current) !== buildJourneyHash(journey);
     current = journey;
+    if (!sameStops) lookUpAddress(journey);
+    showAddress(journey.address, !sameStops && !journey.address);
     if (changed) {
       await drawQr(qrCanvas, buildJourneyUrl(publicUrl(), journey));
       resetSaveButton();
@@ -169,7 +197,35 @@ export function renderCreate(root: HTMLElement, { brokenLink = false } = {}): vo
     if (reveal) result.scrollIntoView({ block: 'nearest' });
   }
 
+  /** Ask for the final stop's readable address, then redraw the QR with it inside. */
+  function lookUpAddress(journey: Journey): void {
+    addressLookup?.abort();
+    if (journey.address) return;
+    const lookup = new AbortController();
+    addressLookup = lookup;
+    geocoder
+      .reverse(finalStop(journey), lookup.signal)
+      .then((address) => {
+        if (lookup.signal.aborted || !current || stopsKey(current) !== stopsKey(journey)) return;
+        if (address) void show({ ...current, address });
+        else showAddress(undefined, false);
+      })
+      .catch(() => {
+        if (!lookup.signal.aborted) showAddress(undefined, false);
+      });
+  }
+
+  function showAddress(address: string | undefined, pending: boolean): void {
+    addressLine.hidden = false;
+    addressLine.classList.toggle('pending', pending || !address);
+    addressLine.textContent = address ?? (pending ? 'Looking up the address…' : 'No street address found for this spot');
+    attribution.hidden = !address;
+  }
+
   function hideResult(): void {
+    addressLookup?.abort();
+    addressLine.hidden = true;
+    attribution.hidden = true;
     current = null;
     qrEmpty.hidden = false;
     qrCanvas.hidden = true;
@@ -241,7 +297,7 @@ export function renderCreate(root: HTMLElement, { brokenLink = false } = {}): vo
             stops.setValues(place.stops.map(pretty));
             nameInput.value = place.name ?? '';
             noteInput.value = place.note ?? '';
-            void show({ stops: place.stops }, { reveal: true });
+            void show({ stops: place.stops, address: place.address }, { reveal: true });
           },
         },
         h(

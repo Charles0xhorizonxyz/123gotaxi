@@ -77,8 +77,10 @@ export function renderDestination(
       h(
         'h1',
         { class: 'destination-name' },
-        journey.label ?? (multiStop ? 'Your route' : pretty(journey.stops.length - 1)),
+        journey.label ?? journey.address ?? (multiStop ? 'Your route' : pretty(journey.stops.length - 1)),
       ),
+      // An old link with a name: the address goes under it.
+      journey.label && journey.address ? h('p', { class: 'address' }, journey.address) : null,
       multiStop
         ? h(
             'ol',
@@ -87,7 +89,7 @@ export function renderDestination(
               h('li', {}, h('span', { class: 'coords' }, pretty(i))),
             ),
           )
-        : journey.label
+        : journey.label || journey.address
           ? h('p', { class: 'coords' }, pretty(0))
           : null,
     ),

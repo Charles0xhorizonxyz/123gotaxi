@@ -31,3 +31,6 @@ export function publicUrl(): string {
     basePath: import.meta.env.BASE_URL,
   });
 }
+
+/** Where readable addresses come from. Any Photon server works; see src/geocoding. */
+export const PHOTON_URL = 'https://photon.komoot.io';

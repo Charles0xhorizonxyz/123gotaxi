@@ -241,16 +241,16 @@ I can set up the live deploy at the end of Milestone 1 on the default `*.github.
 | 123go.taxi / GitHub (hosting) | **No** | Destination is after `#`, which is never sent to the server. No analytics. |
 | Anyone who scans or gets the QR link | Yes | That's the point of the code. The UI warns about home addresses. |
 | The nav app the driver picks | Yes | It has to, to route there. |
-| Search provider (Photon, from Milestone 4) | What you type into search | Unavoidable for live suggestions. Pasting a link or coordinates sends nothing. Disclosed next to the search box. |
+| Address lookup (Photon, photon.komoot.io) | The final stop's coordinates, from the phone making the QR only | Decided 2026-10-19: one lookup when the QR is made; the readable address is written into the QR (`a=`), so the driver's phone looks nothing up. Never receives the name or note. |
 | Map tiles (OpenFreeMap, from Milestone 3) | Roughly which area is on screen | Tiles are fetched per area. No cookies, no key. |
 | Saved places | Only this browser | `localStorage`, never transmitted. Clearing browser data deletes them. |
 
 All traffic is HTTPS. There is no 123go.taxi server to encrypt *to*: the app never sends the address anywhere itself.
 
 **Enforced, not just promised:**
-- The published page carries a Content-Security-Policy with `connect-src 'none'`. The browser itself refuses any attempt by the page to send data to a server, even from a buggy or compromised library. Milestones 3–4 open it only to the named search and map-tile hosts.
+- The published page carries a Content-Security-Policy whose `connect-src` allows only `https://photon.komoot.io`. The browser itself refuses any attempt by the page to send data anywhere else, even from a buggy or compromised library.
 - `referrer: no-referrer`, so the nav app isn't told which page sent the driver.
-- Automated tests (`tests/e2e/privacy.spec.ts`) fail the build if making or saving a QR causes any network request, if the page can send data out, or if the destination appears in any URL sent to the server.
+- Automated tests (`tests/e2e/privacy.spec.ts`) fail the build if making or saving a QR sends anything other than one coordinates-only lookup, if the page can send data elsewhere, if the driver's screen looks anything up, or if the destination appears in any URL sent to our server.
 
 **Places we can't control, documented for users:** the phone itself (malware, browser extensions), QR-scanner apps that keep a scan history, browser history on the driver's phone (the full link is stored locally), and the nav app the driver picks.
 

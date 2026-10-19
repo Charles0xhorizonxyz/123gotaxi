@@ -34,6 +34,15 @@ describe('SavedPlaces', () => {
     expect(store.list()[0]).toMatchObject({ name: undefined, note: 'Corner shop' });
   });
 
+  it('keeps the looked-up address, including through export and import', () => {
+    const phone = new SavedPlaces(memoryStorage());
+    phone.add({ ...at(1), address: 'Sıraselviler Caddesi 20, Beyoğlu' });
+    expect(phone.list()[0]?.address).toBe('Sıraselviler Caddesi 20, Beyoğlu');
+    const laptop = new SavedPlaces(memoryStorage());
+    laptop.importJson(phone.exportJson());
+    expect(laptop.list()[0]?.address).toBe('Sıraselviler Caddesi 20, Beyoğlu');
+  });
+
   it('keeps multi-stop journeys in order', () => {
     const store = new SavedPlaces(memoryStorage());
     const stops = [{ lat: 1, lon: 1 }, { lat: 2, lon: 2 }, { lat: 3, lon: 3 }];

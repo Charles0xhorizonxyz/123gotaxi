@@ -3,6 +3,7 @@
 // Export/import moves the list between devices as a file the user controls.
 
 import {
+  cleanAddress,
   cleanLabel,
   isValidCoordinate,
   MAX_STOPS,
@@ -14,6 +15,8 @@ export interface SavedPlace {
   id: string;
   name?: string;
   note?: string;
+  /** Readable address of the final stop, so reopening doesn't look it up again. */
+  address?: string;
   stops: Point[];
   savedAt: number;
 }
@@ -63,6 +66,7 @@ function toSavedPlace(value: unknown): SavedPlace | null {
     id: typeof v.id === 'string' && v.id ? v.id : newId(),
     name,
     note: cleanNote(typeof v.note === 'string' ? v.note : undefined),
+    address: cleanAddress(typeof v.address === 'string' ? v.address : undefined),
     stops: stops as Point[],
     savedAt: typeof v.savedAt === 'number' ? v.savedAt : Date.now(),
   };
@@ -105,6 +109,7 @@ export class SavedPlaces {
       id: newId(now),
       name: cleanLabel(journey.name),
       note: cleanNote(journey.note),
+      address: cleanAddress(journey.address),
       stops: journey.stops.map(({ lat, lon }) => ({ lat, lon })),
       savedAt: now,
     };
@@ -127,7 +132,13 @@ export class SavedPlaces {
         format: EXPORT_FORMAT,
         version: 1,
         // Ids are per-device; the importing device makes its own.
-        places: this.list().map(({ name, note, stops, savedAt }) => ({ name, note, stops, savedAt })),
+        places: this.list().map(({ name, note, address, stops, savedAt }) => ({
+          name,
+          note,
+          address,
+          stops,
+          savedAt,
+        })),
       },
       null,
       2,

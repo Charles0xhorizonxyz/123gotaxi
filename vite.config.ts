@@ -1,16 +1,16 @@
 import { defineConfig, type Plugin } from 'vitest/config';
 
 // The browser enforces this policy on the published site. Most importantly,
-// connect-src 'none' means the page cannot send anything (typed addresses
-// included) to any server, even if a bug or a compromised library tried to.
-// Milestones 3-4 will add exactly the map-tile and search hosts, nothing else.
+// connect-src allows exactly one outside server, the address lookup (it only
+// ever receives coordinates); the page cannot send anything anywhere else,
+// even if a bug or a compromised library tried to.
 export const CONTENT_SECURITY_POLICY = [
   "default-src 'none'",
   "script-src 'self'",
   "style-src 'self'",
   "img-src 'self' data: blob:",
   "font-src 'self'",
-  "connect-src 'none'",
+  "connect-src https://photon.komoot.io",
   "manifest-src 'self'",
   "base-uri 'none'",
   "form-action 'none'",

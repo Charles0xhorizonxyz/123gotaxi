@@ -26,7 +26,7 @@ describe('buildJourneyUrl', () => {
 
   it('encodes Turkish labels and spaces', () => {
     expect(buildJourneyUrl('https://123go.taxi', { stops: [home], label: 'Kadıköy İskele' })).toBe(
-      'https://123go.taxi/#v=1&lat=41.0342&lon=28.9844&n=Kad%C4%B1k%C3%B6y%20%C4%B0skele',
+      'https://123go.taxi/#v=1&lat=41.0342&lon=28.9844&n=Kad%C4%B1k%C3%B6y+%C4%B0skele',
     );
   });
 
@@ -44,6 +44,12 @@ describe('buildJourneyUrl', () => {
     );
   });
 
+  it('carries the readable address of the final stop', () => {
+    expect(
+      buildJourneyUrl('https://123go.taxi', { stops: [home], address: 'Sıraselviler Caddesi 20, Beyoğlu' }),
+    ).toBe('https://123go.taxi/#v=1&lat=41.0342&lon=28.9844&a=S%C4%B1raselviler+Caddesi+20,+Beyo%C4%9Flu');
+  });
+
   it('works under a sub-path', () => {
     expect(buildJourneyUrl('https://x.github.io/gogogo-rodeo', { stops: [{ lat: 1, lon: 2 }] })).toBe(
       'https://x.github.io/gogogo-rodeo/#v=1&lat=1&lon=2',
@@ -56,6 +62,7 @@ describe('parseJourney', () => {
     for (const journey of [
       { stops: [home], label: 'Ev & bahçe #2' },
       { stops: [{ lat: -33.8688, lon: 151.2093 }, { lat: 1, lon: 2 }, home], label: 'Tour' },
+      { stops: [home], address: 'Galata Kulesi, Bereketzade Mahallesi, İstanbul (a + b ~ c)' },
     ]) {
       const hash = new URL(buildJourneyUrl('https://123go.taxi', journey)).hash;
       expect(parseJourney(hash)).toEqual({ kind: 'ok', journey });
@@ -89,6 +96,11 @@ describe('parseJourney', () => {
   it('refuses more stops than navigation apps accept', () => {
     expect(parseJourney('#lat=1&lon=2&via=1,1~2,2~3,3').kind).toBe('ok');
     expect(parseJourney('#lat=1&lon=2&via=1,1~2,2~3,3~4,4')).toEqual({ kind: 'invalid' });
+  });
+
+  it('caps long addresses', () => {
+    const parsed = parseJourney(`#lat=1&lon=2&a=${'a'.repeat(300)}`);
+    expect(parsed.kind === 'ok' && parsed.journey.address?.length).toBe(100);
   });
 
   it('caps long labels', () => {

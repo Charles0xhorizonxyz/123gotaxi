@@ -106,9 +106,8 @@ export const NAV_APPS: readonly NavApp[] = [
     url(journey) {
       const point = formatPoint(finalStop(journey));
       // Parentheses would end the label early, so drop them.
-      const label = journey.label
-        ? `(${encodeURIComponent(journey.label.replace(/[()]/g, ''))})`
-        : '';
+      const text = journey.label ?? journey.address;
+      const label = text ? `(${encodeURIComponent(text.replace(/[()]/g, ''))})` : '';
       return `geo:${point}?q=${point}${label}`;
     },
   },

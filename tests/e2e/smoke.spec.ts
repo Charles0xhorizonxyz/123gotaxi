@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { ADDRESS, expect, test } from './fixtures';
 
 test('typing coordinates makes the QR by itself; name and note are saved', async ({ page }) => {
   await page.goto('./');
@@ -18,23 +18,33 @@ test('typing coordinates makes the QR by itself; name and note are saved', async
   await expect(page.getByText('This list can disappear.')).toBeVisible();
 });
 
-test('the name stays on this device and is not in the QR link', async ({ page }) => {
+test('the address shows above the QR and goes in the link; the name does not', async ({ page }) => {
   await page.goto('./');
   await page.getByLabel('Where to?').fill('41.0342, 28.9844');
   await page.getByLabel(/^Name/).fill('Secret home');
+  await expect(page.locator('.result .address')).toHaveText(ADDRESS);
   await expect(page.getByRole('link', { name: 'See what the driver sees' })).toHaveAttribute(
     'href',
-    '#v=1&lat=41.0342&lon=28.9844',
+    '#v=1&lat=41.0342&lon=28.9844&a=S%C4%B1raselviler+Caddesi+20,+Katip+Mustafa+%C3%87elebi,+Beyo%C4%9Flu',
   );
+
+  await page.getByRole('link', { name: 'See what the driver sees' }).click();
+  await expect(page.getByRole('heading', { name: ADDRESS })).toBeVisible();
+  await expect(page.getByText('Secret home')).toHaveCount(0);
 });
 
-test('saving without a name lists the coordinates', async ({ page }) => {
+test('saving without a name lists the address, and reopening needs no new lookup', async ({
+  page,
+  photonRequests,
+}) => {
   await page.goto('./');
   await page.getByLabel('Where to?').fill('41.0342, 28.9844');
-  await expect(page.getByRole('img', { name: /QR code/ })).toBeVisible();
+  await expect(page.locator('.result .address')).toHaveText(ADDRESS);
   await page.getByRole('button', { name: 'Save', exact: true }).click();
-  await expect(page.getByRole('button', { name: 'Saved', exact: true })).toBeVisible();
-  await expect(page.getByRole('button', { name: /^41\.0342, 28\.9844/ })).toBeVisible();
+  await page.reload();
+  await page.getByRole('button', { name: new RegExp(`^${ADDRESS}`) }).click();
+  await expect(page.locator('.result .address')).toHaveText(ADDRESS);
+  expect(photonRequests).toHaveLength(1);
 });
 
 test('tapping Save straight after a paste or an edit saves the right place', async ({ page }) => {
@@ -45,7 +55,7 @@ test('tapping Save straight after a paste or an edit saves the right place', asy
   await page.getByRole('button', { name: 'Save', exact: true }).click();
   await where.fill('41.05, 28.99');
   await page.getByRole('button', { name: 'Save', exact: true }).click();
-  await expect(page.locator('.saved-name')).toHaveText(['41.05, 28.99', '41.0342, 28.9844']);
+  await expect(page.locator('.saved-list > li')).toHaveCount(2);
 });
 
 test('a multi-stop journey can be reordered, previewed and come back intact', async ({ page }) => {
