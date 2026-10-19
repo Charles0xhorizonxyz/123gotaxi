@@ -14,12 +14,21 @@ test('making and saving a QR only sends coordinates, and only to the address loo
 
   await page.getByLabel('Where to?').fill('https://www.google.com/maps/@41.0342,28.9844,15z');
   await expect(page.getByText(ADDRESS)).toBeVisible();
-  await page.getByLabel(/^Name/).fill('Ev');
-  await page.getByLabel(/^Note/).fill('Kapı kodu 1234');
+  await page.getByLabel(/^Name/).fill('EvimizX7');
+  await page.getByLabel(/^Note/).fill('KapiKoduQ9');
   await page.getByRole('button', { name: 'Save', exact: true }).click();
-  await page.getByRole('button', { name: /^Ev/ }).click();
+  await page.getByRole('button', { name: /^EvimizX7/ }).click();
 
-  expect(requests.every((url) => url.startsWith('https://photon.komoot.io/'))).toBe(true);
+  // Our own static files may still load (e.g. the font with ı, ğ, ş once the address shows),
+  // but nothing goes to any other site, and no request carries what was typed.
+  const ownSite = new URL(page.url()).origin;
+  const elsewhere = requests.filter(
+    (url) => !url.startsWith(`${ownSite}/`) && !url.startsWith('https://photon.komoot.io/'),
+  );
+  expect(elsewhere).toEqual([]);
+  for (const url of requests.filter((u) => u.startsWith(ownSite))) {
+    expect(url).not.toMatch(/41\.0342|28\.9844|Ev|Kap/);
+  }
   expect(photonRequests).toEqual(['https://photon.komoot.io/reverse?lat=41.0342&lon=28.9844&limit=1']);
 });
 
