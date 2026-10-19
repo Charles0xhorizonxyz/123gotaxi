@@ -1,3 +1,4 @@
+import { CONTACT_EMAIL } from '../config';
 import { h } from '../dom';
 
 export function creditFooter(): HTMLElement {
@@ -11,6 +12,8 @@ export function creditFooter(): HTMLElement {
       h('span', { class: 'heart', 'aria-label': 'love' }, '♥'),
       ' by 0xhorizon.xyz',
     ),
+    h('span', { class: 'credit-sep', 'aria-hidden': 'true' }, ' · '),
+    h('a', { href: `mailto:${CONTACT_EMAIL}`, class: 'credit' }, 'Contact'),
   );
 }
 

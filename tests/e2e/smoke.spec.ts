@@ -112,6 +112,10 @@ test('the driver screen lists apps and puts the remembered one first', async ({ 
     'href',
     'https://0xhorizon.xyz',
   );
+  await expect(page.getByRole('link', { name: 'Contact' })).toHaveAttribute(
+    'href',
+    'mailto:0xhorizonxyz@gmail.com',
+  );
 });
 
 test('a broken QR link falls back to the create screen', async ({ page }) => {

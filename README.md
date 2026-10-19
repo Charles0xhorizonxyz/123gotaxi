@@ -50,6 +50,10 @@ It's a static site: build it and serve `dist/` from anywhere. Two build-time set
 
 Addresses © [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors, looked up with [Photon](https://github.com/komoot/photon) by komoot.
 
+## Contact
+
+Questions, ideas or bug reports: open an issue, or write to [0xhorizonxyz@gmail.com](mailto:0xhorizonxyz@gmail.com).
+
 ## License
 
 [MIT](LICENSE)

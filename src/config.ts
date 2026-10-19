@@ -34,3 +34,6 @@ export function publicUrl(): string {
 
 /** Where readable addresses come from. Any Photon server works; see src/geocoding. */
 export const PHOTON_URL = 'https://photon.komoot.io';
+
+/** Shown as "Contact" in the footer. */
+export const CONTACT_EMAIL = '0xhorizonxyz@gmail.com';
