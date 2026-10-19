@@ -264,7 +264,7 @@ export function renderCreate(root: HTMLElement, { brokenLink = false } = {}): vo
     for (const { text, number } of filled) {
       let parsed: ParseResult = parseLocation(text);
       if (!parsed.ok && parsed.reason === 'short-link' && EXPANDER_URL) {
-        const key = text.trim();
+        const key = parsed.link;
         if (!expanded.has(key)) {
           openShortLink(key, reveal);
           hideResult();

@@ -12,7 +12,9 @@ export interface Place {
 
 export type ParseResult =
   | { ok: true; place: Place }
-  | { ok: false; reason: 'empty' | 'short-link' | 'unrecognised' };
+  | { ok: false; reason: 'empty' | 'unrecognised' }
+  /** `link` is the short link alone, without any text shared around it. */
+  | { ok: false; reason: 'short-link'; link: string };
 
 const NUM = String.raw`[-+]?\d{1,3}(?:\.\d+)?`;
 const PAIR = new RegExp(String.raw`^\s*(${NUM})\s*,\s*(${NUM})\s*$`);
@@ -141,16 +143,31 @@ function isShortLink(url: URL): boolean {
   return host.startsWith('yandex.') && url.pathname.startsWith('/maps/-/');
 }
 
+/**
+ * Map apps often share a place as "Name, address https://maps.app.goo.gl/…".
+ * When the whole text isn't readable, try each link found inside it.
+ */
 export function parseLocation(input: string): ParseResult {
   const text = input.trim();
   if (!text) return { ok: false, reason: 'empty' };
+  const whole = parseText(text);
+  if (whole.ok || whole.reason === 'short-link') return whole;
+  for (const [link] of text.matchAll(/https?:\/\/[^\s<>"]+/gi)) {
+    if (link === text) continue;
+    const found = parseText(link.replace(/[.,;:!?)\]]+$/, ''));
+    if (found.ok || found.reason === 'short-link') return found;
+  }
+  return whole;
+}
+
+function parseText(text: string): ParseResult {
 
   const direct = parseRawCoordinates(text) ?? parseGeoUri(text);
   if (direct) return { ok: true, place: direct };
 
   const url = toUrl(text);
   if (!url) return { ok: false, reason: 'unrecognised' };
-  if (isShortLink(url)) return { ok: false, reason: 'short-link' };
+  if (isShortLink(url)) return { ok: false, reason: 'short-link', link: text };
 
   const host = url.hostname.replace(/^www\./, '');
   let found: Place | null = null;

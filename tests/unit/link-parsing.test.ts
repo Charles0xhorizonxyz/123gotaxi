@@ -104,6 +104,18 @@ describe('things we cannot read', () => {
     expect(coords(input)).toBe('short-link');
   });
 
+  it('finds a short link inside shared text and keeps only the link', () => {
+    expect(parseLocation('Bâton Rouge Grillhouse & Bar\nhttps://maps.app.goo.gl/42vbXakpmaLpAsuD9?g_st=ac')).toEqual({
+      ok: false,
+      reason: 'short-link',
+      link: 'https://maps.app.goo.gl/42vbXakpmaLpAsuD9?g_st=ac',
+    });
+  });
+
+  it('reads a long link inside shared text', () => {
+    expect(coords('Galata Tower, Istanbul https://www.google.com/maps/@41.0256,28.9741,17z.')).toEqual([41.0256, 28.9741]);
+  });
+
   it.each(['Istiklal Caddesi 12', 'https://example.com/page', 'hello'])(
     'does not guess from %s',
     (input) => {
