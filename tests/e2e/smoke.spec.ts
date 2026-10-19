@@ -106,3 +106,9 @@ test('a broken QR link falls back to the create screen', async ({ page }) => {
   await page.goto('./#lat=999&lon=0');
   await expect(page.getByRole('alert')).toContainText('looks broken');
 });
+
+test('before anything is entered there is no QR card', async ({ page }) => {
+  await page.goto('./');
+  await expect(page.getByRole('img', { name: /QR code/ })).toBeHidden();
+  await expect(page.getByRole('button', { name: 'Save', exact: true })).toBeHidden();
+});

@@ -19,6 +19,12 @@
   box-sizing: border-box;
 }
 
+/* Components set their own display (flex, grid...), which would otherwise beat
+   the hidden attribute and show "hidden" things. Hidden always wins. */
+[hidden] {
+  display: none !important;
+}
+
 body {
   margin: 0;
   background: var(--seat);
@@ -290,10 +296,6 @@ button:disabled {
 
 .view {
   display: contents;
-}
-
-.view[hidden] {
-  display: none !important;
 }
 
 /* Saved places */
