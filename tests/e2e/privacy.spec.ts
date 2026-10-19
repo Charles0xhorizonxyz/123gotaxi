@@ -27,7 +27,7 @@ test('making and saving a QR only sends coordinates, and only to the address loo
   );
   expect(elsewhere).toEqual([]);
   for (const url of requests.filter((u) => u.startsWith(ownSite))) {
-    expect(url).not.toMatch(/41\.0342|28\.9844|Ev|Kap/);
+    expect(url).not.toMatch(/41\.0342|28\.9844|EvimizX7|KapiKoduQ9/);
   }
   expect(photonRequests).toEqual(['https://photon.komoot.io/reverse?lat=41.0342&lon=28.9844&limit=1']);
 });
