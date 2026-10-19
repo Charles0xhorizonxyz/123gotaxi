@@ -91,7 +91,7 @@ export function renderCreate(root: HTMLElement, { brokenLink = false } = {}): vo
   nameInput.addEventListener('input', resetSaveButton);
   noteInput.addEventListener('input', resetSaveButton);
 
-  // Saved places ("corral")
+  // Saved places
   const savedList = h('ul', { class: 'saved-list' });
   const emptyNote = h('p', { class: 'hint' }, 'Nothing saved yet. Paste a place and tap Save.');
   const importInput = h('input', {
@@ -102,20 +102,29 @@ export function renderCreate(root: HTMLElement, { brokenLink = false } = {}): vo
   });
   const exportLink = h('a', { class: 'text-link', href: '#', download: '123go-places.json' }, 'Export list');
   const importLabel = h('label', { for: 'import-file', class: 'text-link' }, 'Import list');
-  const corralMessage = h('p', { class: 'hint', role: 'status' });
+  const placesMessage = h('p', { class: 'hint', role: 'status' });
+  // Only worth saying once there's something to lose.
+  const lossWarning = h(
+    'p',
+    { class: 'warning', hidden: true },
+    h('strong', {}, 'This list can disappear. '),
+    'Clearing your browser data, closing a private window, or (on iPhone) not visiting for 7 days erases it, and it doesn’t follow you to another phone. ',
+    'Tap Export list to keep a copy.',
+  );
   const savedSection = h(
     'section',
     { class: 'saved' },
-    h('h2', {}, 'Your corral'),
+    h('h2', {}, 'Your places'),
     h('p', { class: 'hint' }, 'Kept only in this browser. Only you can see it.'),
     emptyNote,
     savedList,
+    lossWarning,
     h('div', { class: 'more' }, exportLink, importLabel, importInput),
-    corralMessage,
+    placesMessage,
   );
   if (!saved.available) {
     savedSection.replaceChildren(
-      h('h2', {}, 'Your corral'),
+      h('h2', {}, 'Your places'),
       h('p', { class: 'hint' }, "This browser doesn't allow saving (private mode?)."),
     );
   }
@@ -198,6 +207,7 @@ export function renderCreate(root: HTMLElement, { brokenLink = false } = {}): vo
     const places = saved.list();
     emptyNote.hidden = places.length > 0;
     exportLink.hidden = places.length === 0;
+    lossWarning.hidden = places.length === 0;
     savedList.replaceChildren(...places.map(savedItem));
   }
 
@@ -300,11 +310,11 @@ export function renderCreate(root: HTMLElement, { brokenLink = false } = {}): vo
     if (!file) return;
     try {
       const added = saved.importJson(await file.text());
-      corralMessage.textContent =
+      placesMessage.textContent =
         added === 0 ? 'Nothing new in that file.' : `Added ${added} place${added === 1 ? '' : 's'}.`;
       renderSaved();
     } catch {
-      corralMessage.textContent = "That file isn't a 123go.taxi export.";
+      placesMessage.textContent = "That file isn't a 123go.taxi export.";
     }
   });
 

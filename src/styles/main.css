@@ -576,3 +576,12 @@ label.text-link {
   height: 1.3rem;
   accent-color: var(--asphalt);
 }
+
+/* "This list can disappear" note under saved places */
+.warning {
+  font-size: 0.875rem;
+  padding: 0.75rem 0.9rem;
+  border-radius: var(--radius);
+  border: 2px dashed var(--asphalt);
+  background: var(--paper);
+}
