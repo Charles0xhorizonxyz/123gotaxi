@@ -1,11 +1,14 @@
-// Links that open each navigation app with a driving route to the destination.
+// Links that open each navigation app with a driving route through the journey.
 // Sources (checked 2026-10):
 //   Google: https://developers.google.com/maps/documentation/urls/get-started
-//   Waze:   https://developers.google.com/waze/deeplinks
+//           (waypoints: "|"-separated, up to 3 in mobile browsers, 9 otherwise)
+//   Waze:   https://developers.google.com/waze/deeplinks (single destination only)
 //   Apple:  https://developer.apple.com/documentation/mapkit/unified-map-urls
-//   Yandex: yandexnavi:// scheme is thinly documented; verify on real phones.
+//           (no documented multi-stop link)
+//   Yandex Navigator: yandex.ru/dev/yandex-apps-launch/navigator/doc/concepts/navigator-url-params-docpage/
+//           (lat_to/lon_to, lat_via_N/lon_via_N)
 
-import { formatCoord, type Destination } from '../destination-url';
+import { finalStop, formatCoord, formatPoint, type Journey } from '../destination-url';
 
 export type Platform = 'android' | 'ios' | 'other';
 
@@ -14,7 +17,9 @@ export interface NavApp {
   name: string;
   /** Platforms the button is shown on. */
   platforms: readonly Platform[];
-  url(destination: Destination, platform: Platform): string;
+  /** Whether the app follows every stop, not just the final one. */
+  multiStop: boolean;
+  url(journey: Journey, platform: Platform): string;
 }
 
 export function detectPlatform(userAgent: string, maxTouchPoints = 0): Platform {
@@ -25,13 +30,9 @@ export function detectPlatform(userAgent: string, maxTouchPoints = 0): Platform 
   return 'other';
 }
 
-function coords(d: Destination): { lat: string; lon: string } {
-  return { lat: formatCoord(d.lat), lon: formatCoord(d.lon) };
-}
-
-export function yandexMapsUrl(d: Destination): string {
-  const { lat, lon } = coords(d);
-  return `https://yandex.com.tr/maps/?rtext=~${lat},${lon}&rtt=auto`;
+export function yandexMapsUrl(journey: Journey): string {
+  // A leading "~" means "from where I am now".
+  return `https://yandex.com.tr/maps/?rtext=~${journey.stops.map(formatPoint).join('~')}&rtt=auto`;
 }
 
 export const NAV_APPS: readonly NavApp[] = [
@@ -39,21 +40,34 @@ export const NAV_APPS: readonly NavApp[] = [
     id: 'google',
     name: 'Google Maps',
     platforms: ['android', 'ios', 'other'],
-    url(d) {
-      const { lat, lon } = coords(d);
-      return `https://www.google.com/maps/dir/?api=1&destination=${lat}%2C${lon}&travelmode=driving&dir_action=navigate`;
+    multiStop: true,
+    url(journey) {
+      const encode = (p: { lat: number; lon: number }) => formatPoint(p).replace(',', '%2C');
+      const via = journey.stops.slice(0, -1).map(encode).join('%7C');
+      return (
+        `https://www.google.com/maps/dir/?api=1&destination=${encode(finalStop(journey))}` +
+        (via ? `&waypoints=${via}` : '') +
+        '&travelmode=driving&dir_action=navigate'
+      );
     },
   },
   {
     id: 'yandex-navi',
     name: 'Yandex Navigator',
     platforms: ['android', 'ios'],
-    url(d, platform) {
-      const { lat, lon } = coords(d);
-      const query = `lat_to=${lat}&lon_to=${lon}`;
+    multiStop: true,
+    url(journey, platform) {
+      const end = finalStop(journey);
+      const query = [
+        `lat_to=${formatCoord(end.lat)}`,
+        `lon_to=${formatCoord(end.lon)}`,
+        ...journey.stops
+          .slice(0, -1)
+          .flatMap((p, i) => [`lat_via_${i}=${formatCoord(p.lat)}`, `lon_via_${i}=${formatCoord(p.lon)}`]),
+      ].join('&');
       if (platform === 'android') {
         // intent:// lets Android fall back to Yandex Maps on the web if Navigator is missing.
-        const fallback = encodeURIComponent(yandexMapsUrl(d));
+        const fallback = encodeURIComponent(yandexMapsUrl(journey));
         return `intent://build_route_on_map?${query}#Intent;scheme=yandexnavi;package=ru.yandex.yandexnavi;S.browser_fallback_url=${fallback};end`;
       }
       return `yandexnavi://build_route_on_map?${query}`;
@@ -63,39 +77,46 @@ export const NAV_APPS: readonly NavApp[] = [
     id: 'yandex-maps',
     name: 'Yandex Maps',
     platforms: ['android', 'ios', 'other'],
+    multiStop: true,
     url: yandexMapsUrl,
   },
   {
     id: 'waze',
     name: 'Waze',
     platforms: ['android', 'ios', 'other'],
-    url(d) {
-      const { lat, lon } = coords(d);
-      return `https://waze.com/ul?ll=${lat},${lon}&navigate=yes&utm_source=gogogo.rodeo`;
+    multiStop: false,
+    url(journey) {
+      return `https://waze.com/ul?ll=${formatPoint(finalStop(journey))}&navigate=yes&utm_source=gogogo.rodeo`;
     },
   },
   {
     id: 'apple',
     name: 'Apple Maps',
     platforms: ['ios', 'other'],
-    url(d) {
-      const { lat, lon } = coords(d);
-      return `https://maps.apple.com/?daddr=${lat},${lon}&dirflg=d`;
+    multiStop: false,
+    url(journey) {
+      return `https://maps.apple.com/?daddr=${formatPoint(finalStop(journey))}&dirflg=d`;
     },
   },
   {
     id: 'geo',
     name: 'Other app',
     platforms: ['android'],
-    url(d) {
-      const { lat, lon } = coords(d);
+    multiStop: false,
+    url(journey) {
+      const point = formatPoint(finalStop(journey));
       // Parentheses would end the label early, so drop them.
-      const label = d.label ? `(${encodeURIComponent(d.label.replace(/[()]/g, ''))})` : '';
-      return `geo:${lat},${lon}?q=${lat},${lon}${label}`;
+      const label = journey.label
+        ? `(${encodeURIComponent(journey.label.replace(/[()]/g, ''))})`
+        : '';
+      return `geo:${point}?q=${point}${label}`;
     },
   },
 ];
 
-export function appsFor(platform: Platform): NavApp[] {
-  return NAV_APPS.filter((app) => app.platforms.includes(platform));
+/** Apps to offer: right platform, and able to follow every stop of the journey. */
+export function appsFor(platform: Platform, stopCount = 1): NavApp[] {
+  return NAV_APPS.filter(
+    (app) => app.platforms.includes(platform) && (stopCount === 1 || app.multiStop),
+  );
 }

@@ -92,7 +92,7 @@ p {
 footer {
   margin-top: auto;
   padding: 1.25rem 0 calc(1.75rem + env(safe-area-inset-bottom));
-  font-style: italic;
+  text-align: center;
   font-size: 0.875rem;
   color: var(--muted);
   position: relative;
@@ -112,10 +112,18 @@ footer a {
   color: inherit;
 }
 
-.footer-brand {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
+.credit {
+  font-style: normal;
+  font-size: 0.8rem;
+  text-decoration: none;
+}
+
+.credit:hover {
+  text-decoration: underline;
+}
+
+.heart {
+  color: #d92d20;
 }
 
 /* Form */
@@ -125,7 +133,8 @@ footer a {
   gap: 0.5rem;
 }
 
-label {
+label,
+.field-label {
   font-weight: 700;
   margin-top: 0.5rem;
 }
@@ -135,7 +144,8 @@ label {
   color: var(--muted);
 }
 
-input {
+input,
+textarea {
   font: inherit;
   font-size: 1.05rem;
   padding: 0.85rem 1rem;
@@ -146,12 +156,20 @@ input {
   width: 100%;
 }
 
-input::placeholder {
+textarea {
+  resize: vertical;
+  min-height: 3.2rem;
+}
+
+input::placeholder,
+textarea::placeholder {
   color: #8a8068;
 }
 
 input:focus-visible,
+textarea:focus-visible,
 button:focus-visible,
+label:focus-within,
 a:focus-visible {
   outline: 3px solid var(--asphalt);
   outline-offset: 3px;
@@ -342,4 +360,164 @@ button:disabled {
   * {
     scroll-behavior: auto !important;
   }
+}
+
+/* Stops list */
+.stops-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.stops {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.stop-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  border-radius: var(--radius);
+}
+
+.stop-row.dragging {
+  outline: 3px dashed var(--asphalt);
+  outline-offset: 3px;
+  background: var(--yellow);
+}
+
+.stop-row input {
+  flex: 1;
+  min-width: 0;
+}
+
+.drag-handle {
+  min-width: 40px;
+  min-height: 52px;
+  padding: 0;
+  background: transparent;
+  border-color: transparent;
+  font-size: 1.4rem;
+  cursor: grab;
+  touch-action: none;
+}
+
+.stop-number {
+  font-family: var(--font-display);
+  min-width: 1.2rem;
+  text-align: center;
+}
+
+.remove-stop {
+  min-width: 44px;
+  padding: 0;
+  background: var(--paper);
+  font-size: 1.3rem;
+}
+
+.stops.single .drag-handle,
+.stops.single .stop-number,
+.stops.single .remove-stop {
+  display: none;
+}
+
+.add-stop {
+  align-self: flex-start;
+  padding-inline: 0;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+label.text-link {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+/* Saved entries */
+.saved-name {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.saved-note {
+  font-weight: 400;
+  font-size: 0.875rem;
+  color: #5a4e20;
+  overflow-wrap: anywhere;
+}
+
+.chip {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  background: var(--asphalt);
+  color: var(--yellow);
+}
+
+/* Driver screen extras */
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: -0.75rem;
+}
+
+.back {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--asphalt);
+  text-decoration: none;
+  min-width: 48px;
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.route {
+  margin: 0.25rem 0 0;
+  padding-left: 1.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.route li::marker {
+  font-family: var(--font-display);
+}
+
+.app.go {
+  background: var(--asphalt);
+  color: var(--yellow);
+}
+
+.remember {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0;
+  min-height: 44px;
+  font-weight: 400;
+}
+
+.remember input {
+  width: 1.3rem;
+  height: 1.3rem;
+  accent-color: var(--asphalt);
 }

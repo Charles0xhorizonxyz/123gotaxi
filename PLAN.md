@@ -226,6 +226,10 @@ I can set up the live deploy at the end of Milestone 1 on the default `*.github.
 9. **Saved places** live only in the browser (`localStorage`), never sent anywhere.
 11. **Look: "Bucking Cab"** (Direction C in `docs/design-rodeo.html`): cream, taxi yellow, asphalt black, one light theme. Logo `public/logo.svg`. Fonts self-hosted, no Google requests.
 12. **Simplicity over extras:** no passcode on saved places, no history-scrubbing.
+13. **Multi-stop journeys** (up to 4 stops): `via=lat,lon~lat,lon` lists earlier stops, `lat`/`lon` stays the final one, so the v1 format is unchanged. Only apps that follow every stop are offered (Google Maps, Yandex Navigator, Yandex Maps).
+14. **Driver page stays** (drivers can come back to it and share it). "Put my app first next time" moves the remembered app to the top; no auto-redirect.
+15. **Saved places** have a name (required) and a private note (never in the QR), with export/import as a JSON file.
+16. Footer: "Made with ♥ by 0xhorizon.xyz". Slogan removed from the page.
 10. **Two-tap rule:** passenger pastes or picks → QR appears; driver scans → taps app. Design directions in `docs/design-proposals.html`.
 
 ### Privacy model (who can see an address)

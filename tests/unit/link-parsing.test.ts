@@ -3,7 +3,7 @@ import { parseLocation } from '../../src/link-parsing';
 
 function coords(input: string) {
   const result = parseLocation(input);
-  return result.ok ? [result.destination.lat, result.destination.lon] : result.reason;
+  return result.ok ? [result.place.lat, result.place.lon] : result.reason;
 }
 
 describe('raw coordinates', () => {
@@ -28,7 +28,7 @@ describe('geo: URIs', () => {
   it('reads coordinates and label', () => {
     expect(parseLocation('geo:41.0342,28.9844?q=41.0342,28.9844(Home)')).toEqual({
       ok: true,
-      destination: { lat: 41.0342, lon: 28.9844, label: 'Home' },
+      place: { lat: 41.0342, lon: 28.9844, label: 'Home' },
     });
   });
 });
@@ -39,7 +39,7 @@ describe('Google Maps', () => {
       'https://www.google.com/maps/place/Galata+Kulesi/@41.0256,28.9741,17z/data=!3m1!4b1!4m6!3m5!1s0x0:0x0!8m2!3d41.025631!4d28.974155';
     expect(parseLocation(url)).toEqual({
       ok: true,
-      destination: { lat: 41.025631, lon: 28.974155, label: 'Galata Kulesi' },
+      place: { lat: 41.025631, lon: 28.974155, label: 'Galata Kulesi' },
     });
   });
 
@@ -89,7 +89,7 @@ describe('gogogo.rodeo links', () => {
   it('reads our own QR links back', () => {
     expect(parseLocation('https://gogogo.rodeo/#v=1&lat=41.0342&lon=28.9844&n=Home')).toEqual({
       ok: true,
-      destination: { lat: 41.0342, lon: 28.9844, label: 'Home' },
+      place: { lat: 41.0342, lon: 28.9844, label: 'Home' },
     });
   });
 });

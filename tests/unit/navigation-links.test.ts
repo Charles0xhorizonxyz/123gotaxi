@@ -1,15 +1,23 @@
 import { describe, expect, it } from 'vitest';
-import { appsFor, detectPlatform, NAV_APPS } from '../../src/navigation-links';
+import type { Journey } from '../../src/destination-url';
+import { appsFor, detectPlatform, NAV_APPS, type Platform } from '../../src/navigation-links';
 
-const home = { lat: 41.034212, lon: 28.98441, label: 'Ev (Cihangir) & bahçe' };
+const home: Journey = { stops: [{ lat: 41.034212, lon: 28.98441 }], label: 'Ev (Cihangir) & bahçe' };
+const tour: Journey = {
+  stops: [
+    { lat: 41.01, lon: 28.97 },
+    { lat: 41.02, lon: 28.98 },
+    { lat: 41.03, lon: 28.99 },
+  ],
+};
 
-function url(id: string, platform: 'android' | 'ios' | 'other' = 'android'): string {
+function url(id: string, journey: Journey = home, platform: Platform = 'android'): string {
   const app = NAV_APPS.find((a) => a.id === id);
   if (!app) throw new Error(`no app ${id}`);
-  return app.url(home, platform);
+  return app.url(journey, platform);
 }
 
-describe('navigation links', () => {
+describe('single destination', () => {
   it('Google Maps: driving directions with encoded comma', () => {
     expect(url('google')).toBe(
       'https://www.google.com/maps/dir/?api=1&destination=41.03421%2C28.98441&travelmode=driving&dir_action=navigate',
@@ -23,15 +31,15 @@ describe('navigation links', () => {
   });
 
   it('Apple Maps: driving directions', () => {
-    expect(url('apple', 'ios')).toBe('https://maps.apple.com/?daddr=41.03421,28.98441&dirflg=d');
+    expect(url('apple', home, 'ios')).toBe('https://maps.apple.com/?daddr=41.03421,28.98441&dirflg=d');
   });
 
-  it('Yandex Maps: route on the Turkish site', () => {
+  it('Yandex Maps: route from here on the Turkish site', () => {
     expect(url('yandex-maps')).toBe('https://yandex.com.tr/maps/?rtext=~41.03421,28.98441&rtt=auto');
   });
 
   it('Yandex Navigator on Android falls back to the web', () => {
-    const link = url('yandex-navi', 'android');
+    const link = url('yandex-navi', home, 'android');
     expect(link).toMatch(/^intent:\/\/build_route_on_map\?lat_to=41.03421&lon_to=28.98441#Intent;/);
     expect(link).toContain('package=ru.yandex.yandexnavi');
     expect(link).toContain(
@@ -41,7 +49,7 @@ describe('navigation links', () => {
   });
 
   it('Yandex Navigator on iPhone uses its app scheme', () => {
-    expect(url('yandex-navi', 'ios')).toBe(
+    expect(url('yandex-navi', home, 'ios')).toBe(
       'yandexnavi://build_route_on_map?lat_to=41.03421&lon_to=28.98441',
     );
   });
@@ -53,13 +61,37 @@ describe('navigation links', () => {
   });
 
   it('geo: works without a label', () => {
-    const app = NAV_APPS.find((a) => a.id === 'geo')!;
-    expect(app.url({ lat: 1, lon: 2 }, 'android')).toBe('geo:1,2?q=1,2');
+    expect(url('geo', { stops: [{ lat: 1, lon: 2 }] })).toBe('geo:1,2?q=1,2');
+  });
+});
+
+describe('multi-stop journeys', () => {
+  it('Google Maps: earlier stops become pipe-separated waypoints', () => {
+    expect(url('google', tour)).toBe(
+      'https://www.google.com/maps/dir/?api=1&destination=41.03%2C28.99&waypoints=41.01%2C28.97%7C41.02%2C28.98&travelmode=driving&dir_action=navigate',
+    );
+  });
+
+  it('Yandex Maps: every stop in rtext, in order', () => {
+    expect(url('yandex-maps', tour)).toBe(
+      'https://yandex.com.tr/maps/?rtext=~41.01,28.97~41.02,28.98~41.03,28.99&rtt=auto',
+    );
+  });
+
+  it('Yandex Navigator: numbered via points', () => {
+    expect(url('yandex-navi', tour, 'ios')).toBe(
+      'yandexnavi://build_route_on_map?lat_to=41.03&lon_to=28.99&lat_via_0=41.01&lon_via_0=28.97&lat_via_1=41.02&lon_via_1=28.98',
+    );
+  });
+
+  it('only apps that follow every stop are offered', () => {
+    expect(appsFor('android', 3).map((a) => a.id)).toEqual(['google', 'yandex-navi', 'yandex-maps']);
+    expect(appsFor('ios', 3).map((a) => a.id)).toEqual(['google', 'yandex-navi', 'yandex-maps']);
   });
 });
 
 describe('appsFor', () => {
-  const ids = (platform: 'android' | 'ios' | 'other') => appsFor(platform).map((a) => a.id);
+  const ids = (platform: Platform) => appsFor(platform).map((a) => a.id);
 
   it('Android gets the OS chooser but not Apple Maps', () => {
     expect(ids('android')).toContain('geo');

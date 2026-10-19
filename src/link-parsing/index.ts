@@ -1,10 +1,17 @@
 // Pull coordinates out of whatever the user pastes: raw coordinates, geo: URIs,
 // or links from Google Maps, Yandex, Apple Maps, OpenStreetMap and gogogo.rodeo.
 
-import { isValidCoordinate, parseDestination, type Destination } from '../destination-url';
+import { finalStop, isValidCoordinate, parseJourney } from '../destination-url';
+
+/** One place found in pasted text, with its name when the link carries one. */
+export interface Place {
+  lat: number;
+  lon: number;
+  label?: string;
+}
 
 export type ParseResult =
-  | { ok: true; destination: Destination }
+  | { ok: true; place: Place }
   | { ok: false; reason: 'empty' | 'short-link' | 'unrecognised' };
 
 const NUM = String.raw`[-+]?\d{1,3}(?:\.\d+)?`;
@@ -12,12 +19,12 @@ const PAIR = new RegExp(String.raw`^\s*(${NUM})\s*,\s*(${NUM})\s*$`);
 
 const SHORT_LINK_HOSTS = ['maps.app.goo.gl', 'goo.gl', 'g.co', 'maps.apple'];
 
-function point(lat: number, lon: number, label?: string): Destination | null {
+function point(lat: number, lon: number, label?: string): Place | null {
   return isValidCoordinate(lat, lon) ? { lat, lon, label } : null;
 }
 
 /** "41.03,28.98" → lat/lon. Yandex writes "lon,lat", so callers can swap. */
-function pair(value: string | null | undefined, order: 'latlon' | 'lonlat'): Destination | null {
+function pair(value: string | null | undefined, order: 'latlon' | 'lonlat'): Place | null {
   const match = value ? PAIR.exec(value) : null;
   if (!match) return null;
   const a = Number(match[1]);
@@ -26,7 +33,7 @@ function pair(value: string | null | undefined, order: 'latlon' | 'lonlat'): Des
 }
 
 /** Plain coordinates: "41.0342, 28.9844", "41.0342 28.9844", "41.0342° N, 28.9844° E". */
-function parseRawCoordinates(text: string): Destination | null {
+function parseRawCoordinates(text: string): Place | null {
   const match = new RegExp(
     String.raw`^\s*(${NUM})\s*°?\s*([NS])?\s*[,;\s]\s*(${NUM})\s*°?\s*([EW])?\s*$`,
     'i',
@@ -39,7 +46,7 @@ function parseRawCoordinates(text: string): Destination | null {
   return point(lat, lon);
 }
 
-function parseGeoUri(text: string): Destination | null {
+function parseGeoUri(text: string): Place | null {
   const match = new RegExp(String.raw`^geo:(${NUM}),(${NUM})`, 'i').exec(text.trim());
   if (!match) return null;
   const label = /\(([^)]+)\)\s*$/.exec(text)?.[1];
@@ -60,7 +67,7 @@ function lastMatch(text: string, pattern: RegExp): RegExpExecArray | null {
   return last;
 }
 
-function parseGoogle(url: URL): Destination | null {
+function parseGoogle(url: URL): Place | null {
   const text = safeDecode(url.pathname) + url.search;
   const placeName = /\/maps\/place\/([^/@]+)/.exec(url.pathname)?.[1];
   const label = placeName ? safeDecode(placeName) : undefined;
@@ -85,7 +92,7 @@ function parseGoogle(url: URL): Destination | null {
   return inPath ? point(Number(inPath[1]), Number(inPath[2]), label) : null;
 }
 
-function parseYandex(url: URL): Destination | null {
+function parseYandex(url: URL): Place | null {
   // Yandex puts longitude first in pt, ll and whatshere[point].
   const marker =
     pair(url.searchParams.get('pt')?.split('~').pop()?.split(',').slice(0, 2).join(','), 'lonlat') ??
@@ -100,7 +107,7 @@ function parseYandex(url: URL): Destination | null {
   return pair(url.searchParams.get('ll'), 'lonlat');
 }
 
-function parseApple(url: URL): Destination | null {
+function parseApple(url: URL): Place | null {
   const label = url.searchParams.get('name') ?? url.searchParams.get('q') ?? undefined;
   for (const key of ['coordinate', 'destination', 'daddr', 'll', 'q', 'sll']) {
     const found = pair(url.searchParams.get(key), 'latlon');
@@ -109,7 +116,7 @@ function parseApple(url: URL): Destination | null {
   return null;
 }
 
-function parseOsm(url: URL): Destination | null {
+function parseOsm(url: URL): Place | null {
   const mlat = url.searchParams.get('mlat');
   const mlon = url.searchParams.get('mlon');
   if (mlat && mlon) return point(Number(mlat), Number(mlon));
@@ -139,22 +146,22 @@ export function parseLocation(input: string): ParseResult {
   if (!text) return { ok: false, reason: 'empty' };
 
   const direct = parseRawCoordinates(text) ?? parseGeoUri(text);
-  if (direct) return { ok: true, destination: direct };
+  if (direct) return { ok: true, place: direct };
 
   const url = toUrl(text);
   if (!url) return { ok: false, reason: 'unrecognised' };
   if (isShortLink(url)) return { ok: false, reason: 'short-link' };
 
   const host = url.hostname.replace(/^www\./, '');
-  let found: Destination | null = null;
+  let found: Place | null = null;
   if (/(^|\.)google\.[a-z.]+$/.test(host)) found = parseGoogle(url);
   else if (/(^|\.)yandex\.[a-z.]+$/.test(host)) found = parseYandex(url);
   else if (host === 'maps.apple.com') found = parseApple(url);
   else if (host.endsWith('openstreetmap.org')) found = parseOsm(url);
   else {
-    const own = parseDestination(url.hash || url.search);
-    if (own.kind === 'ok') found = own.destination;
+    const own = parseJourney(url.hash || url.search);
+    if (own.kind === 'ok') found = { ...finalStop(own.journey), label: own.journey.label };
   }
 
-  return found ? { ok: true, destination: found } : { ok: false, reason: 'unrecognised' };
+  return found ? { ok: true, place: found } : { ok: false, reason: 'unrecognised' };
 }
