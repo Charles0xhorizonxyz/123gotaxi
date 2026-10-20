@@ -1,6 +1,6 @@
 import { fileURLToPath } from 'node:url';
 import { defineConfig, type Plugin } from 'vitest/config';
-import { EXPANDER_URL, GEOAPIFY_KEY, GEOAPIFY_URL, PHOTON_URL } from './src/config';
+import { EXPANDER_URL, GEOAPIFY_KEY, GEOAPIFY_URL, PHOTON_URL } from './src/config.ts';
 
 // The browser enforces this policy on the published site. Most importantly,
 // connect-src allows exactly two outside servers: the address lookup (it only
