@@ -104,6 +104,7 @@ export function businessPanel(publicUrl: () => string, suggestedName: () => stri
     code,
     h('div', { class: 'actions' }, copy, h('span', { class: 'more' }, download)),
     h('p', { class: 'hint' }, t.businessHint),
+    h('a', { class: 'text-link', href: `${import.meta.env.BASE_URL}places/` }, `${t.placesPage} →`),
   );
 
   async function refresh(): Promise<void> {

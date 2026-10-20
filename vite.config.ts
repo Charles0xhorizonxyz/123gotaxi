@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'node:url';
 import { defineConfig, type Plugin } from 'vitest/config';
 import { EXPANDER_URL, GEOAPIFY_KEY, GEOAPIFY_URL, PHOTON_URL } from './src/config';
 
@@ -37,7 +38,16 @@ function securityHeaders(): Plugin {
 // github.io) before the custom domain is connected. Defaults to "/".
 export default defineConfig({
   base: process.env.BASE_PATH ?? '/',
-  build: { target: 'es2022' },
+  build: {
+    target: 'es2022',
+    // Two pages: the app, and the one-pager for places at /places/.
+    rollupOptions: {
+      input: {
+        main: fileURLToPath(new URL('./index.html', import.meta.url)),
+        places: fileURLToPath(new URL('./places/index.html', import.meta.url)),
+      },
+    },
+  },
   plugins: [securityHeaders()],
   test: {
     include: ['tests/unit/**/*.test.ts'],

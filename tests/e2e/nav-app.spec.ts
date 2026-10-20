@@ -207,3 +207,13 @@ test('"Put it on your website" starts with the place’s name and the page’s l
   await expect(page.getByLabel(/^Your place’s name/)).toHaveValue('Pandeli');
   await expect(page.getByLabel('Language of the card')).toHaveValue('en');
 });
+
+test('the one-pager for places speaks the visitor’s language and leads to the app', async ({ page }) => {
+  await page.goto('./places/');
+  await expect(page.getByRole('heading', { name: 'Bring your guests to your door by taxi' })).toBeVisible();
+  await expect(page.locator('.business-card img')).toHaveAttribute('src', /^data:image\/png/);
+  await page.getByRole('button', { name: 'Türkçe' }).click();
+  await expect(page.getByRole('heading', { name: 'Misafirlerinizi taksiyle kapınıza kadar getirin' })).toBeVisible();
+  await page.getByRole('link', { name: 'Kartınızı oluşturun' }).first().click();
+  await expect(page.getByRole('heading', { name: 'Nereye?' })).toBeVisible();
+});
