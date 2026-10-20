@@ -15,7 +15,7 @@ import { expandShortLink } from '../link-parsing/expand';
 import { drawQr, pngFileName, qrPngUrl } from '../qr';
 import { browserStorage, SavedPlaces, type SavedPlace } from '../saved-places';
 import { creditFooter, SHARE_RESULT_TEXT, shareLink } from './common';
-import { installButton } from './install';
+import { installButton, shareAppButton } from './install';
 import { scanButton, type ScanOutcome } from './scanner';
 import { navAppSettings } from './settings';
 import { createStopsEditor, type StopsChange } from './stops-editor';
@@ -269,9 +269,9 @@ export function renderCreate(
       return;
     }
     if (change === 'commit') {
-      // Enter on typed words: show the places found; the user picks one.
+      // Enter or a paste of words: show the places found; the user picks one.
       const index = stops.focusedIndex();
-      if (searchable(stops.values()[index] ?? '')) {
+      if (searchQuery(stops.values()[index] ?? '')) {
         if (suggestionsFor !== index) searchFor(index);
         return;
       }
@@ -281,12 +281,42 @@ export function renderCreate(
     update(change === 'commit' || change === 'leave', change === 'commit');
   }
 
-  /** Words, not a link or coordinates: worth searching for. Links and coordinates are never sent. */
-  function searchable(text: string): boolean {
+  /**
+   * What to search for, or null when the text is already a place (a link we can
+   * read, coordinates) or too short. A map link we can't read is never sent:
+   * only the place name shared next to it, or written inside it
+   * (Yandex: ".../maps/org/galata_kulesi/1087398212").
+   */
+  function searchQuery(text: string): string | null {
     const t = text.trim();
-    if (t.length < 3 || t.includes('://') || /^[a-z]+:/i.test(t)) return false;
     const parsed = parseLocation(t);
-    return !parsed.ok && parsed.reason === 'unrecognised';
+    if (parsed.ok || parsed.reason !== 'unrecognised') return null;
+    let words = t.replace(/https?:\/\/\S+/gi, ' ');
+    if (!words.trim()) {
+      const slug = /\/org\/([^/?#]+)\/\d+/.exec(t)?.[1];
+      words = slug ? safeDecode(slug).replace(/[_-]+/g, ' ') : '';
+    }
+    const query = words
+      .split(/\n+/)
+      .map((line) => line.trim())
+      .filter(Boolean)
+      .join(', ')
+      .replace(/\s+/g, ' ');
+    return query.length >= 3 && !/^[a-z]+:/i.test(query) ? query : null;
+  }
+
+  function safeDecode(text: string): string {
+    try {
+      return decodeURIComponent(text);
+    } catch {
+      return text;
+    }
+  }
+
+  function showSuggestionNote(text: string): void {
+    suggestions.replaceChildren(h('li', { class: 'hint' }, text));
+    suggestions.hidden = false;
+    error.hidden = true;
   }
 
   function hideSuggestions(): void {
@@ -297,13 +327,15 @@ export function renderCreate(
   }
 
   function searchFor(index: number): void {
-    const text = stops.values()[index] ?? '';
-    if (index < 0 || !searchable(text)) return hideSuggestions();
+    const query = index < 0 ? null : searchQuery(stops.values()[index] ?? '');
+    if (!query) return hideSuggestions();
     searching?.abort();
     const lookup = new AbortController();
     searching = lookup;
+    suggestionsFor = index;
+    showSuggestionNote('Searching…');
     geocoder
-      .search(text.trim(), lookup.signal)
+      .search(query, lookup.signal)
       .then((results) => {
         if (lookup.signal.aborted) return;
         suggestionsFor = index;
@@ -327,7 +359,8 @@ export function renderCreate(
         error.hidden = true;
       })
       .catch(() => {
-        // Offline or the service is down: links and coordinates still work.
+        // Slow, offline or down: say so. Links and coordinates still work.
+        if (!lookup.signal.aborted) showSuggestionNote('Search is slow right now. Try again, or paste a map link.');
       });
   }
 
@@ -570,6 +603,7 @@ export function renderCreate(
     result,
     savedSection,
     ...[installButton()].filter((section) => section !== null),
+    shareAppButton(),
     navAppSettings(),
     creditFooter(),
   );

@@ -59,7 +59,8 @@ export function formatPhotonAddress(p: PhotonProperties): string | null {
   return parts.length > 0 ? parts.join(', ') : null;
 }
 
-const TIMEOUT_MS = 6000;
+/** The free public Photon server can take 5–7 seconds on a busy day. */
+const TIMEOUT_MS = 12000;
 const SUGGESTIONS = 5;
 
 /** fetch() with our timeout, following an outside abort too. */

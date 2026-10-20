@@ -126,7 +126,7 @@ test('before anything is entered the full card shows, with an empty QR and actio
   await expect(page.getByRole('img', { name: 'Your QR appears here' })).toBeVisible();
   await expect(page.getByRole('img', { name: /QR code/ })).toBeHidden();
   await expect(page.getByRole('button', { name: 'Save', exact: true })).toBeDisabled();
-  await expect(page.getByRole('button', { name: 'Share' })).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'Share', exact: true })).toBeDisabled();
   await expect(page.getByLabel(/^Name/)).toBeEditable();
 
   // A name typed before the place is kept.

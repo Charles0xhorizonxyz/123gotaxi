@@ -107,7 +107,22 @@ export function createStopsEditor({ onChange }: { onChange: (change: StopsChange
       enterkeyhint: 'go',
     });
     input.value = value;
-    input.addEventListener('paste', () => setTimeout(() => onChange('commit'), 0));
+    input.addEventListener('paste', (event) => {
+      // Map apps share "Name / address / link" on separate lines, which a one-line
+      // field would squash together ("Galata TowerIstanbul"). Keep them apart.
+      const text = event.clipboardData?.getData('text') ?? '';
+      if (/[\r\n]/.test(text)) {
+        event.preventDefault();
+        const joined = text
+          .split(/[\r\n]+/)
+          .map((line) => line.trim())
+          .filter(Boolean)
+          .join(', ');
+        const end = input.value.length;
+        input.setRangeText(joined, input.selectionStart ?? end, input.selectionEnd ?? end, 'end');
+      }
+      setTimeout(() => onChange('commit'), 0);
+    });
     input.addEventListener('input', (event) => {
       if ((event as InputEvent).inputType !== 'insertFromPaste') onChange('typing');
     });

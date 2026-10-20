@@ -11,7 +11,7 @@
 //   downloads the destination page.
 // - Some Google links lead to a place page with an address but no coordinates.
 //   Then the address written in that link (never anything from the person) is
-//   looked up in Photon, the open address service the site already uses.
+//   looked up in OpenStreetMap's address services, Photon and Nominatim.
 // - It stores nothing and logs nothing (observability is off in wrangler.toml).
 // - Only 123go.taxi (and a developer's own machine) may call it from a browser.
 
@@ -122,28 +122,73 @@ export function addressWithoutCoordinates(link: string): string | null {
   return text?.trim() || null;
 }
 
-/**
- * Look the address up in Photon. Google writes "Name, street, city, …": Photon
- * often misses with the name in front, so the second try leaves it out.
- */
-export async function locate(address: string, fetcher: typeof fetch = fetch): Promise<{ lat: number; lon: number } | null> {
-  const parts = address.split(',').map((part) => part.trim()).filter(Boolean);
-  const queries = parts.length > 2 ? [parts.join(', '), parts.slice(1).join(', ')] : [parts.join(', ')];
-  for (const query of queries) {
-    const response = await fetcher(`${PHOTON_URL}?limit=1&q=${encodeURIComponent(query)}`, {
-      headers: { 'user-agent': 'Mozilla/5.0 (compatible; 123go.taxi link expander)' },
-    });
-    if (!response.ok) continue;
-    const data = (await response.json()) as {
-      features?: { geometry?: { coordinates?: [number, number] }; properties?: { type?: string } }[];
-    };
-    const feature = data.features?.[0];
-    const coordinates = feature?.geometry?.coordinates;
-    if (coordinates && !VAGUE_TYPES.has(feature.properties?.type ?? 'other')) {
-      return { lat: coordinates[1], lon: coordinates[0] };
+type Point = { lat: number; lon: number };
+
+const NOMINATIM_URL = 'https://nominatim.openstreetmap.org/search';
+/** One slow address service must not hold the answer up for long. */
+const LOOKUP_TIMEOUT_MS = 9000;
+/** Nominatim's place_rank: 26-27 is a street, 28+ a building, house or venue. */
+const MIN_NOMINATIM_RANK = 28;
+const LOOKUP_HEADERS = { 'user-agent': '123go.taxi link expander (https://123go.taxi)' };
+
+async function photonLookup(query: string, fetcher: typeof fetch): Promise<Point | null> {
+  const response = await fetcher(`${PHOTON_URL}?limit=1&q=${encodeURIComponent(query)}`, {
+    headers: LOOKUP_HEADERS,
+    signal: AbortSignal.timeout(LOOKUP_TIMEOUT_MS),
+  });
+  if (!response.ok) return null;
+  const data = (await response.json()) as {
+    features?: { geometry?: { coordinates?: [number, number] }; properties?: { type?: string } }[];
+  };
+  const feature = data.features?.[0];
+  const coordinates = feature?.geometry?.coordinates;
+  if (!coordinates || VAGUE_TYPES.has(feature.properties?.type ?? 'other')) return null;
+  return { lat: coordinates[1], lon: coordinates[0] };
+}
+
+async function nominatimLookup(query: string, fetcher: typeof fetch): Promise<Point | null> {
+  const response = await fetcher(`${NOMINATIM_URL}?format=jsonv2&limit=1&q=${encodeURIComponent(query)}`, {
+    headers: LOOKUP_HEADERS,
+    signal: AbortSignal.timeout(LOOKUP_TIMEOUT_MS),
+  });
+  if (!response.ok) return null;
+  const data = (await response.json()) as unknown;
+  const first = Array.isArray(data) ? (data[0] as { lat?: string; lon?: string; place_rank?: number }) : undefined;
+  if (!first?.lat || !first.lon || (first.place_rank ?? 0) < MIN_NOMINATIM_RANK) return null;
+  return { lat: Number(first.lat), lon: Number(first.lon) };
+}
+
+/** The first lookup to find a precise place; null when none does. */
+function firstFound(lookups: Promise<Point | null>[]): Promise<Point | null> {
+  return new Promise((resolve) => {
+    let pending = lookups.length;
+    for (const lookup of lookups) {
+      lookup
+        .catch(() => null)
+        .then((found) => {
+          if (found) resolve(found);
+          else if (--pending === 0) resolve(null);
+        });
     }
-  }
-  return null;
+  });
+}
+
+/**
+ * Look the address up, asking Photon and Nominatim (both OpenStreetMap) at the
+ * same time and taking the first precise answer: Photon copes with loose
+ * spelling but can be slow, Nominatim is quick but strict. Google writes
+ * "Name, street, city, ...", which Photon often misses with the name in front,
+ * so it is also asked without it.
+ */
+export function locate(address: string, fetcher: typeof fetch = fetch): Promise<Point | null> {
+  const parts = address.split(',').map((part) => part.trim()).filter(Boolean);
+  const full = parts.join(', ');
+  const withoutName = parts.length > 2 ? parts.slice(1).join(', ') : null;
+  return firstFound([
+    photonLookup(full, fetcher),
+    ...(withoutName ? [photonLookup(withoutName, fetcher)] : []),
+    nominatimLookup(withoutName ?? full, fetcher),
+  ]);
 }
 
 /** The long link, with coordinates added from the address when Google left them out. */

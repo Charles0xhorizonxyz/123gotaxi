@@ -94,3 +94,26 @@ test('typing an address lists places; only a picked place makes the QR', async (
   expect(photonRequests.some((u) => u.includes('/api?q=S%C4%B1raselviler%2020'))).toBe(true);
   expect(photonRequests.some((u) => u.includes('/reverse'))).toBe(false);
 });
+
+test('"Share 123go.taxi" shares the site itself', async ({ page }) => {
+  await page.addInitScript(() => {
+    (window as unknown as { shared: unknown }).shared = null;
+    navigator.share = async (data) => {
+      (window as unknown as { shared: unknown }).shared = data;
+    };
+  });
+  await page.goto('./');
+  await page.getByRole('button', { name: 'Share 123go.taxi' }).click();
+  expect(await page.evaluate(() => (window as unknown as { shared: { url: string } }).shared.url)).toBe('https://123go.taxi');
+});
+
+test('a shared Yandex place with an unreadable link offers the place by name', async ({ page, photonRequests }) => {
+  await page.goto('./');
+  await page.getByLabel('Where to?').fill(
+    'Galata Tower\nIstanbul, Beyoglu, Buyuk Hendek Avenue, 2\nhttps://yandex.com/maps/org/galata_kulesi/1087398212',
+  );
+  await page.getByLabel('Where to?').press('Enter');
+  await expect(page.locator('.suggestion').first()).toBeVisible();
+  // Only the place name and address were searched, never the link.
+  expect(photonRequests.some((u) => u.includes('/api?q=') && !u.includes('yandex'))).toBe(true);
+});

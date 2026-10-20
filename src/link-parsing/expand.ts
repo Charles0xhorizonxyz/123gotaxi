@@ -2,7 +2,8 @@
 // that browsers may not read. Our small link expander (worker/) reads it and
 // sends back the long link. It only ever receives the short link itself.
 
-const TIMEOUT_MS = 8000;
+/** Address-only links make the expander look the address up, which can take a while. */
+const TIMEOUT_MS = 20000;
 
 export async function expandShortLink(shortLink: string, expanderUrl: string): Promise<string | null> {
   const controller = new AbortController();
