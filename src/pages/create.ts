@@ -16,6 +16,7 @@ import { drawQr, pngFileName, qrPngUrl } from '../qr';
 import { detectPlatform } from '../navigation-links';
 import { browserStorage, SavedPlaces, type SavedPlace } from '../saved-places';
 import { creditFooter, sectionHead, SHARE_RESULT_TEXT, shareLink } from './common';
+import { businessPanel } from './business';
 import { cornerButtons, isInstalled } from './install';
 import { scanButton, type ScanOutcome } from './scanner';
 import { navAppSettings } from './settings';
@@ -82,10 +83,13 @@ export function renderCreate(
   {
     brokenLink = false,
     openScanned,
+    openNavigation,
   }: {
     brokenLink?: boolean;
     /** A scanned 123go.taxi QR: show its driver screen, as if scanned with the camera app. */
     openScanned?: (hash: string) => void;
+    /** "Open in navigation": the driver screen, opening this phone's chosen app straight away. */
+    openNavigation?: (hash: string) => void;
   } = {},
 ): void {
   const saved = new SavedPlaces(browserStorage());
@@ -129,7 +133,9 @@ export function renderCreate(
   const saveButton = h('button', { type: 'button', class: 'go' }, 'Save');
   const shareButton = h('button', { type: 'button' }, 'Share');
   const downloadLink = h('a', { class: 'text-link', href: '#', download: '123go.png' }, 'Download PNG');
-  const previewLink = h('a', { class: 'text-link', href: '#' }, 'See what the driver sees');
+  // Your own navigation app, straight away if one is chosen; otherwise the app list.
+  const previewLink = h('a', { class: 'text-link', href: '#' }, 'Open in navigation');
+  const business = businessPanel(publicUrl);
   // Shown until there's a place: a faded QR outline, so the page explains itself.
   const qrEmpty = h('div', { class: 'qr-empty', role: 'img', 'aria-label': 'Your QR appears here' });
   qrEmpty.innerHTML = EMPTY_QR_SVG;
@@ -151,6 +157,8 @@ export function renderCreate(
     saveMessage,
     h('div', { class: 'actions' }, saveButton, shareButton),
     h('div', { class: 'more' }, downloadLink, previewLink),
+    h('div', { class: 'more' }, business.toggle),
+    business.panel,
   );
   resultDetails.append(attribution);
   const result = h(
@@ -250,6 +258,7 @@ export function renderCreate(
     resultStops.textContent =
       journey.stops.length > 1 ? `${journey.stops.length} stops` : pretty(journey.stops[0]!);
     previewLink.href = buildJourneyHash(journey);
+    business.update(journey);
     error.hidden = true;
     qrEmpty.hidden = true;
     qrCanvas.hidden = false;
@@ -291,6 +300,7 @@ export function renderCreate(
     qrCanvas.hidden = true;
     resultStops.textContent = 'No place yet';
     previewLink.href = '#';
+    business.update(null);
     resetSaveButton();
     shareButton.textContent = 'Share';
     setReady(false);
@@ -481,9 +491,24 @@ export function renderCreate(
 
   function savedItem(place: SavedPlace): HTMLLIElement {
     const title = place.name ?? fallbackName(place);
+    const keep = place.pending
+      ? h(
+          'button',
+          {
+            type: 'button',
+            class: 'saved-keep',
+            'aria-label': `Keep ${title}`,
+            onclick: () => {
+              saved.keep(place.id);
+              renderSaved();
+            },
+          },
+          '✓',
+        )
+      : null;
     return h(
       'li',
-      {},
+      { class: place.pending ? 'pending' : undefined },
       h(
         'button',
         {
@@ -499,17 +524,19 @@ export function renderCreate(
         h(
           'span',
           { class: 'saved-name' },
+          place.pending ? h('span', { class: 'chip new' }, 'New') : null,
           title,
           place.stops.length > 1 ? h('span', { class: 'chip' }, `${place.stops.length} stops`) : null,
         ),
         place.note ? h('span', { class: 'saved-note' }, place.note) : null,
       ),
+      keep,
       h(
         'button',
         {
           type: 'button',
           class: 'saved-delete',
-          'aria-label': `Delete ${title}`,
+          'aria-label': `${place.pending ? 'Remove' : 'Delete'} ${title}`,
           onclick: () => {
             saved.remove(place.id);
             renderSaved();
@@ -542,7 +569,8 @@ export function renderCreate(
 
   // Build the big PNG only when asked, so the page stays fast.
   previewLink.addEventListener('click', (event) => {
-    if (!current) event.preventDefault();
+    event.preventDefault();
+    if (current && openNavigation) openNavigation(buildJourneyHash(current));
   });
 
   downloadLink.addEventListener('click', async (event) => {
@@ -658,4 +686,5 @@ export function renderCreate(
   );
   renderSaved();
   hideResult();
+  window.addEventListener('hashchange', () => renderSaved());
 }

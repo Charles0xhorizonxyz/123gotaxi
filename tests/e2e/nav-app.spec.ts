@@ -30,14 +30,30 @@ test('"Ask every time" shows the app list', async ({ page }) => {
   expect(page.url()).not.toContain('waze.com');
 });
 
-test('the driver screen opened from "See what the driver sees" never jumps to the app', async ({ page }) => {
+test('"Open in navigation" opens the chosen app straight away, without adding a New place', async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem('gogogo.app.v1', 'waze'));
   await page.goto('./');
   await page.getByLabel('Where to?', { exact: true }).fill('41.0342, 28.9844');
-  await page.getByRole('link', { name: 'See what the driver sees' }).click();
-  await expect(page.getByRole('heading', { name: 'Open with' })).toBeVisible();
-  await page.waitForTimeout(500);
-  expect(page.url()).not.toContain('waze.com');
+  await page.getByRole('link', { name: 'Open in navigation' }).click();
+  await page.waitForURL(/^https:\/\/waze\.com\/ul\?ll=41\.0342,28\.9844/);
+  const saved = await page.evaluate(() => localStorage.getItem('gogogo.saved.v2'));
+  expect(saved ?? '[]').not.toContain('pending');
+});
+
+test('a 123go.taxi QR opened on this phone is added as New, with keep and remove', async ({ page }) => {
+  await page.goto(DRIVER_LINK);
+  await expect(page.getByRole('heading', { name: 'Cihangir' })).toBeVisible();
+  await page.goto('./');
+  await expect(page.locator('.chip.new')).toBeVisible();
+  await page.getByRole('button', { name: 'Keep Cihangir' }).click();
+  await expect(page.locator('.chip.new')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: /^Cihangir/ })).toBeVisible();
+  // Opening the same QR again doesn't add it twice.
+  await page.goto(DRIVER_LINK);
+  await page.goto('./');
+  await expect(page.getByRole('button', { name: /^Cihangir/ })).toHaveCount(1);
+  await page.getByRole('button', { name: 'Delete Cihangir' }).click();
+  await expect(page.getByRole('button', { name: /^Cihangir/ })).toHaveCount(0);
 });
 
 test('Install is a round button in the corner; on iPhone it shows the two steps', async ({ page }, testInfo) => {
@@ -125,4 +141,20 @@ test('a "?" opens a small box that closes when you tap elsewhere', async ({ page
   await expect(page.getByText('Kept only in this browser')).toBeVisible();
   await page.keyboard.press('Escape');
   await expect(page.getByText('Kept only in this browser')).toBeHidden();
+});
+
+test('"Put it on your website" puts the public name in the QR and gives the code', async ({ page }) => {
+  await page.goto('./');
+  await page.getByLabel('Where to?', { exact: true }).fill('41.0342, 28.9844');
+  await page.getByRole('button', { name: 'Put it on your website' }).click();
+  await page.getByLabel(/^Your place’s name/).fill('Pandeli');
+  await expect(page.locator('#business-code')).toHaveValue(/n=Pandeli/);
+  await expect(page.locator('#business-code')).toHaveValue(/Get to Pandeli by taxi/);
+  // A guest opening it gets the place, by name, in their list.
+  const link = await page.locator('.business-button').getAttribute('href');
+  await page.goto('about:blank');
+  await page.goto(link!.replace('https://123go.taxi/', './'));
+  await expect(page.getByRole('heading', { name: 'Pandeli' })).toBeVisible();
+  await page.goto('./');
+  await expect(page.getByRole('button', { name: 'Keep Pandeli' })).toBeVisible();
 });

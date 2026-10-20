@@ -23,12 +23,8 @@ test('the address shows above the QR and goes in the link; the name does not', a
   await page.getByLabel('Where to?', { exact: true }).fill('41.0342, 28.9844');
   await page.getByLabel(/^Name/).fill('Secret home');
   await expect(page.locator('.result .address')).toHaveText(ADDRESS);
-  await expect(page.getByRole('link', { name: 'See what the driver sees' })).toHaveAttribute(
-    'href',
-    '#v=1&lat=41.0342&lon=28.9844&a=S%C4%B1raselviler+Caddesi+20,+Katip+Mustafa+%C3%87elebi,+Beyo%C4%9Flu',
-  );
 
-  await page.getByRole('link', { name: 'See what the driver sees' }).click();
+  await page.getByRole('link', { name: 'Open in navigation' }).click();
   await expect(page.getByRole('heading', { name: ADDRESS })).toBeVisible();
   await expect(page.getByText('Secret home')).toHaveCount(0);
 });
@@ -70,7 +66,7 @@ test('a multi-stop journey can be reordered, previewed and come back intact', as
   await expect(page.getByText('2 stops')).toBeVisible();
   await page.getByLabel(/^Note/).fill('Groceries first');
 
-  await page.getByRole('link', { name: 'See what the driver sees' }).click();
+  await page.getByRole('link', { name: 'Open in navigation' }).click();
   await expect(page.getByText('Your route · 2 stops')).toBeVisible();
   await expect(page.getByRole('link', { name: 'Google Maps' })).toHaveAttribute(
     'href',

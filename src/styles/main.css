@@ -373,6 +373,26 @@ button:disabled {
   min-width: 52px;
 }
 
+/* New: opened from a 123go.taxi QR, waiting for ✓ keep or ✕ remove */
+.saved-keep {
+  background: var(--asphalt);
+  color: var(--yellow);
+  font-size: 1.3rem;
+  min-width: 52px;
+}
+
+.saved-list li.pending .saved-open {
+  border-style: dashed;
+  background: var(--paper);
+}
+
+.chip.new {
+  margin-right: 0.4rem;
+  background: var(--yellow);
+  color: var(--asphalt);
+  border: 1.5px solid var(--asphalt);
+}
+
 /* Driver screen */
 .eyebrow {
   text-transform: uppercase;
@@ -966,4 +986,47 @@ body:has(input:focus, textarea:focus) .corner {
 .where.block {
   padding-top: 0;
   border-top: 0;
+}
+
+/* "Put it on your website" */
+.business {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  text-align: left;
+}
+
+.business-preview {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  border-radius: var(--radius);
+  border: 1px dashed var(--line);
+  background: var(--paper);
+}
+
+.business-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  border-radius: 999px;
+  background: var(--asphalt);
+  color: var(--yellow);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.business-qr {
+  width: 120px;
+  height: 120px;
+}
+
+.business-code {
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+  font-size: 0.8rem;
+  word-break: break-all;
 }

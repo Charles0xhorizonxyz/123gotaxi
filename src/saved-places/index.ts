@@ -19,6 +19,8 @@ export interface SavedPlace {
   address?: string;
   stops: Point[];
   savedAt: number;
+  /** Added by opening a 123go.taxi QR; waits for the user to keep (✓) or remove (✕) it. */
+  pending?: boolean;
 }
 
 export const STORAGE_KEY = 'gogogo.saved.v2';
@@ -69,7 +71,12 @@ function toSavedPlace(value: unknown): SavedPlace | null {
     address: cleanAddress(typeof v.address === 'string' ? v.address : undefined),
     stops: stops as Point[],
     savedAt: typeof v.savedAt === 'number' ? v.savedAt : Date.now(),
+    pending: v.pending === true ? true : undefined,
   };
+}
+
+function sameStops(a: { stops: Point[] }, b: { stops: Point[] }): boolean {
+  return a.stops.length === b.stops.length && a.stops.every((s, i) => s.lat === b.stops[i]?.lat && s.lon === b.stops[i]?.lon);
 }
 
 function newId(now = Date.now()): string {
@@ -117,6 +124,30 @@ export class SavedPlaces {
     return place;
   }
 
+  /**
+   * A 123go.taxi QR was opened on this phone: add it as New, unless the same
+   * stops are already in the list. Returns the place, new or existing.
+   */
+  addScanned(journey: Journey, now = Date.now()): SavedPlace {
+    const existing = this.list().find((p) => sameStops(p, journey));
+    if (existing) return existing;
+    const place: SavedPlace = {
+      id: newId(now),
+      name: cleanLabel(journey.label),
+      address: cleanAddress(journey.address),
+      stops: journey.stops.map(({ lat, lon }) => ({ lat, lon })),
+      savedAt: now,
+      pending: true,
+    };
+    this.write([place, ...this.list()]);
+    return place;
+  }
+
+  /** ✓ on a New place: it becomes an ordinary saved place. */
+  keep(id: string): void {
+    this.write(this.list().map((p) => (p.id === id ? { ...p, pending: undefined } : p)));
+  }
+
   remove(id: string): void {
     this.write(this.list().filter((p) => p.id !== id));
   }
@@ -132,7 +163,8 @@ export class SavedPlaces {
         format: EXPORT_FORMAT,
         version: 1,
         // Ids are per-device; the importing device makes its own.
-        places: this.list().map(({ name, note, address, stops, savedAt }) => ({
+        // New places nobody has kept yet stay out of the file.
+        places: this.list().filter((p) => !p.pending).map(({ name, note, address, stops, savedAt }) => ({
           name,
           note,
           address,

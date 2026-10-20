@@ -161,3 +161,18 @@ describe('AppPreference', () => {
     expect(pref.available).toBe(false);
   });
 });
+
+describe('places opened from a QR', () => {
+  it('are added once, as New, until kept', () => {
+    const saved = new SavedPlaces(memoryStorage());
+    const journey = { stops: [{ lat: 41.0342, lon: 28.9844 }], label: 'Pandeli' };
+    const place = saved.addScanned(journey);
+    expect(place).toMatchObject({ name: 'Pandeli', pending: true });
+    saved.addScanned(journey);
+    expect(saved.list()).toHaveLength(1);
+    expect(JSON.parse(saved.exportJson()).places).toHaveLength(0);
+    saved.keep(place.id);
+    expect(saved.list()[0]!.pending).toBeUndefined();
+    expect(JSON.parse(saved.exportJson()).places).toHaveLength(1);
+  });
+});

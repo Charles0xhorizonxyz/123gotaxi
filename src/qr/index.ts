@@ -31,3 +31,8 @@ export function pngFileName(label: string | undefined): string {
     .slice(0, 40);
   return `123go-${slug || 'destination'}.png`;
 }
+
+/** A small PNG as a data: URL, to paste into a website's code with the QR inside it. */
+export function qrDataUrl(text: string, size = 360): Promise<string> {
+  return QRCode.toDataURL(text, { ...QR_OPTIONS, width: size });
+}
