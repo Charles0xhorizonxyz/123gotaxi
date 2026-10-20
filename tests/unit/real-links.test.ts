@@ -52,3 +52,27 @@ describe('real shared links', () => {
     if (result.ok) expect(metres(result.place, place)).toBeLessThan(60);
   });
 });
+
+// One spot (Kadıköy, Istanbul) as Organic Maps offers to copy it, six ways.
+describe('the same spot written six ways', () => {
+  const SPOT = { lat: 40.983834, lon: 29.038862 };
+  it.each([
+    ['decimal, as copied (with invisible marks)', '⁨40.983834, 29.038862⁩'],
+    ['degrees, minutes, seconds', `40°59'01.8"N 29°02'19.9"E`],
+    ['Plus Code', '8GGFX2MQ+GG'],
+    ['OpenStreetMap short link', 'https://osm.org/go/x2SYaXKm-?m='],
+    ['UTM', '35T 671518 4538964'],
+    ['MGRS', '35T PF 71518 38964'],
+  ])('%s', (_, text) => {
+    const result = parseLocation(text);
+    expect(result.ok).toBe(true);
+    if (result.ok) expect(metres(result.place, SPOT)).toBeLessThan(30);
+  });
+});
+
+describe('dropped pins', () => {
+  it('Waze, Android: a random spot', () => {
+    const result = parseLocation('Use Waze to drive to Erneydanı Sk: https://waze.com/ul/hsxk97rujq');
+    expect(result.ok && metres(result.place, { lat: 41.044471, lon: 28.976719 })).toBeLessThan(10);
+  });
+});

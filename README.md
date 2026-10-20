@@ -8,7 +8,7 @@
 
 ## How it works
 
-1. **You** paste a Google Maps, Yandex, Waze, Apple Maps or OpenStreetMap link (short `maps.app.goo.gl` links too, even with the place name the Maps app puts in front), type an address and pick it from the list, or type coordinates such as `29.979235, 31.134202`. A QR is only ever made from a link, coordinates, or a place picked from the list, never from guessed words. The QR code appears straight away, with the readable address above it. Add up to 4 stops and drag them into order for a multi-stop ride.
+1. **You** paste a Google Maps, Yandex, Waze, Apple Maps or OpenStreetMap link (short `maps.app.goo.gl` links too, even with the place name the Maps app puts in front), type an address and pick it from the list, or type coordinates such as `29.979235, 31.134202`. Everything map apps offer to copy works too: degrees-minutes-seconds (`40°59'01.8"N 29°02'19.9"E`), Plus Codes (`8GGFX2MQ+GG`), OpenStreetMap short links (`osm.org/go/…`), UTM and MGRS, all decoded on the phone. A QR is only ever made from a link, coordinates, or a place picked from the list, never from guessed words. The QR code appears straight away, with the readable address above it. Add up to 4 stops and drag them into order for a multi-stop ride.
 2. Show the QR, share the link, or download it as a PNG. Save places on your device, with a private name and note, and export or import the list.
 3. **The driver** scans it with the phone's camera, or with **Scan** in 123go.taxi itself, and the route starts in their navigation app. Driving yourself? **Open in navigation** opens it in yours.
 

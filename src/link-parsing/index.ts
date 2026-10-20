@@ -2,6 +2,7 @@
 // or links from Google Maps, Yandex, Waze, Apple Maps, OpenStreetMap and 123go.taxi.
 
 import { finalStop, isValidCoordinate, parseJourney } from '../destination-url';
+import { decodeOsmShortCode, decodePlusCode, parseDms, parseMgrs, parseUtm, withoutInvisibles } from './coordinates';
 
 /** One place found in pasted text, with its name when the link carries one. */
 export interface Place {
@@ -118,7 +119,19 @@ function parseApple(url: URL): Place | null {
   return null;
 }
 
+/** Degrees-minutes-seconds, Plus Codes, UTM and MGRS, as map apps offer to copy them. */
+function otherNotations(text: string): Place | null {
+  const found = parseDms(text) ?? decodePlusCode(text) ?? parseMgrs(text) ?? parseUtm(text);
+  return found ? point(found.lat, found.lon) : null;
+}
+
 function parseOsm(url: URL): Place | null {
+  // "Share > Short link": osm.org/go/<code>
+  const short = /^\/go\/([A-Za-z0-9_~@]+)/.exec(url.pathname)?.[1];
+  if (short) {
+    const centre = decodeOsmShortCode(short);
+    if (centre) return point(centre.lat, centre.lon);
+  }
   const mlat = url.searchParams.get('mlat');
   const mlon = url.searchParams.get('mlon');
   if (mlat && mlon) return point(Number(mlat), Number(mlon));
@@ -183,7 +196,7 @@ function isShortLink(url: URL): boolean {
  * When the whole text isn't readable, try each link found inside it.
  */
 export function parseLocation(input: string): ParseResult {
-  const text = input.trim();
+  const text = withoutInvisibles(input).trim();
   if (!text) return { ok: false, reason: 'empty' };
   const whole = parseText(text);
   if (whole.ok || whole.reason === 'short-link') return whole;
@@ -197,7 +210,7 @@ export function parseLocation(input: string): ParseResult {
 
 function parseText(text: string): ParseResult {
 
-  const direct = parseRawCoordinates(text) ?? parseGeoUri(text);
+  const direct = parseRawCoordinates(text) ?? parseGeoUri(text) ?? otherNotations(text);
   if (direct) return { ok: true, place: direct };
 
   const url = toUrl(text);
@@ -209,7 +222,7 @@ function parseText(text: string): ParseResult {
   if (/(^|\.)google\.[a-z.]+$/.test(host)) found = parseGoogle(url);
   else if (/(^|\.)yandex\.[a-z.]+$/.test(host)) found = parseYandex(url);
   else if (host === 'maps.apple.com') found = parseApple(url);
-  else if (host.endsWith('openstreetmap.org')) found = parseOsm(url);
+  else if (host.endsWith('openstreetmap.org') || host === 'osm.org') found = parseOsm(url);
   else if (host === 'waze.com' || host === 'ul.waze.com') found = parseWaze(url);
   else {
     const own = parseJourney(url.hash || url.search);

@@ -98,7 +98,8 @@ p {
 /* Footer: checker strip like a cab door */
 footer {
   margin-top: auto;
-  padding: 1.25rem 0 calc(1.75rem + env(safe-area-inset-bottom));
+  /* Room below the credit line for the floating corner buttons (3.5rem, 24px up). */
+  padding: 1.25rem 0 calc(6rem + env(safe-area-inset-bottom));
   text-align: center;
   font-size: 0.875rem;
   color: var(--muted);

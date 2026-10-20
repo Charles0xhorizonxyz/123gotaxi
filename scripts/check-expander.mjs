@@ -20,6 +20,7 @@ const CASES = [
   { link: 'https://maps.app.goo.gl/VytxARA1gNn8LKZ38?g_st=ac', place: OZDILEK, note: 'iPhone, Istanbul' },
   { link: 'https://maps.app.goo.gl/kZjhvxthmMqubRKs5?g_st=ac', place: GALATA, note: 'Android, Galata Tower' },
   { link: 'https://maps.app.goo.gl/R2exrem7pfo1LQq76?g_st=ac', place: SIRASELVILER_20, note: 'Android, street address' },
+  { link: 'https://maps.app.goo.gl/eyK3sUUvfBQknGaM6?g_st=ac', place: { lat: 41.0184637, lon: 28.8745512 }, note: 'Android, dropped pin' },
 ];
 
 /** Coordinates in a long Google link: the exact pin first, then the map centre or ?q=. */
