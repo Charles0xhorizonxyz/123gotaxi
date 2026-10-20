@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import worker, { addressWithoutCoordinates, expand, locate } from '../../worker/src/index';
+import worker, { addressWithoutCoordinates, expand, locate, unwrapConsent } from '../../worker/src/index';
 
 const SHORT = 'https://maps.app.goo.gl/42vbXakpmaLpAsuD9?g_st=ac';
 const LONG =
@@ -17,7 +17,8 @@ describe('expand', () => {
   it('follows a Google short link to the long map link', async () => {
     const fetcher = vi.fn(async () => redirect(LONG));
     expect(await expand(new URL(SHORT), fetcher as unknown as typeof fetch)).toBe(LONG);
-    expect(fetcher).toHaveBeenCalledWith(SHORT, expect.objectContaining({ redirect: 'manual' }));
+    // "?g_st=ac" is dropped before asking Google.
+    expect(fetcher).toHaveBeenCalledWith(SHORT.split('?')[0], expect.objectContaining({ redirect: 'manual' }));
   });
 
   it('follows a chain of short links', async () => {
@@ -49,6 +50,20 @@ describe('links without coordinates', () => {
     expect(addressWithoutCoordinates(LONG)).toBeNull();
     expect(addressWithoutCoordinates('https://www.google.com/maps/place/X/@45.39,-71.94,17z')).toBeNull();
     expect(addressWithoutCoordinates('https://yandex.com.tr/maps/?text=x')).toBeNull();
+  });
+
+  it('also finds it in the "?q=" and "/search/" forms', () => {
+    const address = 'ÖzdilekPark İstanbul AVM, Büyükdere Cd. No:181, 34394 Şişli/İstanbul';
+    expect(addressWithoutCoordinates(`https://maps.google.com/?q=${encodeURIComponent(address)}&ftid=0x14cab7:0x1&entry=gps`)).toBe(address);
+    expect(addressWithoutCoordinates(`https://www.google.com/maps?q=${encodeURIComponent(address)}`)).toBe(address);
+    expect(addressWithoutCoordinates(`https://www.google.com/maps/search/${encodeURIComponent(address)}`)).toBe(address);
+    expect(addressWithoutCoordinates('https://www.google.com/maps?q=41.0773,29.0116')).toBeNull();
+  });
+
+  it("takes the real link out of Google's cookie page", () => {
+    const consent = new URL(`https://consent.google.com/m?continue=${encodeURIComponent(LONG)}&gl=DE`);
+    expect(unwrapConsent(consent).toString()).toBe(new URL(LONG).toString());
+    expect(unwrapConsent(new URL(LONG)).toString()).toBe(new URL(LONG).toString());
   });
 
   it('retries without the place name, and keeps a house-level answer', async () => {

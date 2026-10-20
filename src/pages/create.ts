@@ -288,7 +288,9 @@ export function renderCreate(
           return;
         }
         const long = expanded.get(key);
-        if (long) parsed = parseLocation(long);
+        // Unreadable even when opened: keep the short-link advice, which still helps.
+        const opened = long ? parseLocation(long) : null;
+        if (opened?.ok) parsed = opened;
       }
       if (!parsed.ok) {
         hideResult();

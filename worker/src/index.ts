@@ -52,9 +52,21 @@ function json(body: unknown, status: number, origin: string | null): Response {
   return new Response(JSON.stringify(body), { status, headers });
 }
 
+/**
+ * "maps.app.goo.gl/<code>?g_st=ac": the code is the place; "?g_st=…" only says
+ * where it was shared from, and with it Google sometimes answers with a link
+ * that has no place in it at all. So it's dropped.
+ */
+export function withoutShareTags(url: URL): URL {
+  if (url.hostname !== 'maps.app.goo.gl' || !url.search) return url;
+  const clean = new URL(url);
+  clean.search = '';
+  return clean;
+}
+
 /** Follow redirects until the link is no longer a short link. Returns null if it never resolves. */
 export async function expand(short: URL, fetcher: typeof fetch = fetch): Promise<string | null> {
-  let current = short;
+  let current = withoutShareTags(short);
   for (let hop = 0; hop < MAX_HOPS; hop++) {
     const response = await fetcher(current.toString(), {
       method: 'GET',
@@ -66,25 +78,48 @@ export async function expand(short: URL, fetcher: typeof fetch = fetch): Promise
     // Drop the body unread: we only want the redirect target.
     await response.body?.cancel();
     if (response.status < 300 || response.status >= 400 || !location) return null;
-    const next = new URL(location, current);
+    const next = unwrapConsent(new URL(location, current));
     if (!isShortLink(next)) return next.toString();
     current = next;
   }
   return null;
 }
 
-/** A Google place link with an address but no coordinates → that address; otherwise null. */
+/**
+ * Some regions get Google's cookie page first ("consent.google.com/…?continue=<link>").
+ * The link we want is inside it; the page itself is never opened.
+ */
+export function unwrapConsent(url: URL): URL {
+  if (!/^consent\.google\.[a-z.]+$/.test(url.hostname)) return url;
+  const target = url.searchParams.get('continue');
+  try {
+    return target ? new URL(target) : url;
+  } catch {
+    return url;
+  }
+}
+
+/**
+ * A Google Maps link with a place's address but no coordinates → that address;
+ * otherwise null. Google uses several forms, and not always the same one:
+ * "/maps/place/<address>/…", "/maps/search/<address>" and "/maps?q=<address>".
+ */
 export function addressWithoutCoordinates(link: string): string | null {
   const url = new URL(link);
-  if (!/(^|\.)google\.[a-z.]+$/.test(url.hostname)) return null;
-  if (/@-?\d|!3d-?\d/.test(url.pathname) || /[?&](q|query|ll|center)=-?\d/.test(url.search)) return null;
-  const place = /\/maps\/place\/([^/]+)/.exec(url.pathname)?.[1];
-  if (!place) return null;
-  try {
-    return decodeURIComponent(place.replace(/\+/g, ' ')).trim() || null;
-  } catch {
-    return null;
+  if (!/(^|\.)google\.[a-z.]+$/.test(url.hostname) && url.hostname !== 'maps.google.com') return null;
+  if (/@-?\d|!3d-?\d/.test(url.pathname) || /[?&](ll|center)=-?\d/.test(url.search)) return null;
+  const query = url.searchParams.get('q') ?? url.searchParams.get('query');
+  if (query && /^\s*-?\d+(\.\d+)?\s*,\s*-?\d+(\.\d+)?\s*$/.test(query)) return null;
+  const inPath = /\/maps\/(?:place|search)\/([^/]+)/.exec(url.pathname)?.[1];
+  let text = query;
+  if (!text && inPath) {
+    try {
+      text = decodeURIComponent(inPath.replace(/\+/g, ' '));
+    } catch {
+      return null;
+    }
   }
+  return text?.trim() || null;
 }
 
 /**
