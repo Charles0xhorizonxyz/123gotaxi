@@ -48,8 +48,8 @@ export const PLACES: Record<Language, PlacesStrings> = {
   fr: {
     title: '123go.taxi pour les restaurants, hôtels et commerces',
     headline: 'Amenez vos clients jusqu’à votre porte en taxi',
-    lede: 'Ajoutez une carte 123go.taxi à votre site. Vos clients montrent son QR au chauffeur, et l’itinéraire jusqu’à votre porte démarre dans sa propre appli de navigation.',
-    exampleCaption: 'Une carte telle qu’elle apparaît sur un site. Touchez-la sur un téléphone, ou scannez-la depuis un ordinateur.',
+    lede: 'Ajoutez une carte 123go.taxi à votre site. Vos clients montrent leur QR au chauffeur, et l’itinéraire jusqu’à votre porte démarre dans leur propre appli de navigation.',
+    exampleCaption: 'Une carte telle qu’elle apparaît sur un site. Cliquez dessus sur un téléphone, ou scannez-la depuis un ordinateur.',
     benefitsTitle: 'Ce que ça vous apporte',
     benefits: [
       { title: 'Vos clients arrivent à la bonne porte', text: 'Plus d’appels pour expliquer le chemin, plus de chauffeurs perdus ni de mauvaise entrée.' },
@@ -60,8 +60,8 @@ export const PLACES: Record<Language, PlacesStrings> = {
     howTitle: 'L’ajouter en deux minutes',
     steps: [
       'Ouvrez 123go.taxi, tapez votre adresse et choisissez-la dans la liste. Vérifiez que l’adresse affichée est bien votre porte.',
-      'Touchez « Le mettre sur votre site », tapez le nom de votre établissement et choisissez la langue de la carte.',
-      'Touchez « Copier le code » et collez-le sur votre page Contact ou Accès.',
+      'Cliquez sur « Le mettre sur votre site », tapez le nom de votre établissement et choisissez la langue de la carte.',
+      'Cliquez sur « Copier le code » et collez-le sur votre page Contact ou Accès.',
     ],
     printTip: 'Vous pouvez aussi télécharger le QR et l’imprimer sur vos menus, cartes de visite, flyers ou votre porte.',
     helpTitle: 'Quelqu’un d’autre s’occupe de votre site ?',
