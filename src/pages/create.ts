@@ -13,9 +13,10 @@ import { photonGeocoder, type Suggestion } from '../geocoding';
 import { parseLocation, type ParseResult } from '../link-parsing';
 import { expandShortLink } from '../link-parsing/expand';
 import { drawQr, pngFileName, qrPngUrl } from '../qr';
+import { detectPlatform } from '../navigation-links';
 import { browserStorage, SavedPlaces, type SavedPlace } from '../saved-places';
 import { creditFooter, SHARE_RESULT_TEXT, shareLink } from './common';
-import { installButton, shareAppButton } from './install';
+import { installButton, isInstalled, shareAppButton } from './install';
 import { scanButton, type ScanOutcome } from './scanner';
 import { navAppSettings } from './settings';
 import { createStopsEditor, type StopsChange } from './stops-editor';
@@ -149,14 +150,23 @@ export function renderCreate(
   const exportLink = h('a', { class: 'text-link', href: '#', download: '123go-places.json' }, 'Export list');
   const importLabel = h('label', { for: 'import-file', class: 'text-link' }, 'Import list');
   const placesMessage = h('p', { class: 'hint', role: 'status' });
-  // Only worth saying once there's something to lose.
-  const lossWarning = h(
-    'p',
-    { class: 'warning', hidden: true },
-    h('strong', {}, 'This list can disappear. '),
-    'Clearing your browser data, closing a private window, or (on iPhone) not visiting for 7 days erases it, and it doesn’t follow you to another phone. ',
-    'Tap Export list to keep a copy.',
-  );
+  // Only worth saying once there's something to lose. Installed, the list is
+  // kept for good (iPhone's 7-day erasing only applies to Safari itself).
+  const ios = detectPlatform(navigator.userAgent, navigator.maxTouchPoints) === 'ios';
+  const lossWarning = isInstalled()
+    ? h(
+        'p',
+        { class: 'hint', hidden: true },
+        'Kept on this phone. To move it to another phone, tap Export list.',
+      )
+    : h(
+        'p',
+        { class: 'warning', hidden: true },
+        h('strong', {}, ios ? 'Safari erases this list after 7 days without a visit. ' : 'This list can disappear. '),
+        ios
+          ? 'Install 123go.taxi to keep it for good, then use Export list here and Import list in the app to move it there.'
+          : 'Clearing your browser data erases it. Install 123go.taxi, or tap Export list to keep a copy.',
+      );
   const savedSection = h(
     'section',
     { class: 'saved' },
@@ -492,6 +502,8 @@ export function renderCreate(
       return;
     }
     saved.add({ ...current, name: nameInput.value, note: noteInput.value });
+    // Ask the browser not to clear our storage when space runs low. It may say no.
+    void navigator.storage?.persist?.().catch(() => false);
     saveButton.textContent = 'Saved';
     renderSaved();
   });

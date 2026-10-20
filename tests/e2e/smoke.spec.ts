@@ -15,7 +15,7 @@ test('typing coordinates makes the QR by itself; name and note are saved', async
   await expect(entry).toContainText('Blue door');
   await expect(entry).not.toContainText('41.0342');
   await expect(page.getByRole('heading', { name: 'Your places' })).toBeVisible();
-  await expect(page.getByText('This list can disappear.')).toBeVisible();
+  await expect(page.locator('.warning')).toContainText(/This list can disappear|Safari erases this list after 7 days/);
 });
 
 test('the address shows above the QR and goes in the link; the name does not', async ({ page }) => {

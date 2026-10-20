@@ -8,7 +8,8 @@ interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>;
 }
 
-function installed(): boolean {
+/** Opened from the home screen, as an installed app. */
+export function isInstalled(): boolean {
   return (
     matchMedia('(display-mode: standalone)').matches ||
     (navigator as Navigator & { standalone?: boolean }).standalone === true
@@ -21,7 +22,7 @@ function installed(): boolean {
  * Gone once installed.
  */
 export function installButton(): HTMLElement | null {
-  if (installed()) return null;
+  if (isInstalled()) return null;
   const ios = detectPlatform(navigator.userAgent, navigator.maxTouchPoints) === 'ios';
 
   const button = h('button', { type: 'button', class: 'install-button' }, 'Install 123go.taxi');
@@ -42,12 +43,22 @@ export function installButton(): HTMLElement | null {
   return section;
 }
 
-/** "Share 123go.taxi": send the app itself to someone, with the phone's share sheet. */
+// The share symbol each phone's own apps use. Static markup, no user data.
+const SHARE_ICONS = {
+  ios: '<svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7.5 7.5 12 3l4.5 4.5"/><path d="M8 10H6a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-9a1 1 0 0 0-1-1h-2"/></svg>',
+  other: '<svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true" fill="currentColor"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 10.7 15.4 6.6M8.6 13.3l6.8 4.1" stroke="currentColor" stroke-width="2"/></svg>',
+};
+
+/** A round share button in the bottom-right corner: sends 123go.taxi itself to someone. */
 export function shareAppButton(): HTMLElement {
-  const button = h('button', { type: 'button', class: 'text-link' }, 'Share 123go.taxi');
+  const ios = detectPlatform(navigator.userAgent, navigator.maxTouchPoints) === 'ios';
+  const button = h('button', { type: 'button', class: 'share-app', 'aria-label': 'Share 123go.taxi' });
+  button.innerHTML = ios ? SHARE_ICONS.ios : SHARE_ICONS.other;
+  const status = h('span', { class: 'share-app-status', role: 'status' });
   button.addEventListener('click', async () => {
     const outcome = await shareLink(CANONICAL_URL, '123go.taxi');
-    button.textContent = outcome === 'shared' ? 'Share 123go.taxi' : SHARE_RESULT_TEXT[outcome];
+    status.textContent = outcome === 'shared' ? '' : SHARE_RESULT_TEXT[outcome];
+    if (status.textContent) setTimeout(() => (status.textContent = ''), 2500);
   });
-  return h('div', { class: 'more' }, button);
+  return h('div', { class: 'share-app-corner' }, status, button);
 }

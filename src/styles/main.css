@@ -857,3 +857,41 @@ select:focus-visible {
   font-size: 0.875rem;
   color: var(--muted);
 }
+
+/* Share 123go.taxi: a round button in the bottom-right corner */
+.share-app-corner {
+  position: fixed;
+  right: calc(16px + env(safe-area-inset-right, 0px));
+  bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.share-app {
+  width: 3.5rem;
+  height: 3.5rem;
+  min-height: 0;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 2px solid var(--seat);
+  background: var(--asphalt);
+  color: var(--yellow);
+}
+
+.share-app-status:not(:empty) {
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+  background: var(--asphalt);
+  color: var(--seat);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+/* While typing, the keyboard needs the room. */
+body:has(input:focus, textarea:focus) .share-app-corner {
+  display: none;
+}
