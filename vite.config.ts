@@ -40,11 +40,11 @@ export default defineConfig({
   base: process.env.BASE_PATH ?? '/',
   build: {
     target: 'es2022',
-    // Two pages: the app, and the one-pager for places at /places/.
+    // Two pages: the app, and the one-pager for places at /onmysite/.
     rollupOptions: {
       input: {
         main: fileURLToPath(new URL('./index.html', import.meta.url)),
-        places: fileURLToPath(new URL('./places/index.html', import.meta.url)),
+        onmysite: fileURLToPath(new URL('./onmysite/index.html', import.meta.url)),
       },
     },
   },

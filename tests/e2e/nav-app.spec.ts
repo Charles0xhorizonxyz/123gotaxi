@@ -209,11 +209,13 @@ test('"Put it on your website" starts with the place’s name and the page’s l
 });
 
 test('the one-pager for places speaks the visitor’s language and leads to the app', async ({ page }) => {
-  await page.goto('./places/');
+  await page.goto('./onmysite/');
   await expect(page.getByRole('heading', { name: 'Bring your guests to your door by taxi' })).toBeVisible();
   await expect(page.locator('.business-card img')).toHaveAttribute('src', /^data:image\/png/);
+  await page.getByRole('button', { name: /^Language/ }).click();
   await page.getByRole('button', { name: 'Türkçe' }).click();
   await expect(page.getByRole('heading', { name: 'Misafirlerinizi taksiyle kapınıza kadar getirin' })).toBeVisible();
-  await page.getByRole('link', { name: 'Kartınızı oluşturun' }).first().click();
+  await expect(page.getByRole('link', { name: 'Kartınızı oluşturun' })).toHaveCount(1);
+  await page.getByRole('link', { name: 'Kartınızı oluşturun' }).click();
   await expect(page.getByRole('heading', { name: 'Nereye?' })).toBeVisible();
 });

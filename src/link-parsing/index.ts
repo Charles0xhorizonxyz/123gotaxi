@@ -2,7 +2,7 @@
 // or links from Google Maps, Yandex, Waze, Apple Maps, OpenStreetMap and 123go.taxi.
 
 import { finalStop, isValidCoordinate, parseJourney } from '../destination-url';
-import { decodeOsmShortCode, decodePlusCode, parseDms, parseMgrs, parseUtm, withoutInvisibles } from './coordinates';
+import { decodeGe0, decodeOsmShortCode, decodePlusCode, parseDms, parseMgrs, parseUtm, withoutInvisibles } from './coordinates';
 
 /** One place found in pasted text, with its name when the link carries one. */
 export interface Place {
@@ -119,6 +119,14 @@ function parseApple(url: URL): Place | null {
   return null;
 }
 
+/** Organic Maps share links: omaps.app/<code>/<name> (and ge0://<code>/<name>). */
+function parseGe0(url: URL): Place | null {
+  const [code, name] = (url.protocol === 'ge0:' ? `${url.host}${url.pathname}` : url.pathname.slice(1)).split('/');
+  const centre = code ? decodeGe0(code) : null;
+  const label = name ? safeDecode(name.replace(/_/g, ' ')).trim() : undefined;
+  return centre ? point(centre.lat, centre.lon, label || undefined) : null;
+}
+
 /** Degrees-minutes-seconds, Plus Codes, UTM and MGRS, as map apps offer to copy them. */
 function otherNotations(text: string): Place | null {
   const found = parseDms(text) ?? decodePlusCode(text) ?? parseMgrs(text) ?? parseUtm(text);
@@ -205,6 +213,11 @@ export function parseLocation(input: string): ParseResult {
     const found = parseText(link.replace(/[.,;:!?)\]]+$/, ''));
     if (found.ok || found.reason === 'short-link') return found;
   }
+  // Shared text with a coordinates line in it ("ebebek / Sabri Kiraz Sokağı 5B /
+  // 40.983834, 29.038862 / link"). Three decimals at least, so "5B, 34724" never counts.
+  const pair = /(-?\d{1,2}\.\d{3,})\s*,\s*(-?\d{1,3}\.\d{3,})/.exec(text);
+  const inside = pair ? point(Number(pair[1]), Number(pair[2])) : null;
+  if (inside) return { ok: true, place: inside };
   return whole;
 }
 
@@ -223,6 +236,7 @@ function parseText(text: string): ParseResult {
   else if (/(^|\.)yandex\.[a-z.]+$/.test(host)) found = parseYandex(url);
   else if (host === 'maps.apple.com') found = parseApple(url);
   else if (host.endsWith('openstreetmap.org') || host === 'osm.org') found = parseOsm(url);
+  else if (host === 'omaps.app' || host === 'ge0.me' || url.protocol === 'ge0:') found = parseGe0(url);
   else if (host === 'waze.com' || host === 'ul.waze.com') found = parseWaze(url);
   else {
     const own = parseJourney(url.hash || url.search);

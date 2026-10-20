@@ -4,7 +4,7 @@ For restaurants, hotels, shops, clinics, venues: anywhere guests come by taxi.
 
 Put a **Reach us with 123go.taxi** card, the words over a QR code, on your Contact or Getting here page. A guest taps the card on their phone (or scans the QR on a computer screen), your place lands in their 123go.taxi list with your name, and they show the QR to the driver. The driver scans it and the route starts in their own navigation app: Google Maps, Yandex, Waze, Apple Maps or any other.
 
-It's free, needs no account, and nothing about your guests is collected. The short version, in six languages, to send to a place: **https://123go.taxi/places/**
+It's free, needs no account, and nothing about your guests is collected. The short version, in six languages, to send to a place: **https://123go.taxi/onmysite/**
 
 ---
 

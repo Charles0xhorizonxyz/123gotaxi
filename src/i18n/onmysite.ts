@@ -1,4 +1,4 @@
-// Words of the "for places" one-pager (123go.taxi/places/), in the site's six languages.
+// Words of the "for places" one-pager (123go.taxi/onmysite/), in the site's six languages.
 
 import type { Language } from './index';
 

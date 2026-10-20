@@ -1098,25 +1098,10 @@ body:has(input:focus, textarea:focus) .corner {
   background: var(--yellow);
 }
 
-/* 123go.taxi/places/: the one-pager for restaurants, hotels and shops */
+/* 123go.taxi/onmysite/: the one-pager for restaurants, hotels and shops */
 .wordmark-link {
   color: inherit;
   text-decoration: none;
-}
-
-.places-languages {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0 1rem;
-}
-
-.places-languages [aria-current='true'] {
-  text-decoration: none;
-  font-weight: 700;
-  color: var(--asphalt);
-  background: var(--yellow);
-  padding: 0 0.5rem;
-  border-radius: 999px;
 }
 
 .places-hero {
@@ -1143,11 +1128,18 @@ body:has(input:focus, textarea:focus) .corner {
 }
 
 .places-cta {
-  align-self: flex-start;
-  padding-inline: 1.5rem;
+  align-self: center;
+  padding-inline: 2rem;
 }
 
-.places-benefits,
+.places-benefits {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.9rem;
+}
+
 .places-steps {
   margin: 0;
   padding-left: 1.3rem;

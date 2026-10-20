@@ -1,5 +1,5 @@
-// 123go.taxi/places/: the one-pager for restaurants, hotels and shops, in the
-// visitor's language (same choice as the app, changed with 文A).
+// 123go.taxi/onmysite/: the one-pager for restaurants, hotels and shops, in the
+// visitor's language (same choice as the app, changed with 文A in the corner).
 
 import '@fontsource/archivo/400.css';
 import '@fontsource/archivo/700.css';
@@ -8,10 +8,11 @@ import '@fontsource/roboto-slab/cyrillic-900.css';
 import './styles/main.css';
 import { buildJourneyUrl } from './destination-url';
 import { h } from './dom';
-import { language, LANGUAGES, setLanguage, t, type Language } from './i18n';
-import { PLACES } from './i18n/places';
+import { language, t } from './i18n';
+import { PLACES } from './i18n/onmysite';
 import { CARD_LANGUAGES } from './pages/business';
 import { creditFooter } from './pages/common';
+import { cornerButtons } from './pages/install';
 import { qrDataUrl } from './qr';
 
 const GUIDE_URL = 'https://github.com/Charles0xhorizonxyz/123gotaxi/blob/main/docs/ADD-TO-YOUR-WEBSITE.md';
@@ -25,24 +26,6 @@ document.title = p.title;
 const exampleUrl = buildJourneyUrl('https://123go.taxi', EXAMPLE);
 const exampleQr = h('img', { width: '180', height: '180', alt: CARD_LANGUAGES[language].alt });
 void qrDataUrl(exampleUrl).then((src) => (exampleQr.src = src));
-
-const languages = h(
-  'nav',
-  { class: 'places-languages', 'aria-label': t.languageAria },
-  ...(Object.entries(LANGUAGES) as [Language, string][]).map(([code, name]) =>
-    h(
-      'button',
-      {
-        type: 'button',
-        class: 'text-link',
-        lang: code,
-        'aria-current': code === language ? 'true' : undefined,
-        onclick: () => code !== language && setLanguage(code),
-      },
-      name,
-    ),
-  ),
-);
 
 document.querySelector<HTMLElement>('#app')!.replaceChildren(
   h(
@@ -62,7 +45,7 @@ document.querySelector<HTMLElement>('#app')!.replaceChildren(
         ),
       ),
     ),
-    languages,
+    h('p', { class: 'tagline' }, t.tagline),
   ),
   h(
     'section',
@@ -75,7 +58,6 @@ document.querySelector<HTMLElement>('#app')!.replaceChildren(
       h('a', { class: 'business-card', href: exampleUrl, lang: language }, h('span', {}, CARD_LANGUAGES[language].text), exampleQr),
       h('figcaption', { class: 'hint' }, p.exampleCaption),
     ),
-    h('a', { class: 'button go places-cta', href: '/' }, p.cta),
   ),
   h(
     'section',
@@ -102,5 +84,6 @@ document.querySelector<HTMLElement>('#app')!.replaceChildren(
     h('p', {}, p.helpText),
     h('a', { class: 'text-link places-guide', href: GUIDE_URL, rel: 'noopener', target: '_blank' }, p.guideLink),
   ),
+  cornerButtons(),
   creditFooter(),
 );

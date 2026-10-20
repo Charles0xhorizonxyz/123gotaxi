@@ -196,3 +196,32 @@ export function parseMgrs(text: string): LatLon | null {
   while (northing < minimum - 100000) northing += 2000000;
   return utmToLatLon(zone, north, easting, northing);
 }
+
+// ---------- Organic Maps / Maps.me links: https://omaps.app/4y5hklrFZC/ebebek ----------
+// The "ge0" format: one character for the zoom, then up to nine characters
+// interleaving latitude and longitude bits, three of each per character.
+
+const GE0_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
+const GE0_BITS = 30;
+
+/** The code after the domain (or after "ge0://"), zoom character included. */
+export function decodeGe0(code: string): LatLon | null {
+  const point = code.slice(1, 10);
+  if (point.length < 2) return null;
+  let lat = 0;
+  let lon = 0;
+  let shift = GE0_BITS - 3;
+  for (const char of point) {
+    const a = GE0_ALPHABET.indexOf(char);
+    if (a < 0) return null;
+    lat |= (((a >> 5) & 1) << 2 | ((a >> 3) & 1) << 1 | ((a >> 1) & 1)) << shift;
+    lon |= (((a >> 4) & 1) << 2 | ((a >> 2) & 1) << 1 | (a & 1)) << shift;
+    shift -= 3;
+  }
+  // The middle of the square the code names.
+  const middle = 2 ** (3 * (10 - point.length) - 1);
+  const max = 2 ** GE0_BITS - 1;
+  const latDeg = ((lat + middle) / max) * 180 - 90;
+  const lonDeg = ((lon + middle) / (max + 1)) * 360 - 180;
+  return Math.abs(latDeg) <= 90 && Math.abs(lonDeg) <= 180 ? { lat: latDeg, lon: lonDeg } : null;
+}

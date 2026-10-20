@@ -54,7 +54,7 @@ describe('real shared links', () => {
 });
 
 // One spot (Kadıköy, Istanbul) as Organic Maps offers to copy it, six ways.
-describe('the same spot written six ways', () => {
+describe('the same spot written every way map apps copy it', () => {
   const SPOT = { lat: 40.983834, lon: 29.038862 };
   it.each([
     ['decimal, as copied (with invisible marks)', '⁨40.983834, 29.038862⁩'],
@@ -63,6 +63,9 @@ describe('the same spot written six ways', () => {
     ['OpenStreetMap short link', 'https://osm.org/go/x2SYaXKm-?m='],
     ['UTM', '35T 671518 4538964'],
     ['MGRS', '35T PF 71518 38964'],
+    ['Organic Maps link', 'https://omaps.app/4y5hklrFZC/ebebek'],
+    ['Organic Maps shared text', 'ebebek\nSabri Kiraz Sokağı, 5B, 34724\n40.983834, 29.038862\nhttps://omaps.app/4y5hklrFZC/ebebek'],
+    ['Organic Maps shared text, pasted on one line', 'ebebek, Sabri Kiraz Sokağı, 5B, 34724, 40.983834, 29.038862, https://omaps.app/4y5hklrFZC/ebebek'],
   ])('%s', (_, text) => {
     const result = parseLocation(text);
     expect(result.ok).toBe(true);
@@ -74,5 +77,16 @@ describe('dropped pins', () => {
   it('Waze, Android: a random spot', () => {
     const result = parseLocation('Use Waze to drive to Erneydanı Sk: https://waze.com/ul/hsxk97rujq');
     expect(result.ok && metres(result.place, { lat: 41.044471, lon: 28.976719 })).toBeLessThan(10);
+  });
+});
+
+describe('Organic Maps', () => {
+  it('keeps the place name from its link', () => {
+    const result = parseLocation('https://omaps.app/4y5hklrFZC/ebebek');
+    expect(result.ok && result.place.label).toBe('ebebek');
+  });
+
+  it('never takes a house number and a postcode for coordinates', () => {
+    expect(parseLocation('Sabri Kiraz Sokağı, 5B, 34724').ok).toBe(false);
   });
 });
