@@ -13,7 +13,9 @@
     "lint": "eslint .",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "iphone": "playwright open --browser=webkit --device=\"iPhone 15\" https://123go.taxi",
+    "iphone:local": "playwright open --browser=webkit --device=\"iPhone 15\" http://localhost:5173"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

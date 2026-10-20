@@ -39,6 +39,7 @@ npm test           # unit tests
 npm run test:e2e   # browser smoke tests (first run: npx playwright install chromium)
 npm run lint
 npm run build      # static site in dist/
+npm run iphone     # the live site in Safari's engine (WebKit), iPhone 15 size (first run: npx playwright install webkit)
 ```
 
 The short-link expander in `worker/` is a Cloudflare Worker, live at `https://123go-expand.123go-taxi.workers.dev`. Deploy it with `npx wrangler@4 deploy --config worker/wrangler.toml`.

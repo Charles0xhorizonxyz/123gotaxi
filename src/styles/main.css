@@ -848,7 +848,8 @@ select:focus-visible {
 /* Install and Share: round buttons floating in the bottom-right corner */
 .corner {
   position: fixed;
-  right: calc(16px + env(safe-area-inset-right, 0px));
+  /* On a phone: the screen's corner. On a wide screen: the page column's corner (32rem wide, centred). */
+  right: max(calc(16px + env(safe-area-inset-right, 0px)), calc((100% - 32rem) / 2 + 16px));
   bottom: calc(24px + env(safe-area-inset-bottom, 0px));
   z-index: 20;
   display: flex;
