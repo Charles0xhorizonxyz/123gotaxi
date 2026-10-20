@@ -609,7 +609,7 @@ export function renderCreate(
         ),
         scanButton(onScan),
       ),
-      h('p', { class: 'tagline' }, 'Hold on to your hat. Paste a place, get a QR, share it easily.'),
+      h('p', { class: 'tagline' }, 'Hold on to your hat. Paste a place, get a QR ready to share.'),
     ),
     h('div', { class: 'place-form' }, h('p', { class: 'field-label' }, 'Where to?'), stops.element, suggestions, notice, error),
     result,

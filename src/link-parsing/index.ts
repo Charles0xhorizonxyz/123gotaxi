@@ -1,5 +1,5 @@
 // Pull coordinates out of whatever the user pastes: raw coordinates, geo: URIs,
-// or links from Google Maps, Yandex, Apple Maps, OpenStreetMap and 123go.taxi.
+// or links from Google Maps, Yandex, Waze, Apple Maps, OpenStreetMap and 123go.taxi.
 
 import { finalStop, isValidCoordinate, parseJourney } from '../destination-url';
 
@@ -126,6 +126,41 @@ function parseOsm(url: URL): Place | null {
   return map ? point(Number(map[1]), Number(map[2])) : null;
 }
 
+const GEOHASH = '0123456789bcdefghjkmnpqrstuvwxyz';
+
+/** Geohash ("sxk97kd2j") → the centre of its cell. 9 characters is about 5 m. */
+export function decodeGeohash(hash: string): { lat: number; lon: number } | null {
+  const lat = [-90, 90];
+  const lon = [-180, 180];
+  let even = true;
+  for (const char of hash.toLowerCase()) {
+    const value = GEOHASH.indexOf(char);
+    if (value < 0) return null;
+    for (const bit of [16, 8, 4, 2, 1]) {
+      const range = even ? lon : lat;
+      const mid = (range[0]! + range[1]!) / 2;
+      if (value & bit) range[0] = mid;
+      else range[1] = mid;
+      even = !even;
+    }
+  }
+  return { lat: (lat[0]! + lat[1]!) / 2, lon: (lon[0]! + lon[1]!) / 2 };
+}
+
+/**
+ * Waze: "waze.com/ul/h<geohash>" (what the app shares), "waze.com/ul?ll=lat,lon"
+ * and "waze.com/live-map/directions?to=ll.lat,lon".
+ */
+function parseWaze(url: URL): Place | null {
+  const hash = /^\/ul\/h([0-9a-z]{5,12})\/?$/i.exec(url.pathname)?.[1];
+  if (hash) {
+    const centre = decodeGeohash(hash);
+    return centre ? point(centre.lat, centre.lon) : null;
+  }
+  const to = url.searchParams.get('to')?.replace(/^ll\./, '');
+  return pair(url.searchParams.get('ll') ?? url.searchParams.get('latlng') ?? to, 'latlon');
+}
+
 function toUrl(text: string): URL | null {
   const candidate = /^[a-z][a-z\d+.-]*:\/\//i.test(text) ? text : `https://${text}`;
   try {
@@ -175,6 +210,7 @@ function parseText(text: string): ParseResult {
   else if (/(^|\.)yandex\.[a-z.]+$/.test(host)) found = parseYandex(url);
   else if (host === 'maps.apple.com') found = parseApple(url);
   else if (host.endsWith('openstreetmap.org')) found = parseOsm(url);
+  else if (host === 'waze.com' || host === 'ul.waze.com') found = parseWaze(url);
   else {
     const own = parseJourney(url.hash || url.search);
     if (own.kind === 'ok') found = { ...finalStop(own.journey), label: own.journey.label };

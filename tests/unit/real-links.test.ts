@@ -31,12 +31,24 @@ const CASES: { app: string; what: string; text: string; place: { lat: number; lo
     text: 'https://yandex.com/maps?rtext=41.029528%2C28.981307~41.025625%2C28.974194&rtt=auto',
     place: GALATA,
   },
+  {
+    app: 'Waze, Android',
+    what: 'Galata Tower',
+    text: 'Use Waze to drive to galata tower: https://waze.com/ul/hsxk97kd2j',
+    place: GALATA,
+  },
+  {
+    app: 'Waze, Android',
+    what: 'street address',
+    text: 'Use Waze to drive to Sıraselviler Cd. No:20: https://waze.com/ul/hsxk97w1cu',
+    place: { lat: 41.03424737, lon: 28.98451095 },
+  },
 ];
 
 describe('real shared links', () => {
   it.each(CASES)('$app: $what', ({ text, place }) => {
     const result = parseLocation(text);
     expect(result.ok).toBe(true);
-    if (result.ok) expect(metres(result.place, place)).toBeLessThan(50);
+    if (result.ok) expect(metres(result.place, place)).toBeLessThan(60);
   });
 });

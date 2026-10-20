@@ -10,12 +10,16 @@ const TOLERANCE_M = 300;
 // Real links from our own phones (Android app, iPhone app, desktop), with where they really are.
 const BATON_ROUGE = { lat: 45.397038, lon: -71.942085 };
 const OZDILEK = { lat: 41.0773612, lon: 29.011635 };
+const GALATA = { lat: 41.025636, lon: 28.974167 };
+const SIRASELVILER_20 = { lat: 41.0342474, lon: 28.984511 };
 const CASES = [
   { link: 'https://maps.app.goo.gl/42vbXakpmaLpAsuD9?g_st=ac', place: BATON_ROUGE, note: 'mobile, with ?g_st' },
   { link: 'https://maps.app.goo.gl/r6ssFsMEZsTXLkoDA', place: BATON_ROUGE, note: 'mobile, address only' },
   { link: 'https://maps.app.goo.gl/vU2dmEkDJhSTsGqG6', place: BATON_ROUGE, note: 'mobile' },
   { link: 'https://maps.app.goo.gl/inhRMpVNq3GiVe456', place: BATON_ROUGE, note: 'desktop' },
   { link: 'https://maps.app.goo.gl/VytxARA1gNn8LKZ38?g_st=ac', place: OZDILEK, note: 'iPhone, Istanbul' },
+  { link: 'https://maps.app.goo.gl/kZjhvxthmMqubRKs5?g_st=ac', place: GALATA, note: 'Android, Galata Tower' },
+  { link: 'https://maps.app.goo.gl/R2exrem7pfo1LQq76?g_st=ac', place: SIRASELVILER_20, note: 'Android, street address' },
 ];
 
 /** Coordinates in a long Google link: the exact pin first, then the map centre or ?q=. */

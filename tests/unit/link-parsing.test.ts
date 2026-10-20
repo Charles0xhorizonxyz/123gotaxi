@@ -137,3 +137,12 @@ describe('links rebuilt by the expander', () => {
     });
   });
 });
+
+describe('Waze links', () => {
+  it.each([
+    ['https://waze.com/ul?ll=41.0342,28.9844&navigate=yes', [41.0342, 28.9844]],
+    ['https://www.waze.com/live-map/directions?to=ll.41.0342%2C28.9844', [41.0342, 28.9844]],
+  ])('reads %s', (input, expected) => {
+    expect(coords(input)).toEqual(expected);
+  });
+});
