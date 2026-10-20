@@ -813,3 +813,47 @@ select:focus-visible {
 .scan-close {
   min-width: 10rem;
 }
+
+/* Places found while typing in "Where to?" */
+.suggestions {
+  list-style: none;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  border: var(--border);
+  border-radius: var(--radius);
+  background: var(--paper);
+  overflow: hidden;
+}
+
+.suggestions li + li {
+  border-top: 1px solid #e6dcb8;
+}
+
+.suggestions .hint {
+  padding: 0.85rem 1rem;
+}
+
+.suggestion {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.1rem;
+  width: 100%;
+  min-height: 52px;
+  padding: 0.7rem 1rem;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  text-align: left;
+  font-weight: 400;
+}
+
+.suggestion:hover,
+.suggestion:focus-visible {
+  background: var(--seat);
+}
+
+.suggestion span {
+  font-size: 0.875rem;
+  color: var(--muted);
+}

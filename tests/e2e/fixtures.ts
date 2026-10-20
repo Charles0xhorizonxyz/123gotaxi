@@ -5,6 +5,7 @@ import { test as base, expect } from '@playwright/test';
 export const PHOTON_REPLY = {
   features: [
     {
+      geometry: { coordinates: [28.9844, 41.0342] },
       properties: {
         housenumber: '20',
         street: 'Sıraselviler Caddesi',

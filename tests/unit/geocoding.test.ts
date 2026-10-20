@@ -71,3 +71,13 @@ describe('photonGeocoder', () => {
     expect(await photonGeocoder('https://photon.example').reverse({ lat: 1, lon: 2 })).toBeNull();
   });
 });
+
+describe('toSuggestions', () => {
+  it('keeps places with an address, once each, name first', async () => {
+    const { toSuggestions } = await import('../../src/geocoding');
+    const place = { geometry: { coordinates: [28.98, 41.03] as [number, number] }, properties: { name: 'Galata Kulesi', street: 'Bereketzade', city: 'Beyoğlu' } };
+    expect(
+      toSuggestions({ features: [place, place, { properties: { name: 'No geometry' } }] }),
+    ).toEqual([{ lat: 41.03, lon: 28.98, name: 'Galata Kulesi', address: 'Galata Kulesi, Bereketzade, Beyoğlu' }]);
+  });
+});

@@ -9,7 +9,7 @@ import {
   parseJourney,
   type Point,
 } from '../destination-url';
-import { photonGeocoder } from '../geocoding';
+import { photonGeocoder, type Suggestion } from '../geocoding';
 import { parseLocation, type ParseResult } from '../link-parsing';
 import { expandShortLink } from '../link-parsing/expand';
 import { drawQr, pngFileName, qrPngUrl } from '../qr';
@@ -25,7 +25,7 @@ const ERRORS = {
   'short-link':
     'That link threw its rider. Short links hide the location: open it, then copy the long link from the address bar.',
   unrecognised:
-    'We couldn\'t find coordinates in that. Try a Google Maps or Yandex link, or coordinates like "29.979235, 31.134202".',
+    'We couldn\'t find that place. Pick one from the list, paste a map link, or type coordinates like "29.979235, 31.134202".',
   invalidQr: 'That QR link looks broken. Make a fresh one below.',
 } as const;
 
@@ -71,6 +71,10 @@ export function renderCreate(
   const stops = createStopsEditor({ onChange });
   const error = h('p', { class: 'error', role: 'alert', hidden: !brokenLink });
   const notice = h('p', { class: 'hint', role: 'status', hidden: true });
+  // Typed words: places found, under "Where to?". Only a place picked here makes a QR.
+  const suggestions = h('ul', { class: 'suggestions', 'aria-label': 'Places found', hidden: true });
+  let searching: AbortController | undefined;
+  let suggestionsFor = -1;
   // Short links already asked about: the long link, or null if it couldn't be opened.
   const expanded = new Map<string, string | null>();
   const expanding = new Set<string>();
@@ -257,8 +261,84 @@ export function renderCreate(
 
   function onChange(change: StopsChange): void {
     clearTimeout(typingTimer);
-    if (change === 'typing') typingTimer = setTimeout(() => update(false), TYPING_DELAY_MS);
-    else update(change === 'commit' || change === 'leave', change === 'commit');
+    if (change === 'typing') {
+      typingTimer = setTimeout(() => {
+        update(false);
+        searchFor(stops.focusedIndex());
+      }, TYPING_DELAY_MS);
+      return;
+    }
+    if (change === 'commit') {
+      // Enter on typed words: show the places found; the user picks one.
+      const index = stops.focusedIndex();
+      if (searchable(stops.values()[index] ?? '')) {
+        if (suggestionsFor !== index) searchFor(index);
+        return;
+      }
+    }
+    // Leaving the field (often to tap a suggestion) keeps the list open.
+    if (change !== 'leave') hideSuggestions();
+    update(change === 'commit' || change === 'leave', change === 'commit');
+  }
+
+  /** Words, not a link or coordinates: worth searching for. Links and coordinates are never sent. */
+  function searchable(text: string): boolean {
+    const t = text.trim();
+    if (t.length < 3 || t.includes('://') || /^[a-z]+:/i.test(t)) return false;
+    const parsed = parseLocation(t);
+    return !parsed.ok && parsed.reason === 'unrecognised';
+  }
+
+  function hideSuggestions(): void {
+    searching?.abort();
+    suggestions.hidden = true;
+    suggestions.replaceChildren();
+    suggestionsFor = -1;
+  }
+
+  function searchFor(index: number): void {
+    const text = stops.values()[index] ?? '';
+    if (index < 0 || !searchable(text)) return hideSuggestions();
+    searching?.abort();
+    const lookup = new AbortController();
+    searching = lookup;
+    geocoder
+      .search(text.trim(), lookup.signal)
+      .then((results) => {
+        if (lookup.signal.aborted) return;
+        suggestionsFor = index;
+        suggestions.replaceChildren(
+          ...(results.length
+            ? results.map((s) =>
+                h(
+                  'li',
+                  {},
+                  h(
+                    'button',
+                    { type: 'button', class: 'suggestion', onclick: () => pick(s) },
+                    h('strong', {}, s.name),
+                    s.address !== s.name ? h('span', {}, s.address.slice(s.name.length + 2)) : null,
+                  ),
+                ),
+              )
+            : [h('li', { class: 'hint' }, 'No place found. Add the town, or paste a map link.')]),
+        );
+        suggestions.hidden = false;
+        error.hidden = true;
+      })
+      .catch(() => {
+        // Offline or the service is down: links and coordinates still work.
+      });
+  }
+
+  /** A picked place becomes that stop's coordinates; its name fills an empty Name. */
+  function pick(s: Suggestion): void {
+    const index = suggestionsFor;
+    hideSuggestions();
+    stops.setValue(index, pretty(s));
+    const single = stops.values().filter((v) => v.trim()).length === 1;
+    if (single && !nameInput.value.trim()) nameInput.value = s.name;
+    update(true, true);
   }
 
   /** Read the stops and show the QR. Only explain problems when `explain` is set. */
@@ -294,7 +374,8 @@ export function renderCreate(
       }
       if (!parsed.ok) {
         hideResult();
-        if (explain) {
+        // Words with places listed under them aren't a mistake: the list is the answer.
+        if (explain && (parsed.reason !== 'unrecognised' || suggestions.hidden)) {
           error.textContent =
             filled.length > 1 ? `Stop ${number}: ${ERRORS[parsed.reason]}` : ERRORS[parsed.reason];
           error.hidden = false;
@@ -485,7 +566,7 @@ export function renderCreate(
       ),
       h('p', { class: 'tagline' }, 'Hold on to your hat. Paste a place, get a QR, share it easily.'),
     ),
-    h('div', { class: 'place-form' }, h('p', { class: 'field-label' }, 'Where to?'), stops.element, notice, error),
+    h('div', { class: 'place-form' }, h('p', { class: 'field-label' }, 'Where to?'), stops.element, suggestions, notice, error),
     result,
     savedSection,
     ...[installButton()].filter((section) => section !== null),

@@ -75,3 +75,22 @@ test('Close stops the scanner', async ({ page }) => {
   await page.getByRole('button', { name: 'Close' }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
 });
+
+test('typing an address lists places; only a picked place makes the QR', async ({ page, photonRequests }) => {
+  await page.goto('./');
+  await page.getByLabel('Where to?').pressSequentially('Sıraselviler 20');
+  const place = page.getByRole('button', { name: /Sıraselviler Caddesi 20/ });
+  await expect(place).toBeVisible();
+  // Words alone never make a QR.
+  await expect(page.getByRole('img', { name: /QR code/ })).toBeHidden();
+  await page.getByLabel('Where to?').press('Enter');
+  await expect(page.getByRole('img', { name: /QR code/ })).toBeHidden();
+
+  await place.click();
+  await expect(page.getByRole('img', { name: /QR code/ })).toBeVisible();
+  await expect(page.getByLabel('Where to?')).toHaveValue('41.0342, 28.9844');
+  await expect(page.getByLabel(/^Name/)).toHaveValue('Sıraselviler Caddesi 20');
+  // The search sent the words; picking needed no second lookup.
+  expect(photonRequests.some((u) => u.includes('/api?q=S%C4%B1raselviler%2020'))).toBe(true);
+  expect(photonRequests.some((u) => u.includes('/reverse'))).toBe(false);
+});

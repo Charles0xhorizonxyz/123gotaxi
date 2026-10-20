@@ -6,6 +6,12 @@ export interface StopsEditor {
   /** Input values in driving order. */
   values(): string[];
   setValues(values: string[]): void;
+  /** Change one stop's text, keeping the others as they are. */
+  setValue(index: number, value: string): void;
+  /** The stop being typed in, or -1. */
+  focusedIndex(): number;
+  /** The input of a stop, e.g. to show suggestions under it. */
+  inputAt(index: number): HTMLInputElement | undefined;
 }
 
 /**
@@ -39,7 +45,7 @@ export function createStopsEditor({ onChange }: { onChange: (change: StopsChange
       const name = all.length === 1 ? 'Where to?' : i === all.length - 1 ? 'Final stop' : `Stop ${i + 1}`;
       input.setAttribute('aria-label', name);
       input.placeholder =
-        i === 0 ? 'Map link or 29.979235, 31.134202' : 'Paste a link or coordinates';
+        i === 0 ? 'Address, link or 29.979235, 31.134202' : 'Address, link or coordinates';
       row.querySelector('.stop-number')!.textContent = String(i + 1);
       handle.setAttribute('aria-label', `Move stop ${i + 1}. Use the arrow keys.`);
       remove.setAttribute('aria-label', `Remove stop ${i + 1}`);
@@ -93,11 +99,12 @@ export function createStopsEditor({ onChange }: { onChange: (change: StopsChange
   }
 
   function addRow(value = ''): HTMLInputElement {
+    // The normal keyboard: a space bar for typing addresses, and links still paste fine.
     const input = h('input', {
       type: 'text',
-      inputmode: 'url',
       autocomplete: 'off',
       spellcheck: 'false',
+      enterkeyhint: 'go',
     });
     input.value = value;
     input.addEventListener('paste', () => setTimeout(() => onChange('commit'), 0));
@@ -151,5 +158,11 @@ export function createStopsEditor({ onChange }: { onChange: (change: StopsChange
       list.replaceChildren();
       (values.length ? values : ['']).slice(0, MAX_STOPS).forEach((v) => addRow(v));
     },
+    setValue(index, value) {
+      const input = rows()[index]?.querySelector('input');
+      if (input) input.value = value;
+    },
+    focusedIndex: () => rows().findIndex((row) => row.contains(document.activeElement)),
+    inputAt: (index) => rows()[index]?.querySelector('input') ?? undefined,
   };
 }

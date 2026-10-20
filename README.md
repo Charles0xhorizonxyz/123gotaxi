@@ -8,7 +8,7 @@
 
 ## How it works
 
-1. **You** paste a Google Maps, Yandex, Apple Maps or OpenStreetMap link (short `maps.app.goo.gl` links too, even with the place name the Maps app puts in front), or type coordinates such as `29.979235, 31.134202`. The QR code appears straight away, with the readable address above it. Add up to 4 stops and drag them into order for a multi-stop ride.
+1. **You** paste a Google Maps, Yandex, Apple Maps or OpenStreetMap link (short `maps.app.goo.gl` links too, even with the place name the Maps app puts in front), type an address and pick it from the list, or type coordinates such as `29.979235, 31.134202`. A QR is only ever made from a link, coordinates, or a place picked from the list, never from guessed words. The QR code appears straight away, with the readable address above it. Add up to 4 stops and drag them into order for a multi-stop ride.
 2. Show the QR, share the link, or download it as a PNG. Save places on your device, with a private name and note, and export or import the list.
 3. **The driver** scans it with the phone's camera, or with **Scan** in 123go.taxi itself, and the route starts in their navigation app.
 
@@ -20,6 +20,7 @@ The QR code points to a 123go.taxi page, not straight to one app, so app support
 
 - No accounts, no database, no analytics, no cookies.
 - **One outside lookup:** to show a readable address, the phone making the QR sends the final stop's coordinates (nothing else) to [Photon](https://photon.komoot.io), an open OpenStreetMap address service. The address then travels inside the QR, so the driver's phone looks nothing up.
+- **Typed addresses:** when you type words (not a link or coordinates) in "Where to?", those words go to Photon to list matching places. Nothing else goes with them.
 - **Short map links only:** if you paste a short link such as `maps.app.goo.gl/…`, that link (nothing else) goes to our tiny link expander on Cloudflare (`worker/`), which returns the long link holding the coordinates. When Google's long link only carries an address, the expander looks that address up in Photon itself. It stores and logs nothing. Long links, addresses and coordinates never go there.
 - QR codes are generated in your browser, and **Scan** reads them on your phone: camera images never leave it.
 - **The coordinates are part of the QR link.** Anyone who scans the code sees the location. For a home address, consider pinning a nearby corner instead.
