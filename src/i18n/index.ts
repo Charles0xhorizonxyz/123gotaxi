@@ -154,7 +154,7 @@ const en = {
 export type Strings = typeof en;
 
 const fr: Strings = {
-  tagline: 'Collez un lieu. Obtenez un QR. Partagez-le. En route !',
+  tagline: 'Collez un lieu. Obtenez un QR. Partagez-le. Go!',
   whereTo: 'Où allez-vous ?',
   whereHelp: {
     intro: 'Trois façons de dire où vous allez :',
@@ -273,7 +273,7 @@ const fr: Strings = {
 };
 
 const tr: Strings = {
-  tagline: 'Bir yer yapıştır. QR al. Paylaş. Yola çık!',
+  tagline: 'Bir yer yapıştır. QR al. Paylaş. Go!',
   whereTo: 'Nereye?',
   whereHelp: {
     intro: 'Nereye gittiğinizi söylemenin üç yolu:',
@@ -392,7 +392,7 @@ const tr: Strings = {
 };
 
 const de: Strings = {
-  tagline: 'Ort einfügen. QR bekommen. Teilen. Los!',
+  tagline: 'Ort einfügen. QR bekommen. Teilen. Go!',
   whereTo: 'Wohin?',
   whereHelp: {
     intro: 'Drei Wege, zu sagen, wohin es geht:',
@@ -511,7 +511,7 @@ const de: Strings = {
 };
 
 const es: Strings = {
-  tagline: 'Pega un lugar. Obtén un QR. Compártelo. ¡En marcha!',
+  tagline: 'Pega un lugar. Obtén un QR. Compártelo. Go!',
   whereTo: '¿Adónde vas?',
   whereHelp: {
     intro: 'Tres formas de decir adónde vas:',
@@ -630,7 +630,7 @@ const es: Strings = {
 };
 
 const ruStrings: Strings = {
-  tagline: 'Вставьте место. Получите QR. Поделитесь. Поехали!',
+  tagline: 'Вставьте место. Получите QR. Поделитесь. Go!',
   whereTo: 'Куда?',
   whereHelp: {
     intro: 'Три способа указать, куда вы едете:',
