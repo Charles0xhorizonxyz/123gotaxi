@@ -39,7 +39,7 @@ export function createStopsEditor({ onChange }: { onChange: (change: StopsChange
       const name = all.length === 1 ? 'Where to?' : i === all.length - 1 ? 'Final stop' : `Stop ${i + 1}`;
       input.setAttribute('aria-label', name);
       input.placeholder =
-        i === 0 ? 'Paste a map link, or 11.15, 40.58' : 'Paste a link or coordinates';
+        i === 0 ? 'Map link or 29.979235, 31.134202' : 'Paste a link or coordinates';
       row.querySelector('.stop-number')!.textContent = String(i + 1);
       handle.setAttribute('aria-label', `Move stop ${i + 1}. Use the arrow keys.`);
       remove.setAttribute('aria-label', `Remove stop ${i + 1}`);

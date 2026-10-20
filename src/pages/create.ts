@@ -25,7 +25,7 @@ const ERRORS = {
   'short-link':
     'That link threw its rider. Short links hide the location: open it, then copy the long link from the address bar.',
   unrecognised:
-    'We couldn\'t find coordinates in that. Try a Google Maps or Yandex link, or coordinates like "11.15, 40.58".',
+    'We couldn\'t find coordinates in that. Try a Google Maps or Yandex link, or coordinates like "29.979235, 31.134202".',
   invalidQr: 'That QR link looks broken. Make a fresh one below.',
 } as const;
 

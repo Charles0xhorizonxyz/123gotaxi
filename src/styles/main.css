@@ -683,7 +683,6 @@ select:focus-visible {
   color: var(--yellow);
   font-size: 0.72rem;
   line-height: 1;
-  box-shadow: 0 3px 0 rgba(20, 20, 20, 0.25);
 }
 
 /* Scanner: full screen, dark like the cab at night */
