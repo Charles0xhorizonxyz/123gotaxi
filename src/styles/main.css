@@ -621,13 +621,20 @@ label.text-link {
 }
 
 select {
+  /* Our own big arrow: the browser's is too faint to see this is a menu. */
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23141414' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  background-size: 1.3rem;
   font: inherit;
   font-size: 1.05rem;
   min-height: 52px;
-  padding: 0.75rem 1rem;
+  padding: 0.75rem 3rem 0.75rem 1rem;
   border-radius: var(--radius);
   border: var(--border);
-  background: var(--paper);
+  background-color: var(--paper);
   color: var(--asphalt);
   width: 100%;
 }
@@ -901,9 +908,32 @@ body:has(input:focus, textarea:focus) .corner {
 }
 
 .section-head {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
+  position: relative;
+}
+
+/* The box a "?" opens: floats over the page, closes when you tap elsewhere */
+.help-box {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  left: 0;
+  z-index: 15;
+  width: min(100%, 24rem);
+  display: grid;
+  gap: 0.5rem;
+  padding: 0.9rem 1rem;
+  border-radius: var(--radius);
+  border: var(--border);
+  background: var(--paper);
+  font-size: 0.95rem;
+  line-height: 1.45;
+  box-shadow: 0 6px 18px rgba(20, 20, 20, 0.12);
+}
+
+.help-box ul {
+  margin: 0;
+  padding-left: 1.1rem;
+  display: grid;
+  gap: 0.4rem;
 }
 
 .section-title {

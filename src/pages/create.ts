@@ -38,7 +38,7 @@ const EMPTY_QR_SVG = `<svg viewBox="0 0 29 29" aria-hidden="true" fill="none" st
 </svg>`;
 
 /** Wait this long after the last keystroke before trying typed text. */
-const TYPING_DELAY_MS = 500;
+const TYPING_DELAY_MS = 300;
 
 const pretty = (p: Point) => formatPoint(p).replace(',', ', ');
 
@@ -49,6 +49,32 @@ const stopsKey = (journey: Journey) => journey.stops.map(formatPoint).join('~');
 function fallbackName(place: SavedPlace): string {
   const end = place.address ?? pretty(place.stops[place.stops.length - 1]!);
   return place.stops.length > 1 ? `Route to ${end}` : end;
+}
+
+/** "Where to?" explained in plain words: three ways to say where you're going. */
+function whereHelp(): HTMLElement {
+  return h(
+    'div',
+    {},
+    h('p', {}, h('strong', {}, 'Three ways to say where you’re going:')),
+    h(
+      'ul',
+      {},
+      h('li', {}, h('strong', {}, 'Type an address'), ' or the name of a place, then tap it in the list.'),
+      h(
+        'li',
+        {},
+        h('strong', {}, 'From a map app'),
+        ' (Google Maps, Yandex, Waze…): open the place, tap ',
+        h('em', {}, 'Share'),
+        ', then ',
+        h('em', {}, 'Copy'),
+        ', and paste it here.',
+      ),
+      h('li', {}, h('strong', {}, 'Type coordinates'), ', like 29.979235, 31.134202.'),
+    ),
+    h('p', {}, 'Going to several places? Tap ', h('em', {}, '+ Add a stop'), '.'),
+  );
 }
 
 export function renderCreate(
@@ -614,7 +640,15 @@ export function renderCreate(
     h(
       'section',
       { class: 'where block' },
-      h('div', { class: 'place-form' }, h('h2', { class: 'where-title' }, 'Where to?'), stops.element, suggestions, notice, error),
+      h(
+        'div',
+        { class: 'place-form' },
+        sectionHead('Where to?', whereHelp(), { titleClass: 'where-title' }),
+        stops.element,
+        suggestions,
+        notice,
+        error,
+      ),
       result,
     ),
     savedSection,

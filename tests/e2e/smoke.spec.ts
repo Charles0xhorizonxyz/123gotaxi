@@ -2,7 +2,7 @@ import { ADDRESS, expect, test } from './fixtures';
 
 test('typing coordinates makes the QR by itself; name and note are saved', async ({ page }) => {
   await page.goto('./');
-  await page.getByLabel('Where to?').fill('41.0342, 28.9844');
+  await page.getByLabel('Where to?', { exact: true }).fill('41.0342, 28.9844');
   await expect(page.getByRole('img', { name: /QR code/ })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Make my QR' })).toHaveCount(0);
 
@@ -20,7 +20,7 @@ test('typing coordinates makes the QR by itself; name and note are saved', async
 
 test('the address shows above the QR and goes in the link; the name does not', async ({ page }) => {
   await page.goto('./');
-  await page.getByLabel('Where to?').fill('41.0342, 28.9844');
+  await page.getByLabel('Where to?', { exact: true }).fill('41.0342, 28.9844');
   await page.getByLabel(/^Name/).fill('Secret home');
   await expect(page.locator('.result .address')).toHaveText(ADDRESS);
   await expect(page.getByRole('link', { name: 'See what the driver sees' })).toHaveAttribute(
@@ -38,7 +38,7 @@ test('saving without a name lists the address, and reopening needs no new lookup
   photonRequests,
 }) => {
   await page.goto('./');
-  await page.getByLabel('Where to?').fill('41.0342, 28.9844');
+  await page.getByLabel('Where to?', { exact: true }).fill('41.0342, 28.9844');
   await expect(page.locator('.result .address')).toHaveText(ADDRESS);
   await page.getByRole('button', { name: 'Save', exact: true }).click();
   await page.reload();
@@ -49,7 +49,7 @@ test('saving without a name lists the address, and reopening needs no new lookup
 
 test('tapping Save straight after a paste or an edit saves the right place', async ({ page }) => {
   await page.goto('./');
-  const where = page.getByLabel('Where to?');
+  const where = page.getByLabel('Where to?', { exact: true });
   await where.fill('41.0342, 28.9844');
   await where.press('Enter');
   await page.getByRole('button', { name: 'Save', exact: true }).click();
@@ -60,7 +60,7 @@ test('tapping Save straight after a paste or an edit saves the right place', asy
 
 test('a multi-stop journey can be reordered, previewed and come back intact', async ({ page }) => {
   await page.goto('./');
-  await page.getByLabel('Where to?').fill('41.01, 28.97');
+  await page.getByLabel('Where to?', { exact: true }).fill('41.01, 28.97');
   await page.getByRole('button', { name: '+ Add a stop' }).click();
   await page.getByLabel('Final stop', { exact: true }).fill('41.02, 28.98');
 
@@ -87,8 +87,8 @@ test('a multi-stop journey can be reordered, previewed and come back intact', as
 
 test('a short link explains what to do', async ({ page }) => {
   await page.goto('./');
-  await page.getByLabel('Where to?').fill('https://maps.app.goo.gl/abc123');
-  await page.getByLabel('Where to?').press('Enter');
+  await page.getByLabel('Where to?', { exact: true }).fill('https://maps.app.goo.gl/abc123');
+  await page.getByLabel('Where to?', { exact: true }).press('Enter');
   await expect(page.getByRole('alert')).toContainText('Short links');
 });
 
@@ -132,12 +132,12 @@ test('before anything is entered the full card shows, with an empty QR and actio
   // A name typed before the place is kept.
   await page.getByLabel(/^Name/).fill('Office');
 
-  await page.getByLabel('Where to?').fill('41.0342, 28.9844');
+  await page.getByLabel('Where to?', { exact: true }).fill('41.0342, 28.9844');
   await expect(page.getByRole('img', { name: /QR code/ })).toBeVisible();
   await expect(page.getByRole('img', { name: 'Your QR appears here' })).toBeHidden();
   await expect(page.getByRole('button', { name: 'Save', exact: true })).toBeEnabled();
   await expect(page.getByLabel(/^Name/)).toHaveValue('Office');
 
-  await page.getByLabel('Where to?').fill('');
+  await page.getByLabel('Where to?', { exact: true }).fill('');
   await expect(page.getByRole('img', { name: 'Your QR appears here' })).toBeVisible();
 });

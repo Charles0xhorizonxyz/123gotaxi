@@ -12,7 +12,7 @@
 2. Show the QR, share the link, or download it as a PNG. Save places on your device, with a private name and note, and export or import the list.
 3. **The driver** scans it with the phone's camera, or with **Scan** in 123go.taxi itself, and the route starts in their navigation app.
 
-The QR code points to a 123go.taxi page, not straight to one app, so app support can improve without reprinting codes. That page lists the apps. Once a phone has a navigation app chosen ("Open this app directly next time" on that page, or **Your navigation app** on the main page), a scan opens it directly; untick "Open it directly" to see the list again.
+The QR code points to a 123go.taxi page, not straight to one app, so app support can improve without reprinting codes. That page lists the apps. Once a phone has a navigation app chosen ("Open this app directly next time" on that page, or **Your navigation app** on the main page), a scan opens it straight away; pick "Ask every time" to see the list again.
 
 **Install it:** the round download button in the bottom-right corner installs it (on iPhone: Share in Safari's toolbar, then "Add to Home Screen"), so it sits on the home screen like an app. No store, no account.
 

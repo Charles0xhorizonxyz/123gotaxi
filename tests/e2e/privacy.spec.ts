@@ -12,7 +12,7 @@ test('making and saving a QR only sends coordinates, and only to the address loo
   const requests: string[] = [];
   page.on('request', (request) => requests.push(request.url()));
 
-  await page.getByLabel('Where to?').fill('https://www.google.com/maps/@41.0342,28.9844,15z');
+  await page.getByLabel('Where to?', { exact: true }).fill('https://www.google.com/maps/@41.0342,28.9844,15z');
   await expect(page.getByText(ADDRESS)).toBeVisible();
   await page.getByLabel(/^Name/).fill('EvimizX7');
   await page.getByLabel(/^Note/).fill('KapiKoduQ9');

@@ -13,31 +13,27 @@ test('a scanned QR opens the chosen app directly', async ({ page }) => {
   await page.waitForURL(/^https:\/\/waze\.com\/ul\?ll=41\.0342,28\.9844/);
 });
 
-test('with "open directly" unticked on the main page, the driver sees the list', async ({ page }) => {
+test('choosing an app on the main page makes a scanned QR open it directly', async ({ page }) => {
   await page.goto('./');
   await page.getByLabel('Navigation app', { exact: true }).selectOption({ label: 'Waze' });
-  await page.getByLabel('Open it directly').uncheck();
-
+  await page.goto('about:blank');
   await page.goto(DRIVER_LINK);
-  await expect(page.getByRole('heading', { name: 'Cihangir' })).toBeVisible();
-  await expect(page.locator('.app').first()).toHaveText('Waze');
-  await expect(page.getByLabel('Open this app directly next time')).not.toBeChecked();
-  expect(page.url()).not.toContain('waze.com');
+  await page.waitForURL(/^https:\/\/waze\.com\/ul\?ll=41\.0342,28\.9844/);
 });
 
-test('"Ask every time" forgets the app and greys out the tick box', async ({ page }) => {
+test('"Ask every time" shows the app list', async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem('gogogo.app.v1', 'waze'));
   await page.goto('./');
-  await expect(page.getByLabel('Navigation app', { exact: true })).toHaveValue('waze');
   await page.getByLabel('Navigation app', { exact: true }).selectOption({ label: 'Ask every time' });
-  await expect(page.getByLabel('Open it directly')).toBeDisabled();
-  expect(await page.evaluate(() => localStorage.getItem('gogogo.app.v1'))).toBeNull();
+  await page.goto(DRIVER_LINK);
+  await expect(page.getByRole('heading', { name: 'Cihangir' })).toBeVisible();
+  expect(page.url()).not.toContain('waze.com');
 });
 
 test('the driver screen opened from "See what the driver sees" never jumps to the app', async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem('gogogo.app.v1', 'waze'));
   await page.goto('./');
-  await page.getByLabel('Where to?').fill('41.0342, 28.9844');
+  await page.getByLabel('Where to?', { exact: true }).fill('41.0342, 28.9844');
   await page.getByRole('link', { name: 'See what the driver sees' }).click();
   await expect(page.getByRole('heading', { name: 'Open with' })).toBeVisible();
   await page.waitForTimeout(500);
@@ -77,17 +73,17 @@ test('Close stops the scanner', async ({ page }) => {
 
 test('typing an address lists places; only a picked place makes the QR', async ({ page, photonRequests }) => {
   await page.goto('./');
-  await page.getByLabel('Where to?').pressSequentially('Sıraselviler 20');
+  await page.getByLabel('Where to?', { exact: true }).pressSequentially('Sıraselviler 20');
   const place = page.getByRole('button', { name: /Sıraselviler Caddesi 20/ });
   await expect(place).toBeVisible();
   // Words alone never make a QR.
   await expect(page.getByRole('img', { name: /QR code/ })).toBeHidden();
-  await page.getByLabel('Where to?').press('Enter');
+  await page.getByLabel('Where to?', { exact: true }).press('Enter');
   await expect(page.getByRole('img', { name: /QR code/ })).toBeHidden();
 
   await place.click();
   await expect(page.getByRole('img', { name: /QR code/ })).toBeVisible();
-  await expect(page.getByLabel('Where to?')).toHaveValue('41.0342, 28.9844');
+  await expect(page.getByLabel('Where to?', { exact: true })).toHaveValue('41.0342, 28.9844');
   await expect(page.getByLabel(/^Name/)).toHaveValue('Sıraselviler Caddesi 20');
   // The search sent the words; picking needed no second lookup.
   expect(photonRequests.some((u) => u.includes('/api?q=S%C4%B1raselviler%2020'))).toBe(true);
@@ -108,19 +104,25 @@ test('"Share 123go.taxi" shares the site itself', async ({ page }) => {
 
 test('a shared Yandex place with an unreadable link offers the place by name', async ({ page, photonRequests }) => {
   await page.goto('./');
-  await page.getByLabel('Where to?').fill(
+  await page.getByLabel('Where to?', { exact: true }).fill(
     'Galata Tower\nIstanbul, Beyoglu, Buyuk Hendek Avenue, 2\nhttps://yandex.com/maps/org/galata_kulesi/1087398212',
   );
-  await page.getByLabel('Where to?').press('Enter');
+  await page.getByLabel('Where to?', { exact: true }).press('Enter');
   await expect(page.locator('.suggestion').first()).toBeVisible();
   // Only the place name and address were searched, never the link.
   expect(photonRequests.some((u) => u.includes('/api?q=') && !u.includes('yandex'))).toBe(true);
 });
 
-test('section explanations stay behind "?" until asked for', async ({ page }) => {
+test('a "?" opens a small box that closes when you tap elsewhere', async ({ page }) => {
   await page.goto('./');
-  const help = page.getByText('Kept only in this browser');
+  const help = page.getByText('Three ways to say where you’re going');
+  await expect(help).toBeHidden();
+  await page.getByRole('button', { name: 'About Where to?' }).click();
+  await expect(help).toBeVisible();
+  await page.getByRole('heading', { name: 'Your places' }).click();
   await expect(help).toBeHidden();
   await page.getByRole('button', { name: 'About Your places' }).click();
-  await expect(help).toBeVisible();
+  await expect(page.getByText('Kept only in this browser')).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(page.getByText('Kept only in this browser')).toBeHidden();
 });
