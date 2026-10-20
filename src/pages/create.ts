@@ -6,6 +6,7 @@ import {
   finalStop,
   formatPoint,
   type Journey,
+  parseJourney,
   type Point,
 } from '../destination-url';
 import { photonGeocoder } from '../geocoding';
@@ -14,7 +15,8 @@ import { expandShortLink } from '../link-parsing/expand';
 import { drawQr, pngFileName, qrPngUrl } from '../qr';
 import { browserStorage, SavedPlaces, type SavedPlace } from '../saved-places';
 import { creditFooter, SHARE_RESULT_TEXT, shareLink } from './common';
-import { installCard } from './install';
+import { installButton } from './install';
+import { scanButton, type ScanOutcome } from './scanner';
 import { navAppSettings } from './settings';
 import { createStopsEditor, type StopsChange } from './stops-editor';
 
@@ -23,7 +25,7 @@ const ERRORS = {
   'short-link':
     'That link threw its rider. Short links hide the location: open it, then copy the long link from the address bar.',
   unrecognised:
-    'We couldn\'t find coordinates in that. Try a Google Maps or Yandex link, or coordinates like "41.0342, 28.9844".',
+    'We couldn\'t find coordinates in that. Try a Google Maps or Yandex link, or coordinates like "11.15, 40.58".',
   invalidQr: 'That QR link looks broken. Make a fresh one below.',
 } as const;
 
@@ -48,7 +50,17 @@ function fallbackName(place: SavedPlace): string {
   return place.stops.length > 1 ? `Route to ${end}` : end;
 }
 
-export function renderCreate(root: HTMLElement, { brokenLink = false } = {}): void {
+export function renderCreate(
+  root: HTMLElement,
+  {
+    brokenLink = false,
+    openScanned,
+  }: {
+    brokenLink?: boolean;
+    /** A scanned 123go.taxi QR: show its driver screen, as if scanned with the camera app. */
+    openScanned?: (hash: string) => void;
+  } = {},
+): void {
   const saved = new SavedPlaces(browserStorage());
   const geocoder = photonGeocoder(PHOTON_URL);
   let addressLookup: AbortController | undefined;
@@ -430,22 +442,51 @@ export function renderCreate(root: HTMLElement, { brokenLink = false } = {}): vo
     }
   });
 
+  /** 123go.taxi QR → its driver screen. Map link or coordinates → "Where to?". */
+  function onScan(text: string): ScanOutcome {
+    let url: URL | null = null;
+    try {
+      url = new URL(text);
+    } catch {
+      // Not a link: maybe coordinates.
+    }
+    if (url && (url.hostname === '123go.taxi' || url.origin === location.origin)) {
+      const journey = parseJourney(url.hash || url.search);
+      if (journey.kind === 'ok' && openScanned) {
+        openScanned(buildJourneyHash(journey.journey));
+        return { done: true };
+      }
+    }
+    const parsed = parseLocation(text);
+    if (parsed.ok || parsed.reason === 'short-link') {
+      stops.setValues([text.trim()]);
+      update(true, true);
+      return { done: true };
+    }
+    return { done: false, message: "That QR isn't a place. Try a 123go.taxi or map QR." };
+  }
+
   root.replaceChildren(
     h(
       'header',
       { class: 'masthead' },
       h(
-        'h1',
-        { class: 'wordmark' },
-        h('img', { src: `${import.meta.env.BASE_URL}logo.svg`, alt: '', width: '56', height: '58' }),
-        '123go.taxi',
+        'div',
+        { class: 'masthead-row' },
+        h(
+          'h1',
+          { class: 'wordmark' },
+          h('img', { src: `${import.meta.env.BASE_URL}logo.svg`, alt: '', width: '56', height: '58' }),
+          '123go.taxi',
+        ),
+        scanButton(onScan),
       ),
       h('p', { class: 'tagline' }, 'Hold on to your hat. Paste a place, get a QR, share it easily.'),
     ),
     h('div', { class: 'place-form' }, h('p', { class: 'field-label' }, 'Where to?'), stops.element, notice, error),
     result,
     savedSection,
-    ...[installCard()].filter((card) => card !== null),
+    ...[installButton()].filter((section) => section !== null),
     navAppSettings(),
     creditFooter(),
   );

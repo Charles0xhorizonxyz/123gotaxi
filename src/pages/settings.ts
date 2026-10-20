@@ -25,7 +25,7 @@ export function navAppSettings(): HTMLElement {
     ...apps.map((app) => h('option', { value: app.id, selected: app.id === remembered }, app.name)),
   );
   const directBox = h('input', { type: 'checkbox', id: 'nav-direct', checked: preference.direct });
-  const directLabel = h('label', { class: 'remember', for: 'nav-direct' }, directBox, 'Open it directly, without the app list');
+  const directLabel = h('label', { class: 'remember', for: 'nav-direct' }, directBox, 'Open it directly');
 
   function sync(): void {
     const none = select.value === '';

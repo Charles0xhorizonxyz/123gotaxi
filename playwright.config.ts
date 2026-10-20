@@ -5,7 +5,20 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   // On CI, keep a trace (screenshots, DOM, events) of any failing test.
   reporter: process.env.CI ? [['list'], ['html', { open: 'never' }]] : 'list',
-  use: { baseURL: 'http://localhost:4173', trace: 'retain-on-failure' },
+  globalSetup: './tests/e2e/global-setup.ts',
+  use: {
+    baseURL: 'http://localhost:4173',
+    trace: 'retain-on-failure',
+    // A fake camera that shows a QR code (made in global-setup.ts).
+    permissions: ['camera'],
+    launchOptions: {
+      args: [
+        '--use-fake-ui-for-media-stream',
+        '--use-fake-device-for-media-stream',
+        '--use-file-for-fake-video-capture=tests/e2e/.fake-camera.y4m',
+      ],
+    },
+  },
   webServer: {
     command: 'npm run build && npx vite preview --port 4173 --strictPort',
     url: 'http://localhost:4173',

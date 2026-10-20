@@ -16,7 +16,7 @@ test('a scanned QR opens the chosen app directly', async ({ page }) => {
 test('with "open directly" unticked on the main page, the driver sees the list', async ({ page }) => {
   await page.goto('./');
   await page.getByLabel('Navigation app').selectOption({ label: 'Waze' });
-  await page.getByLabel('Open it directly, without the app list').uncheck();
+  await page.getByLabel('Open it directly').uncheck();
 
   await page.goto(DRIVER_LINK);
   await expect(page.getByRole('heading', { name: 'Cihangir' })).toBeVisible();
@@ -30,7 +30,7 @@ test('"Ask every time" forgets the app and greys out the tick box', async ({ pag
   await page.goto('./');
   await expect(page.getByLabel('Navigation app')).toHaveValue('waze');
   await page.getByLabel('Navigation app').selectOption({ label: 'Ask every time' });
-  await expect(page.getByLabel('Open it directly, without the app list')).toBeDisabled();
+  await expect(page.getByLabel('Open it directly')).toBeDisabled();
   expect(await page.evaluate(() => localStorage.getItem('gogogo.app.v1'))).toBeNull();
 });
 
@@ -44,13 +44,34 @@ test('the driver screen opened from "See what the driver sees" never jumps to th
   expect(page.url()).not.toContain('waze.com');
 });
 
-test('the install card explains how, and "Not now" hides it for good', async ({ page }) => {
+test('Install is one button; on iPhone it shows the two steps', async ({ page }, testInfo) => {
   await page.goto('./');
-  const card = page.getByRole('region', { name: 'Install' });
-  await expect(card).toBeVisible();
-  await expect(card).toContainText(/Add to Home [Ss]creen/);
-  await card.getByRole('button', { name: 'Not now' }).click();
-  await expect(card).toHaveCount(0);
-  await page.reload();
-  await expect(page.getByRole('region', { name: 'Install' })).toHaveCount(0);
+  const install = page.getByRole('region', { name: 'Install' });
+  // Android: the button waits for the browser's install offer, which tests never get.
+  if (testInfo.project.name === 'android') {
+    await expect(install).toBeHidden();
+    return;
+  }
+  await expect(install.getByRole('button', { name: 'Install 123go.taxi' })).toBeVisible();
+  await install.getByRole('button', { name: 'Install 123go.taxi' }).click();
+  await expect(install).toContainText('Add to Home Screen');
+});
+
+test('Scan reads a 123go.taxi QR with the camera and opens its driver screen', async ({ page }) => {
+  await page.goto('./');
+  await page.getByRole('button', { name: 'Scan a QR code' }).click();
+  await expect(page.getByRole('dialog', { name: 'Scan a QR code' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Lucy' })).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+});
+
+test('Close stops the scanner', async ({ page }) => {
+  await page.addInitScript(() => {
+    // A camera that never answers, so the scan can't finish first.
+    navigator.mediaDevices.getUserMedia = () => new Promise(() => {});
+  });
+  await page.goto('./');
+  await page.getByRole('button', { name: 'Scan a QR code' }).click();
+  await page.getByRole('button', { name: 'Close' }).click();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
 });

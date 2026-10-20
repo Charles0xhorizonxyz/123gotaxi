@@ -108,12 +108,9 @@ test('the driver screen lists apps and puts the remembered one first', async ({ 
   await page.reload();
   await expect(page.locator('.app').first()).toHaveText('Waze');
   await expect(page.getByLabel('Open this app directly next time')).toBeChecked();
-  await expect(page.getByRole('link', { name: /Made with/ })).toHaveAttribute(
-    'href',
-    'https://0xhorizon.xyz',
-  );
+  await expect(page.getByRole('link', { name: /Made with/ })).toHaveCount(0);
   await expect(page.getByRole('link', { name: 'Contact' })).toHaveCount(0);
-  await expect(page.getByRole('link', { name: 'Fully open source' })).toHaveAttribute(
+  await expect(page.getByRole('link', { name: 'Source code on GitHub' })).toHaveAttribute(
     'href',
     'https://github.com/Charles0xhorizonxyz/123gotaxi',
   );

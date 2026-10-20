@@ -8,3 +8,4 @@ playwright-report/
 .DS_Store
 .env.local
 gogogo-rodeo-prompt.md
+tests/e2e/.fake-camera.y4m
