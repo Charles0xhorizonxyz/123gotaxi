@@ -21,15 +21,15 @@ The QR code points to a 123go.taxi page, not straight to one app, so app support
 ## Privacy
 
 - No accounts, no database, no analytics, no cookies.
-- **One outside lookup:** to show a readable address, the phone making the QR sends the final stop's coordinates (nothing else) to [Photon](https://photon.komoot.io), an open OpenStreetMap address service. The address then travels inside the QR, so the driver's phone looks nothing up.
-- **Typed addresses:** when you type words (not a link or coordinates) in "Where to?", those words go to Photon to list matching places. Nothing else goes with them.
+- **Address lookups:** to show a readable address, the phone making the QR sends the final stop's coordinates (nothing else) to [Geoapify](https://www.geoapify.com), a German OpenStreetMap address service under EU privacy law, or, if Geoapify is slow or unavailable, to [Photon](https://photon.komoot.io), komoot's open one. The address then travels inside the QR, so the driver's phone looks nothing up.
+- **Typed addresses:** when you type words (not a link or coordinates) in "Where to?", those words go to the same address service (Geoapify, or Photon as backup) to list matching places. Nothing else goes with them.
 - **Short map links only:** if you paste a short link such as `maps.app.goo.gl/…`, that link (nothing else) goes to our tiny link expander on Cloudflare (`worker/`), which returns the long link holding the coordinates. When Google's long link only carries an address, the expander looks that address up itself, in OpenStreetMap's address services (Photon and Nominatim). It stores and logs nothing. Long links, addresses and coordinates never go there.
 - QR codes are generated in your browser, and **Scan** reads them on your phone: camera images never leave it.
 - **The coordinates are part of the QR link.** Anyone who scans the code sees the location. For a home address, consider pinning a nearby corner instead.
 - Saved places, names and notes stay in your browser (`localStorage`) and never go into the QR code or anywhere else.
 - **Opened QRs are kept on that phone.** Any 123go.taxi QR opened on a phone (camera, Scan, or a tapped link) is added to *Your places* as **New**, with ✓ to keep it and ✕ to remove it. That includes a driver's phone, which keeps the places its driver scans until removed. It stays on that phone only.
 - The chosen navigation app is stored only in that phone's browser. Pick "Ask every time" to clear it.
-- The published page's Content-Security-Policy forbids it from sending data to any server other than that address lookup and the link expander.
+- The published page's Content-Security-Policy forbids it from sending data to any server other than those address services and the link expander.
 
 ## Development
 
@@ -56,9 +56,11 @@ It's a static site: build it and serve `dist/` from anywhere. Two build-time set
 | `VITE_PUBLIC_URL` | `https://123go.taxi` | Address that QR codes point to. |
 | `BASE_PATH` | `/` | Sub-path if the site isn't at the root of its domain, e.g. `/123gotaxi/`. |
 
+The Geoapify key in `src/config.ts` only works from 123go.taxi. When self-hosting, put your own free key there, or leave it empty to use Photon alone.
+
 ## Credits
 
-Addresses © [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors, looked up with [Photon](https://github.com/komoot/photon) by komoot. QR reading on iPhone with [jsQR](https://github.com/cozmo/jsQR) (Apache-2.0).
+Addresses © [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors, looked up with [Geoapify](https://www.geoapify.com) and [Photon](https://github.com/komoot/photon) by komoot. QR reading on iPhone with [jsQR](https://github.com/cozmo/jsQR) (Apache-2.0).
 
 ## Contact
 

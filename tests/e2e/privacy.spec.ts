@@ -22,12 +22,15 @@ test('making and saving a QR only sends coordinates, and only to the address loo
   // Our own static files may still load (e.g. the font with ı, ğ, ş once the address shows),
   // but nothing goes to any other site, and no request carries what was typed.
   const ownSite = new URL(page.url()).origin;
-  const elsewhere = requests.filter(
-    (url) => !url.startsWith(`${ownSite}/`) && !url.startsWith('https://photon.komoot.io/'),
-  );
+  const lookups = ['https://photon.komoot.io/', 'https://api.geoapify.com/'];
+  const elsewhere = requests.filter((url) => !url.startsWith(`${ownSite}/`) && !lookups.some((l) => url.startsWith(l)));
   expect(elsewhere).toEqual([]);
   for (const url of requests.filter((u) => u.startsWith(ownSite))) {
     expect(url).not.toMatch(/41\.0342|28\.9844|EvimizX7|KapiKoduQ9/);
+  }
+  // The address services only ever get the coordinates: never the name or the note.
+  for (const url of requests.filter((u) => lookups.some((l) => u.startsWith(l)))) {
+    expect(url).not.toMatch(/EvimizX7|KapiKoduQ9/);
   }
   expect(photonRequests).toEqual(['https://photon.komoot.io/reverse?lat=41.0342&lon=28.9844&limit=1']);
 });
@@ -46,6 +49,7 @@ test('the page cannot send data anywhere else', async ({ page }) => {
 test('the driver screen looks nothing up, and the destination never reaches the server', async ({
   page,
   photonRequests,
+  geoapifyRequests,
 }) => {
   const served: string[] = [];
   page.on('request', (request) => served.push(request.url()));
@@ -54,4 +58,5 @@ test('the driver screen looks nothing up, and the destination never reaches the 
   // URLs as sent on the wire never include the part after "#".
   for (const url of served) expect(url).not.toMatch(/41\.0342|28\.9844|Sıraselviler|S%C4%B1raselviler/);
   expect(photonRequests).toEqual([]);
+  expect(geoapifyRequests).toEqual([]);
 });

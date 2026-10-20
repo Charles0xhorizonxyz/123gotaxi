@@ -36,6 +36,14 @@ export function publicUrl(): string {
 export const PHOTON_URL = 'https://photon.komoot.io';
 
 /**
+ * Geoapify answers address searches much faster than the free Photon server.
+ * The key is public by design: Geoapify only accepts it from 123go.taxi.
+ * Self-hosting? Use your own key, or leave it empty to use Photon alone.
+ */
+export const GEOAPIFY_URL = 'https://api.geoapify.com';
+export const GEOAPIFY_KEY = 'e0d14429c9a14eefa00c17f367869ccf';
+
+/**
  * The link expander (worker/) that turns short map links into long ones.
  * Empty: short links show "open it and copy the long link" instead.
  */

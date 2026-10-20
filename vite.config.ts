@@ -1,5 +1,5 @@
 import { defineConfig, type Plugin } from 'vitest/config';
-import { EXPANDER_URL, PHOTON_URL } from './src/config';
+import { EXPANDER_URL, GEOAPIFY_KEY, GEOAPIFY_URL, PHOTON_URL } from './src/config';
 
 // The browser enforces this policy on the published site. Most importantly,
 // connect-src allows exactly two outside servers: the address lookup (it only
@@ -12,7 +12,7 @@ export const CONTENT_SECURITY_POLICY = [
   "style-src 'self'",
   "img-src 'self' data: blob:",
   "font-src 'self'",
-  `connect-src ${[PHOTON_URL, EXPANDER_URL].filter(Boolean).join(' ')}`,
+  `connect-src ${[GEOAPIFY_KEY && GEOAPIFY_URL, PHOTON_URL, EXPANDER_URL].filter(Boolean).join(' ')}`,
   "manifest-src 'self'",
   "base-uri 'none'",
   "form-action 'none'",

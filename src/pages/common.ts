@@ -53,10 +53,16 @@ export function creditFooter(): HTMLElement {
   });
   github.innerHTML = GITHUB_SVG;
   // Addresses and searches come from OpenStreetMap, whose licence asks for this credit.
+  const link = (href: string, text: string) => h('a', { href, rel: 'noopener', target: '_blank' }, text);
   const osm = h(
-    'a',
-    { href: 'https://www.openstreetmap.org/copyright', rel: 'noopener', target: '_blank', class: 'osm-credit' },
-    'Address © OpenStreetMap contributors, via Photon',
+    'p',
+    { class: 'osm-credit' },
+    'Address © ',
+    link('https://www.openstreetmap.org/copyright', 'OpenStreetMap contributors'),
+    ', via ',
+    link('https://www.geoapify.com', 'Geoapify'),
+    ' and ',
+    link('https://photon.komoot.io', 'Photon'),
   );
   return h('footer', {}, h('div', { class: 'footer-row' }, github, osm));
 }

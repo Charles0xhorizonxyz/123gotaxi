@@ -1,4 +1,4 @@
-import { EXPANDER_URL, PHOTON_URL, publicUrl } from '../config';
+import { EXPANDER_URL, GEOAPIFY_KEY, GEOAPIFY_URL, PHOTON_URL, publicUrl } from '../config';
 import { h } from '../dom';
 import {
   buildJourneyHash,
@@ -9,7 +9,7 @@ import {
   parseJourney,
   type Point,
 } from '../destination-url';
-import { photonGeocoder, type Suggestion } from '../geocoding';
+import { geoapifyGeocoder, photonGeocoder, withBackup, type Suggestion } from '../geocoding';
 import { parseLocation, type ParseResult } from '../link-parsing';
 import { expandShortLink } from '../link-parsing/expand';
 import { drawQr, pngFileName, qrPngUrl } from '../qr';
@@ -93,7 +93,9 @@ export function renderCreate(
   } = {},
 ): void {
   const saved = new SavedPlaces(browserStorage());
-  const geocoder = photonGeocoder(PHOTON_URL);
+  const geocoder = GEOAPIFY_KEY
+    ? withBackup(geoapifyGeocoder(GEOAPIFY_URL, GEOAPIFY_KEY), photonGeocoder(PHOTON_URL))
+    : photonGeocoder(PHOTON_URL);
   let addressLookup: AbortController | undefined;
   // The QR only carries the stops. Name and note stay on this device.
   let current: Journey | null = null;

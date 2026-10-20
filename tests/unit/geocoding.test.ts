@@ -81,3 +81,26 @@ describe('toSuggestions', () => {
     ).toEqual([{ lat: 41.03, lon: 28.98, name: 'Galata Kulesi', address: 'Galata Kulesi, Bereketzade, Beyoğlu' }]);
   });
 });
+
+describe('Geoapify, with Photon as backup', () => {
+  it('reads Geoapify results like Photon ones', async () => {
+    const { geoapifySuggestions } = await import('../../src/geocoding');
+    expect(
+      geoapifySuggestions({
+        results: [{ lat: 41.0256, lon: 28.9742, name: 'Galata Tower', street: 'Bereketzade Mahallesi', suburb: 'Bereketzade Mahallesi', city: 'İstanbul' }],
+      }),
+    ).toEqual([{ lat: 41.0256, lon: 28.9742, name: 'Galata Tower', address: 'Galata Tower, Bereketzade Mahallesi, İstanbul' }]);
+  });
+
+  it('asks the backup when the first service fails, and remembers what it learned', async () => {
+    const { withBackup } = await import('../../src/geocoding');
+    const failing = { attribution: '', reverse: vi.fn(async () => { throw new Error('HTTP 429'); }), search: vi.fn(async () => { throw new Error('HTTP 429'); }) };
+    const backup = { attribution: '', reverse: vi.fn(async () => 'Backup street 1'), search: vi.fn(async () => [{ lat: 1, lon: 2, name: 'B', address: 'B, Town' }]) };
+    const geocoder = withBackup(failing, backup);
+    expect(await geocoder.reverse({ lat: 3, lon: 4 })).toBe('Backup street 1');
+    expect(await geocoder.search('b')).toHaveLength(1);
+    // Picking the suggestion needs no further lookup.
+    expect(await geocoder.reverse({ lat: 1, lon: 2 })).toBe('B, Town');
+    expect(backup.reverse).toHaveBeenCalledTimes(1);
+  });
+});

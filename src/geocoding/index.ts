@@ -1,5 +1,6 @@
 // Turning coordinates into a readable address ("reverse geocoding"), and
-// typed words into places ("search").
+// typed words into places ("search"). Geoapify answers first; the free Photon
+// server is the backup. Both serve OpenStreetMap data.
 //
 // Reverse: it sends the coordinates of the final stop, nothing else (no name,
 // no note), and only from the phone making the QR: the address then travels
@@ -63,15 +64,24 @@ export function formatPhotonAddress(p: PhotonProperties): string | null {
 const TIMEOUT_MS = 12000;
 const SUGGESTIONS = 5;
 
-/** fetch() with our timeout, following an outside abort too. */
-async function fetchJson<T>(url: string, signal?: AbortSignal): Promise<T | null> {
+/**
+ * fetch() with a timeout, following an outside abort too. Without `strict`, a
+ * refused answer resolves null; with it, it throws, so a backup can take over.
+ */
+async function fetchJson<T>(
+  url: string,
+  signal?: AbortSignal,
+  { timeoutMs = TIMEOUT_MS, strict = false } = {},
+): Promise<T | null> {
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
   const stop = () => controller.abort();
   signal?.addEventListener('abort', stop);
   try {
     const response = await fetch(url, { signal: controller.signal, credentials: 'omit', referrerPolicy: 'no-referrer' });
-    return response.ok ? ((await response.json()) as T) : null;
+    if (response.ok) return (await response.json()) as T;
+    if (strict) throw new Error(`HTTP ${response.status}`);
+    return null;
   } finally {
     clearTimeout(timer);
     signal?.removeEventListener('abort', stop);
@@ -123,6 +133,103 @@ export function photonGeocoder(baseUrl: string): ReverseGeocoder {
       );
       const found = toSuggestions(data);
       // Remember each address, so picking one doesn't need a second lookup.
+      for (const s of found) cache.set(formatPoint(s), s.address);
+      return found;
+    },
+  };
+}
+
+// Geoapify: the same OpenStreetMap data, answering in about a second where
+// the free Photon server can take four or five. Its key is public (it sits in
+// the page) but only works from 123go.taxi.
+
+/** Give Geoapify this long before Photon takes over. */
+const GEOAPIFY_TIMEOUT_MS = 5000;
+
+/** The fields we use from a Geoapify result. */
+export interface GeoapifyResult {
+  lat?: number;
+  lon?: number;
+  name?: string;
+  housenumber?: string;
+  street?: string;
+  suburb?: string;
+  district?: string;
+  city?: string;
+  state?: string;
+}
+
+/** Geoapify results in Photon's shape, so both read the same way. */
+function asPhoton(results: GeoapifyResult[] | undefined): PhotonReply {
+  return {
+    features: (results ?? []).map((r) => ({
+      geometry: r.lat !== undefined && r.lon !== undefined ? { coordinates: [r.lon, r.lat] } : undefined,
+      properties: {
+        name: r.name,
+        housenumber: r.housenumber,
+        street: r.street,
+        district: r.suburb ?? r.district,
+        city: r.city,
+        state: r.state,
+      },
+    })),
+  };
+}
+
+export function geoapifySuggestions(reply: { results?: GeoapifyResult[] } | null): Suggestion[] {
+  return toSuggestions(asPhoton(reply?.results));
+}
+
+export function geoapifyGeocoder(baseUrl: string, apiKey: string): ReverseGeocoder {
+  const options = { timeoutMs: GEOAPIFY_TIMEOUT_MS, strict: true };
+  return {
+    attribution: 'Address © OpenStreetMap contributors, via Geoapify',
+    async reverse(point, signal) {
+      const data = await fetchJson<{ results?: GeoapifyResult[] }>(
+        `${baseUrl}/v1/geocode/reverse?lat=${formatCoord(point.lat)}&lon=${formatCoord(point.lon)}&format=json&apiKey=${apiKey}`,
+        signal,
+        options,
+      );
+      const properties = asPhoton(data?.results).features?.[0]?.properties;
+      return properties ? formatPhotonAddress(properties) : null;
+    },
+    async search(query, signal) {
+      const data = await fetchJson<{ results?: GeoapifyResult[] }>(
+        `${baseUrl}/v1/geocode/autocomplete?text=${encodeURIComponent(query)}&limit=${SUGGESTIONS}&format=json&apiKey=${apiKey}`,
+        signal,
+        options,
+      );
+      return geoapifySuggestions(data);
+    },
+  };
+}
+
+/**
+ * Ask `primary` first; when it fails (slow, down, over its daily limit, or
+ * refusing this address, as on a developer's own machine), ask `backup`.
+ * Remembers every address it learns, so nothing is looked up twice.
+ */
+export function withBackup(primary: ReverseGeocoder, backup: ReverseGeocoder): ReverseGeocoder {
+  const cache = new Map<string, string | null>();
+  const either = async <T>(ask: (g: ReverseGeocoder) => Promise<T>, signal?: AbortSignal): Promise<T> => {
+    try {
+      return await ask(primary);
+    } catch (error) {
+      if (signal?.aborted) throw error;
+      return ask(backup);
+    }
+  };
+  return {
+    attribution: 'Address © OpenStreetMap contributors, via Geoapify and Photon',
+    async reverse(point, signal) {
+      const key = formatPoint(point);
+      if (cache.has(key)) return cache.get(key)!;
+      const address = await either((g) => g.reverse(point, signal), signal);
+      cache.set(key, address);
+      return address;
+    },
+    async search(query, signal) {
+      const found = await either((g) => g.search(query, signal), signal);
       for (const s of found) cache.set(formatPoint(s), s.address);
       return found;
     },

@@ -160,3 +160,18 @@ test('"Put it on your website" puts the public name in the QR and gives the code
   await page.goto('./');
   await expect(page.getByRole('button', { name: 'Keep Pandeli' })).toBeVisible();
 });
+
+test.describe('with Geoapify answering', () => {
+  test.use({ geoapifyAnswers: true });
+
+  test('searches and addresses come from Geoapify, and Photon is not asked', async ({ page, photonRequests, geoapifyRequests }) => {
+    await page.goto('./');
+    await page.getByLabel('Where to?', { exact: true }).pressSequentially('Sıraselviler 20');
+    const place = page.getByRole('button', { name: /Sıraselviler Caddesi 20/ });
+    await expect(place).toBeVisible();
+    await place.click();
+    await expect(page.locator('.result .address')).toHaveText('Sıraselviler Caddesi 20, Katip Mustafa Çelebi, Beyoğlu');
+    expect(geoapifyRequests.some((u) => u.includes('/v1/geocode/autocomplete?text=S%C4%B1raselviler%2020'))).toBe(true);
+    expect(photonRequests).toEqual([]);
+  });
+});
