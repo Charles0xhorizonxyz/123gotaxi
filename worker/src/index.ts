@@ -9,6 +9,9 @@
 // - Only map short links are accepted (see SHORT_HOSTS); anything else is refused.
 // - It follows the redirects by reading their Location headers; it never
 //   downloads the destination page.
+// - Some Google links lead to a place page with an address but no coordinates.
+//   Then the address written in that link (never anything from the person) is
+//   looked up in Photon, the open address service the site already uses.
 // - It stores nothing and logs nothing (observability is off in wrangler.toml).
 // - Only 123go.taxi (and a developer's own machine) may call it from a browser.
 
@@ -22,6 +25,9 @@ const SHORT_HOSTS: Record<string, (path: string) => boolean> = {
 };
 
 const MAX_HOPS = 5;
+const PHOTON_URL = 'https://photon.komoot.io/api/';
+/** Photon results this vague could be a whole street or town away: better no answer. */
+const VAGUE_TYPES = new Set(['street', 'locality', 'district', 'city', 'county', 'state', 'country', 'other']);
 const MAX_INPUT_LENGTH = 500;
 
 function isShortLink(url: URL): boolean {
@@ -67,6 +73,53 @@ export async function expand(short: URL, fetcher: typeof fetch = fetch): Promise
   return null;
 }
 
+/** A Google place link with an address but no coordinates → that address; otherwise null. */
+export function addressWithoutCoordinates(link: string): string | null {
+  const url = new URL(link);
+  if (!/(^|\.)google\.[a-z.]+$/.test(url.hostname)) return null;
+  if (/@-?\d|!3d-?\d/.test(url.pathname) || /[?&](q|query|ll|center)=-?\d/.test(url.search)) return null;
+  const place = /\/maps\/place\/([^/]+)/.exec(url.pathname)?.[1];
+  if (!place) return null;
+  try {
+    return decodeURIComponent(place.replace(/\+/g, ' ')).trim() || null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Look the address up in Photon. Google writes "Name, street, city, …": Photon
+ * often misses with the name in front, so the second try leaves it out.
+ */
+export async function locate(address: string, fetcher: typeof fetch = fetch): Promise<{ lat: number; lon: number } | null> {
+  const parts = address.split(',').map((part) => part.trim()).filter(Boolean);
+  const queries = parts.length > 2 ? [parts.join(', '), parts.slice(1).join(', ')] : [parts.join(', ')];
+  for (const query of queries) {
+    const response = await fetcher(`${PHOTON_URL}?limit=1&q=${encodeURIComponent(query)}`, {
+      headers: { 'user-agent': 'Mozilla/5.0 (compatible; 123go.taxi link expander)' },
+    });
+    if (!response.ok) continue;
+    const data = (await response.json()) as {
+      features?: { geometry?: { coordinates?: [number, number] }; properties?: { type?: string } }[];
+    };
+    const feature = data.features?.[0];
+    const coordinates = feature?.geometry?.coordinates;
+    if (coordinates && !VAGUE_TYPES.has(feature.properties?.type ?? 'other')) {
+      return { lat: coordinates[1], lon: coordinates[0] };
+    }
+  }
+  return null;
+}
+
+/** The long link, with coordinates added from the address when Google left them out. */
+async function withCoordinates(long: string): Promise<string> {
+  const address = addressWithoutCoordinates(long);
+  if (!address) return long;
+  const found = await locate(address).catch(() => null);
+  if (!found) return long;
+  return `https://www.google.com/maps/place/${encodeURIComponent(address)}/data=!3d${found.lat}!4d${found.lon}`;
+}
+
 export default {
   async fetch(request: Request): Promise<Response> {
     const origin = request.headers.get('origin');
@@ -86,7 +139,8 @@ export default {
     if (!isShortLink(short)) return json({ error: 'not-a-short-link' }, 422, origin);
 
     try {
-      const long = await expand(short);
+      const expanded = await expand(short);
+      const long = expanded && (await withCoordinates(expanded));
       return long ? json({ url: long }, 200, origin) : json({ error: 'did-not-resolve' }, 502, origin);
     } catch {
       return json({ error: 'upstream-failed' }, 502, origin);

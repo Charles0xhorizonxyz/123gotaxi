@@ -18,7 +18,7 @@ The QR code points to a 123go.taxi page, not straight to one app. That page list
 
 - No accounts, no database, no analytics, no cookies.
 - **One outside lookup:** to show a readable address, the phone making the QR sends the final stop's coordinates (nothing else) to [Photon](https://photon.komoot.io), an open OpenStreetMap address service. The address then travels inside the QR, so the driver's phone looks nothing up.
-- **Short map links only:** if you paste a short link such as `maps.app.goo.gl/…`, that link (nothing else) goes to our tiny link expander on Cloudflare (`worker/`), which returns the long link holding the coordinates. It stores and logs nothing. Long links, addresses and coordinates never go there.
+- **Short map links only:** if you paste a short link such as `maps.app.goo.gl/…`, that link (nothing else) goes to our tiny link expander on Cloudflare (`worker/`), which returns the long link holding the coordinates. When Google's long link only carries an address, the expander looks that address up in Photon itself. It stores and logs nothing. Long links, addresses and coordinates never go there.
 - QR codes are generated in your browser.
 - **The coordinates are part of the QR link.** Anyone who scans the code sees the location. For a home address, consider pinning a nearby corner instead.
 - Saved places, names and notes stay in your browser (`localStorage`) and never go into the QR code or anywhere else.

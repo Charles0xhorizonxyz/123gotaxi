@@ -127,3 +127,13 @@ describe('things we cannot read', () => {
     expect(coords('   ')).toBe('empty');
   });
 });
+
+describe('links rebuilt by the expander', () => {
+  it('reads the place and its name', () => {
+    const link = `https://www.google.com/maps/place/${encodeURIComponent('Bâton Rouge Grillhouse & Bar, 2844 Rue King Ouest')}/data=!3d45.3970493!4d-71.9420658`;
+    expect(parseLocation(link)).toEqual({
+      ok: true,
+      place: { lat: 45.3970493, lon: -71.9420658, label: 'Bâton Rouge Grillhouse & Bar, 2844 Rue King Ouest' },
+    });
+  });
+});

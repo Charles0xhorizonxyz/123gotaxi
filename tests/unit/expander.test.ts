@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import worker, { expand } from '../../worker/src/index';
+import worker, { addressWithoutCoordinates, expand, locate } from '../../worker/src/index';
 
 const SHORT = 'https://maps.app.goo.gl/42vbXakpmaLpAsuD9?g_st=ac';
 const LONG =
@@ -31,6 +31,41 @@ describe('expand', () => {
   it('gives up when there is no redirect, or it never ends', async () => {
     expect(await expand(new URL(SHORT), (async () => new Response('page')) as typeof fetch)).toBeNull();
     expect(await expand(new URL(SHORT), (async () => redirect(SHORT)) as typeof fetch)).toBeNull();
+  });
+});
+
+describe('links without coordinates', () => {
+  const NO_COORDS =
+    'https://www.google.com/maps/place/B%C3%A2ton+Rouge+Grillhouse+%26+Bar,+2844+Rue+King+Ouest,+Sherbrooke,+Quebec+J1L+1C5,+Canada/data=!4m2!3m1!1s0x4cb7b4a269933f83:0x67934ab493ca3a9!18m1!1e1?entry=gps';
+
+  function photon(type: string, lon = -71.9420658, lat = 45.3970493): Response {
+    return Response.json({ features: [{ geometry: { coordinates: [lon, lat] }, properties: { type } }] });
+  }
+
+  it('finds the address in a Google place link that has no coordinates', () => {
+    expect(addressWithoutCoordinates(NO_COORDS)).toBe(
+      'Bâton Rouge Grillhouse & Bar, 2844 Rue King Ouest, Sherbrooke, Quebec J1L 1C5, Canada',
+    );
+    expect(addressWithoutCoordinates(LONG)).toBeNull();
+    expect(addressWithoutCoordinates('https://www.google.com/maps/place/X/@45.39,-71.94,17z')).toBeNull();
+    expect(addressWithoutCoordinates('https://yandex.com.tr/maps/?text=x')).toBeNull();
+  });
+
+  it('retries without the place name, and keeps a house-level answer', async () => {
+    const fetcher = vi
+      .fn()
+      .mockResolvedValueOnce(Response.json({ features: [] }))
+      .mockResolvedValueOnce(photon('house'));
+    expect(await locate('Bâton Rouge, 2844 Rue King Ouest, Sherbrooke', fetcher as unknown as typeof fetch)).toEqual({
+      lat: 45.3970493,
+      lon: -71.9420658,
+    });
+    expect(fetcher.mock.calls[1]![0]).toContain(encodeURIComponent('2844 Rue King Ouest, Sherbrooke'));
+  });
+
+  it('refuses answers as vague as a street or a town', async () => {
+    const fetcher = vi.fn(async () => photon('street'));
+    expect(await locate('Somewhere, Rue King Ouest, Sherbrooke', fetcher as unknown as typeof fetch)).toBeNull();
   });
 });
 
