@@ -56,7 +56,7 @@ export function creditFooter(): HTMLElement {
   const osm = h(
     'a',
     { href: 'https://www.openstreetmap.org/copyright', rel: 'noopener', target: '_blank', class: 'osm-credit' },
-    'Addresses © OpenStreetMap',
+    'Address © OpenStreetMap contributors, via Photon',
   );
   return h('footer', {}, h('div', { class: 'footer-row' }, github, osm));
 }

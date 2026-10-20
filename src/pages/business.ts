@@ -1,34 +1,52 @@
 // "Put it on your website": for restaurants, hotels and other places. The
 // place gives its public name (it goes into the QR, so guests and drivers see
-// it) and gets a "Get here by taxi" button and QR to paste into its website.
+// it) and gets one card, "Reach us with 123go.taxi" over the QR, to paste into
+// its website, in the language of its guests.
 
 import { buildJourneyUrl, type Journey } from '../destination-url';
 import { h } from '../dom';
 import { qrDataUrl } from '../qr';
 
-const BUTTON_STYLE = [
+/** The card's words, per language: what it says, and the QR's description for screen readers. */
+export const CARD_LANGUAGES = {
+  en: { name: 'English', text: 'Reach us with 123go.taxi', alt: 'QR code: reach us with 123go.taxi' },
+  fr: { name: 'Français', text: 'Rejoignez-nous avec 123go.taxi', alt: 'Code QR : rejoignez-nous avec 123go.taxi' },
+  tr: { name: 'Türkçe', text: '123go.taxi ile bize ulaşın', alt: 'QR kod: 123go.taxi ile bize ulaşın' },
+  de: { name: 'Deutsch', text: 'Mit 123go.taxi zu uns', alt: 'QR-Code: mit 123go.taxi zu uns' },
+  es: { name: 'Español', text: 'Llega hasta nosotros con 123go.taxi', alt: 'Código QR: llega hasta nosotros con 123go.taxi' },
+  ru: { name: 'Русский', text: 'Доберитесь до нас с 123go.taxi', alt: 'QR-код: доберитесь до нас с 123go.taxi' },
+} as const;
+export type CardLanguage = keyof typeof CARD_LANGUAGES;
+
+const CARD_STYLE = [
   'display:inline-flex',
+  'flex-direction:column',
   'align-items:center',
-  'gap:8px',
-  'padding:12px 20px',
-  'border-radius:999px',
+  'gap:12px',
+  'max-width:220px',
+  'padding:16px',
+  'border-radius:18px',
   'background:#141414',
   'color:#ffc61a',
-  'font:700 16px/1.2 system-ui,-apple-system,sans-serif',
+  'font:700 16px/1.25 system-ui,-apple-system,sans-serif',
+  'text-align:center',
   'text-decoration:none',
 ].join(';');
+const QR_STYLE = 'display:block;width:180px;height:180px;border-radius:8px;background:#fff';
 
 function escapeHtml(text: string): string {
   return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-/** The code a website pastes: a button for phones, a QR for computers. */
-export function websiteSnippet(url: string, name: string, qr: string): string {
-  const label = name ? `Get to ${name} by taxi` : 'Get here by taxi';
+/** The code a website pastes: one card, the words over the QR, the whole card a link (for phones). */
+export function websiteSnippet(url: string, qr: string, language: CardLanguage = 'en'): string {
+  const words = CARD_LANGUAGES[language];
   return [
-    `<!-- 123go.taxi: ${escapeHtml(label)} -->`,
-    `<a href="${escapeHtml(url)}" style="${BUTTON_STYLE}">🚕 ${escapeHtml(label)}</a>`,
-    `<br><img src="${qr}" width="180" height="180" alt="QR code: ${escapeHtml(label)} with 123go.taxi">`,
+    `<!-- 123go.taxi -->`,
+    `<a href="${escapeHtml(url)}" style="${CARD_STYLE}" lang="${language}">`,
+    `  <span>${escapeHtml(words.text)}</span>`,
+    `  <img src="${qr}" width="180" height="180" alt="${escapeHtml(words.alt)}" style="${QR_STYLE}">`,
+    `</a>`,
   ].join('\n');
 }
 
@@ -42,7 +60,11 @@ export interface BusinessPanel {
 export function businessPanel(publicUrl: () => string): BusinessPanel {
   let journey: Journey | null = null;
   let version = 0;
-  const toggle = h('button', { type: 'button', class: 'text-link', 'aria-expanded': 'false', 'aria-controls': 'business' }, 'Put it on your website');
+  const toggle = h(
+    'button',
+    { type: 'button', class: 'text-link', 'aria-expanded': 'false', 'aria-controls': 'business' },
+    'Put it on your website',
+  );
   const nameInput = h('input', {
     id: 'public-name',
     type: 'text',
@@ -50,8 +72,14 @@ export function businessPanel(publicUrl: () => string): BusinessPanel {
     autocomplete: 'organization',
     placeholder: 'e.g. Pandeli Restaurant',
   });
-  const preview = h('a', { class: 'business-button', href: '#', target: '_blank', rel: 'noopener' });
-  const qr = h('img', { class: 'business-qr', alt: '', width: '180', height: '180' });
+  const languageSelect = h(
+    'select',
+    { id: 'card-language' },
+    ...Object.entries(CARD_LANGUAGES).map(([code, words]) => h('option', { value: code }, words.name)),
+  );
+  const cardText = h('span', {});
+  const cardQr = h('img', { alt: '', width: '180', height: '180' });
+  const card = h('a', { class: 'business-card', href: '#', target: '_blank', rel: 'noopener' }, cardText, cardQr);
   const code = h('textarea', { id: 'business-code', class: 'business-code', rows: '4', readonly: true, spellcheck: 'false' });
   const copy = h('button', { type: 'button', class: 'go' }, 'Copy the code');
   const download = h('a', { class: 'text-link', href: '#', download: '123go-qr.png' }, 'Download the QR');
@@ -60,25 +88,33 @@ export function businessPanel(publicUrl: () => string): BusinessPanel {
     { class: 'business', id: 'business', hidden: true },
     h('label', { for: 'public-name' }, 'Your place’s name ', h('span', { class: 'optional' }, '(shown to guests and drivers)')),
     nameInput,
-    h('div', { class: 'business-preview' }, preview, qr),
+    h('label', { for: 'card-language' }, 'Language of the card'),
+    languageSelect,
+    h('div', { class: 'business-preview' }, card),
     h('label', { for: 'business-code' }, 'Paste this on your Contact or Getting here page'),
     code,
     h('div', { class: 'actions' }, copy, h('span', { class: 'more' }, download)),
-    h('p', { class: 'hint' }, 'On a phone, guests tap the button; on a computer, they scan the QR. Either way it lands in their places, ready for the driver.'),
+    h(
+      'p',
+      { class: 'hint' },
+      'On a phone, guests tap the card; on a computer, they scan the QR. Either way your place lands in their list, ready for the driver.',
+    ),
   );
 
   async function refresh(): Promise<void> {
     if (!journey || panel.hidden) return;
     const mine = ++version;
-    const name = nameInput.value.trim();
-    const url = buildJourneyUrl(publicUrl(), { ...journey, label: name || undefined });
+    const language = languageSelect.value as CardLanguage;
+    const url = buildJourneyUrl(publicUrl(), { ...journey, label: nameInput.value.trim() || undefined });
     const image = await qrDataUrl(url);
     if (mine !== version) return;
-    preview.href = url;
-    preview.textContent = `🚕 ${name ? `Get to ${name} by taxi` : 'Get here by taxi'}`;
-    qr.src = image;
+    card.href = url;
+    card.lang = language;
+    cardText.textContent = CARD_LANGUAGES[language].text;
+    cardQr.src = image;
+    cardQr.alt = CARD_LANGUAGES[language].alt;
     download.href = image;
-    code.value = websiteSnippet(url, name, image);
+    code.value = websiteSnippet(url, image, language);
     copy.textContent = 'Copy the code';
   }
 
@@ -88,6 +124,7 @@ export function businessPanel(publicUrl: () => string): BusinessPanel {
     void refresh();
   });
   nameInput.addEventListener('input', () => void refresh());
+  languageSelect.addEventListener('change', () => void refresh());
   copy.addEventListener('click', async () => {
     try {
       await navigator.clipboard.writeText(code.value);

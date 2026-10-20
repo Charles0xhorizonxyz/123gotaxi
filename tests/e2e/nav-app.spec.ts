@@ -149,9 +149,11 @@ test('"Put it on your website" puts the public name in the QR and gives the code
   await page.getByRole('button', { name: 'Put it on your website' }).click();
   await page.getByLabel(/^Your place’s name/).fill('Pandeli');
   await expect(page.locator('#business-code')).toHaveValue(/n=Pandeli/);
-  await expect(page.locator('#business-code')).toHaveValue(/Get to Pandeli by taxi/);
+  await expect(page.locator('#business-code')).toHaveValue(/Reach us with 123go\.taxi/);
+  await page.getByLabel('Language of the card').selectOption({ label: 'Français' });
+  await expect(page.locator('#business-code')).toHaveValue(/Rejoignez-nous avec 123go\.taxi/);
   // A guest opening it gets the place, by name, in their list.
-  const link = await page.locator('.business-button').getAttribute('href');
+  const link = await page.locator('.business-card').getAttribute('href');
   await page.goto('about:blank');
   await page.goto(link!.replace('https://123go.taxi/', './'));
   await expect(page.getByRole('heading', { name: 'Pandeli' })).toBeVisible();

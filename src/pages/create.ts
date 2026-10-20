@@ -358,6 +358,20 @@ export function renderCreate(
 
   function showSuggestionNote(text: string): void {
     suggestions.replaceChildren(h('li', { class: 'hint' }, text));
+    openSuggestions();
+  }
+
+  /** Show the list hanging from the stop being typed in, over what's below it. */
+  function openSuggestions(): void {
+    const input = stops.inputAt(suggestionsFor);
+    const form = suggestions.parentElement;
+    if (input && form) {
+      const box = input.getBoundingClientRect();
+      const within = form.getBoundingClientRect();
+      suggestions.style.top = `${box.bottom - within.top}px`;
+      suggestions.style.left = `${box.left - within.left}px`;
+      suggestions.style.width = `${box.width}px`;
+    }
     suggestions.hidden = false;
     error.hidden = true;
   }
@@ -398,7 +412,7 @@ export function renderCreate(
               )
             : [h('li', { class: 'hint' }, 'No place found. Add the town, or paste a map link.')]),
         );
-        suggestions.hidden = false;
+        openSuggestions();
         error.hidden = true;
       })
       .catch(() => {
@@ -683,4 +697,9 @@ export function renderCreate(
   renderSaved();
   hideResult();
   window.addEventListener('hashchange', () => renderSaved());
+  // The list floats over the page: tapping anywhere else closes it.
+  document.addEventListener('pointerdown', (event) => {
+    const target = event.target as Node;
+    if (!suggestions.hidden && !suggestions.contains(target) && !stops.element.contains(target)) hideSuggestions();
+  });
 }

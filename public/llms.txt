@@ -2,7 +2,7 @@
 
 > Turns an address into a QR code a taxi driver scans to start navigation in their own app (Google Maps, Yandex, Waze, Apple Maps, any other). Free, open source, no accounts, nothing collected.
 
-Businesses (restaurants, hotels, venues) can put a "Get here by taxi" button and QR on their website. Full instructions, written to be followed exactly by an AI assistant: https://github.com/Charles0xhorizonxyz/123gotaxi/blob/main/docs/ADD-TO-YOUR-WEBSITE.md
+Businesses (restaurants, hotels, venues) can put a "Reach us with 123go.taxi" card (the words over the QR, the whole card a link) on their website, in English, French, Turkish, German, Spanish or Russian. Full instructions, written to be followed exactly by an AI assistant: https://github.com/Charles0xhorizonxyz/123gotaxi/blob/main/docs/ADD-TO-YOUR-WEBSITE.md
 
 ## Link format
 
