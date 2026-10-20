@@ -15,7 +15,7 @@ test('a scanned QR opens the chosen app directly', async ({ page }) => {
 
 test('with "open directly" unticked on the main page, the driver sees the list', async ({ page }) => {
   await page.goto('./');
-  await page.getByLabel('Navigation app').selectOption({ label: 'Waze' });
+  await page.getByLabel('Navigation app', { exact: true }).selectOption({ label: 'Waze' });
   await page.getByLabel('Open it directly').uncheck();
 
   await page.goto(DRIVER_LINK);
@@ -28,8 +28,8 @@ test('with "open directly" unticked on the main page, the driver sees the list',
 test('"Ask every time" forgets the app and greys out the tick box', async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem('gogogo.app.v1', 'waze'));
   await page.goto('./');
-  await expect(page.getByLabel('Navigation app')).toHaveValue('waze');
-  await page.getByLabel('Navigation app').selectOption({ label: 'Ask every time' });
+  await expect(page.getByLabel('Navigation app', { exact: true })).toHaveValue('waze');
+  await page.getByLabel('Navigation app', { exact: true }).selectOption({ label: 'Ask every time' });
   await expect(page.getByLabel('Open it directly')).toBeDisabled();
   expect(await page.evaluate(() => localStorage.getItem('gogogo.app.v1'))).toBeNull();
 });
@@ -116,4 +116,12 @@ test('a shared Yandex place with an unreadable link offers the place by name', a
   await expect(page.locator('.suggestion').first()).toBeVisible();
   // Only the place name and address were searched, never the link.
   expect(photonRequests.some((u) => u.includes('/api?q=') && !u.includes('yandex'))).toBe(true);
+});
+
+test('section explanations stay behind "?" until asked for', async ({ page }) => {
+  await page.goto('./');
+  const help = page.getByText('Kept only in this browser');
+  await expect(help).toBeHidden();
+  await page.getByRole('button', { name: 'About Your places' }).click();
+  await expect(help).toBeVisible();
 });

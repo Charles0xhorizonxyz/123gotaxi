@@ -7,6 +7,7 @@
   --paper: #ffffff;
   --muted: #6b5f3a;
   --danger: #b42318;
+  --line: #e6dcb8;
   --radius: 14px;
   --border: 2px solid var(--asphalt);
   --font-display: 'Alfa Slab One', Rockwell, Georgia, serif;
@@ -246,16 +247,13 @@ button:disabled {
   flex-direction: column;
   align-items: center;
   gap: 0.75rem;
-  padding: 1.25rem;
-  border-radius: var(--radius);
-  background: var(--paper);
-  border: var(--border);
   text-align: center;
 }
 
 .qr {
   width: min(100%, 300px) !important;
   height: auto !important;
+  border-radius: 8px;
 }
 
 .qr-empty {
@@ -826,7 +824,7 @@ select:focus-visible {
 }
 
 .suggestions li + li {
-  border-top: 1px solid #e6dcb8;
+  border-top: 1px solid var(--line);
 }
 
 .suggestions .hint {
@@ -894,4 +892,50 @@ select:focus-visible {
 /* While typing, the keyboard needs the room. */
 body:has(input:focus, textarea:focus) .share-app-corner {
   display: none;
+}
+
+/* The page in three sections: Where to?, Your places, Your navigation app.
+   A thin line above each, so the structure reads at a glance. */
+.block {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding-top: 1.75rem;
+  border-top: 1px solid var(--line);
+}
+
+.where-title {
+  font-size: 1.7rem;
+}
+
+.section-head {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+/* The small "?" beside a section title */
+.help-toggle {
+  flex: none;
+  width: 1.9rem;
+  height: 1.9rem;
+  min-height: 0;
+  padding: 0;
+  border-radius: 50%;
+  border: 2px solid var(--asphalt);
+  background: transparent;
+  color: var(--asphalt);
+  font-size: 0.95rem;
+  line-height: 1;
+}
+
+.help-toggle[aria-expanded='true'] {
+  background: var(--asphalt);
+  color: var(--yellow);
 }

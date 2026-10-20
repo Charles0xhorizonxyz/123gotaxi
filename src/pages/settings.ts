@@ -1,4 +1,5 @@
 import { h } from '../dom';
+import { sectionHead } from './common';
 import { appsFor, detectPlatform } from '../navigation-links';
 import { AppPreference } from '../preferences';
 import { browserStorage } from '../saved-places';
@@ -6,11 +7,11 @@ import { browserStorage } from '../saved-places';
 /** "Your navigation app": which app a QR scanned on this phone opens, and whether it skips the list. */
 export function navAppSettings(): HTMLElement {
   const preference = new AppPreference(browserStorage());
-  const heading = h('h2', {}, 'Your navigation app');
+  const heading = sectionHead('Your navigation app', 'The app a 123go.taxi QR opens when you scan it with this phone.');
   if (!preference.available) {
     return h(
       'section',
-      { class: 'settings' },
+      { class: 'settings block' },
       heading,
       h('p', { class: 'hint' }, "This browser doesn't allow saving (private mode?)."),
     );
@@ -43,9 +44,8 @@ export function navAppSettings(): HTMLElement {
 
   return h(
     'section',
-    { class: 'settings' },
+    { class: 'settings block' },
     heading,
-    h('p', { class: 'hint' }, 'When you scan a 123go.taxi QR with this phone.'),
     h('label', { for: 'nav-app', class: 'visually-hidden' }, 'Navigation app'),
     select,
     directLabel,

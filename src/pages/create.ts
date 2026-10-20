@@ -15,7 +15,7 @@ import { expandShortLink } from '../link-parsing/expand';
 import { drawQr, pngFileName, qrPngUrl } from '../qr';
 import { detectPlatform } from '../navigation-links';
 import { browserStorage, SavedPlaces, type SavedPlace } from '../saved-places';
-import { creditFooter, SHARE_RESULT_TEXT, shareLink } from './common';
+import { creditFooter, sectionHead, SHARE_RESULT_TEXT, shareLink } from './common';
 import { installButton, isInstalled, shareAppButton } from './install';
 import { scanButton, type ScanOutcome } from './scanner';
 import { navAppSettings } from './settings';
@@ -140,7 +140,6 @@ export function renderCreate(
 
   // Saved places
   const savedList = h('ul', { class: 'saved-list' });
-  const emptyNote = h('p', { class: 'hint' }, 'Nothing saved yet. Paste a place and tap Save.');
   const importInput = h('input', {
     type: 'file',
     accept: 'application/json,.json',
@@ -167,20 +166,24 @@ export function renderCreate(
           ? 'Install 123go.taxi to keep it for good, then use Export list here and Import list in the app to move it there.'
           : 'Clearing your browser data erases it. Install 123go.taxi, or tap Export list to keep a copy.',
       );
+  const placesHead = sectionHead(
+    'Your places',
+    'Kept only in this browser, and only you can see them. Paste a place and tap Save to keep it here.',
+  );
   const savedSection = h(
     'section',
-    { class: 'saved' },
-    h('h2', {}, 'Your places'),
-    h('p', { class: 'hint' }, 'Kept only in this browser. Only you can see it.'),
-    emptyNote,
+    { class: 'saved block' },
+    placesHead,
     savedList,
     lossWarning,
     h('div', { class: 'more' }, exportLink, importLabel, importInput),
     placesMessage,
   );
+  const install = installButton();
+  if (install) savedSection.append(install);
   if (!saved.available) {
     savedSection.replaceChildren(
-      h('h2', {}, 'Your places'),
+      placesHead,
       h('p', { class: 'hint' }, "This browser doesn't allow saving (private mode?)."),
     );
   }
@@ -447,7 +450,6 @@ export function renderCreate(
   function renderSaved(): void {
     if (!saved.available) return;
     const places = saved.list();
-    emptyNote.hidden = places.length > 0;
     exportLink.hidden = places.length === 0;
     lossWarning.hidden = places.length === 0;
     savedList.replaceChildren(...places.map(savedItem));
@@ -611,10 +613,13 @@ export function renderCreate(
       ),
       h('p', { class: 'tagline' }, 'Hold on to your hat. Paste a place, get a QR ready to share.'),
     ),
-    h('div', { class: 'place-form' }, h('p', { class: 'field-label' }, 'Where to?'), stops.element, suggestions, notice, error),
-    result,
+    h(
+      'section',
+      { class: 'where block' },
+      h('div', { class: 'place-form' }, h('h2', { class: 'where-title' }, 'Where to?'), stops.element, suggestions, notice, error),
+      result,
+    ),
     savedSection,
-    ...[installButton()].filter((section) => section !== null),
     shareAppButton(),
     navAppSettings(),
     creditFooter(),
