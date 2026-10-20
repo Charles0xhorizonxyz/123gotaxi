@@ -14,6 +14,8 @@ import { expandShortLink } from '../link-parsing/expand';
 import { drawQr, pngFileName, qrPngUrl } from '../qr';
 import { browserStorage, SavedPlaces, type SavedPlace } from '../saved-places';
 import { creditFooter, SHARE_RESULT_TEXT, shareLink } from './common';
+import { installCard } from './install';
+import { navAppSettings } from './settings';
 import { createStopsEditor, type StopsChange } from './stops-editor';
 
 const ERRORS = {
@@ -443,6 +445,8 @@ export function renderCreate(root: HTMLElement, { brokenLink = false } = {}): vo
     h('div', { class: 'place-form' }, h('p', { class: 'field-label' }, 'Where to?'), stops.element, notice, error),
     result,
     savedSection,
+    ...[installCard()].filter((card) => card !== null),
+    navAppSettings(),
     creditFooter(),
   );
   renderSaved();

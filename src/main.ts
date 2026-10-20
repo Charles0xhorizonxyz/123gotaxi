@@ -17,6 +17,10 @@ root.replaceChildren(createView, destinationView);
 let createBuilt = false;
 let createScroll = 0;
 
+function navigationType(): string | undefined {
+  return (performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming | undefined)?.type;
+}
+
 function route(): void {
   const parsed = parseJourney(location.hash || location.search);
   if (parsed.kind === 'ok') {
@@ -25,6 +29,8 @@ function route(): void {
     renderDestination(destinationView, parsed.journey, {
       // Opened from our own create screen: the back arrow returns to it as it was.
       backToCreate: createBuilt ? () => history.back() : undefined,
+      // Only a fresh scan opens the app by itself: not a reload, not coming back from the app.
+      autoOpen: !createBuilt && navigationType() === 'navigate',
     });
     createView.hidden = true;
     destinationView.hidden = false;

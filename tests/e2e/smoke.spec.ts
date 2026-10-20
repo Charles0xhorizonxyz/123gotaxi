@@ -100,14 +100,14 @@ test('the driver screen lists apps and puts the remembered one first', async ({ 
     /destination=41\.0342%2C28\.9844/,
   );
 
-  await page.getByLabel('Put my app first next time').check();
+  await page.getByLabel('Open this app directly next time').check();
   const waze = page.getByRole('link', { name: 'Waze' });
   await waze.evaluate((a) => a.addEventListener('click', (e) => e.preventDefault()));
   await waze.click();
 
   await page.reload();
   await expect(page.locator('.app').first()).toHaveText('Waze');
-  await expect(page.getByLabel('Put my app first next time')).toBeChecked();
+  await expect(page.getByLabel('Open this app directly next time')).toBeChecked();
   await expect(page.getByRole('link', { name: /Made with/ })).toHaveAttribute(
     'href',
     'https://0xhorizon.xyz',

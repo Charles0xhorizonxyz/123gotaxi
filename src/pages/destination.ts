@@ -8,7 +8,14 @@ import { creditFooter, SHARE_RESULT_TEXT, shareLink } from './common';
 export function renderDestination(
   root: HTMLElement,
   journey: Journey,
-  { backToCreate }: { backToCreate?: () => void } = {},
+  {
+    backToCreate,
+    autoOpen = false,
+  }: {
+    backToCreate?: () => void;
+    /** Freshly opened from a scanned QR: the chosen app may open straight away. */
+    autoOpen?: boolean;
+  } = {},
 ): void {
   const platform = detectPlatform(navigator.userAgent, navigator.maxTouchPoints);
   const preference = new AppPreference(browserStorage());
@@ -21,10 +28,13 @@ export function renderDestination(
     (a, b) => Number(b.id === remembered) - Number(a.id === remembered),
   );
 
+  const chosen = apps.find((a) => a.id === remembered);
+  const opening = autoOpen && preference.direct ? chosen : undefined;
+
   const rememberBox = h('input', {
     type: 'checkbox',
     id: 'remember',
-    checked: remembered !== null && apps.some((a) => a.id === remembered),
+    checked: chosen !== undefined && preference.direct,
   });
   rememberBox.addEventListener('change', () => {
     if (!rememberBox.checked) preference.forget();
@@ -38,7 +48,9 @@ export function renderDestination(
         href: app.url(journey, platform),
         rel: 'noopener',
         onclick: () => {
-          if (rememberBox.checked) preference.set(app.id);
+          if (!rememberBox.checked) return;
+          preference.set(app.id);
+          preference.setDirect(true);
         },
       },
       app.name,
@@ -97,9 +109,12 @@ export function renderDestination(
       'section',
       { class: 'apps', 'aria-label': 'Open with' },
       h('h2', {}, 'Open with'),
+      opening
+        ? h('p', { class: 'opening', role: 'status' }, `Opening ${opening.name}… Didn't open? Tap it below.`)
+        : null,
       h('div', { class: 'app-list' }, ...apps.map(button)),
       preference.available
-        ? h('label', { class: 'remember', for: 'remember' }, rememberBox, 'Put my app first next time')
+        ? h('label', { class: 'remember', for: 'remember' }, rememberBox, 'Open this app directly next time')
         : null,
       multiStop
         ? h(
@@ -116,4 +131,7 @@ export function renderDestination(
     ),
     creditFooter(),
   );
+
+  // The list stays underneath, so coming back (or an app that won't open) still leaves a choice.
+  if (opening) location.assign(opening.url(journey, platform));
 }

@@ -615,3 +615,48 @@ label.text-link {
   font-size: 0.72rem;
   color: var(--muted);
 }
+
+/* Install card and navigation app setting, under saved places */
+.install,
+.settings {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.install {
+  padding: 1.25rem;
+  border-radius: var(--radius);
+  background: var(--yellow);
+  border: var(--border);
+}
+
+.install .more {
+  justify-content: flex-start;
+}
+
+select {
+  font: inherit;
+  font-size: 1.05rem;
+  min-height: 52px;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius);
+  border: var(--border);
+  background: var(--paper);
+  color: var(--asphalt);
+  width: 100%;
+}
+
+select:focus-visible {
+  outline: 3px solid var(--asphalt);
+  outline-offset: 3px;
+}
+
+.remember.disabled {
+  opacity: 0.45;
+}
+
+/* Driver screen: "Opening Waze…" while the chosen app starts */
+.opening {
+  font-weight: 700;
+}
