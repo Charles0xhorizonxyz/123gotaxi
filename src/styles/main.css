@@ -277,7 +277,7 @@ button:disabled {
 .qr-empty span {
   color: var(--muted);
   font-size: 0.95rem;
-  background: var(--paper);
+  background: var(--seat);
   padding: 0.25rem 0.5rem;
   position: relative;
 }
@@ -622,13 +622,21 @@ label.text-link {
 }
 
 .install {
-  text-align: center;
+  align-items: flex-start;
+  margin-top: 0.4rem;
 }
 
+/* A small pill under the tagline */
 .install-button {
-  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 44px;
+  padding: 0.45rem 1rem 0.45rem 0.75rem;
+  border-radius: 999px;
   background: var(--asphalt);
   color: var(--yellow);
+  font-size: 0.95rem;
 }
 
 select {
@@ -938,4 +946,10 @@ body:has(input:focus, textarea:focus) .share-app-corner {
 .help-toggle[aria-expanded='true'] {
   background: var(--asphalt);
   color: var(--yellow);
+}
+
+/* Where to? follows the header directly: no line above it. */
+.where.block {
+  padding-top: 0;
+  border-top: 0;
 }

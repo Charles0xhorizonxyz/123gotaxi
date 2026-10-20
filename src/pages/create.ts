@@ -179,8 +179,6 @@ export function renderCreate(
     h('div', { class: 'more' }, exportLink, importLabel, importInput),
     placesMessage,
   );
-  const install = installButton();
-  if (install) savedSection.append(install);
   if (!saved.available) {
     savedSection.replaceChildren(
       placesHead,
@@ -611,7 +609,8 @@ export function renderCreate(
         ),
         scanButton(onScan),
       ),
-      h('p', { class: 'tagline' }, 'Hold on to your hat. Paste a place, get a QR ready to share.'),
+      h('p', { class: 'tagline' }, 'Paste a place, get a QR ready to share.'),
+      installButton(),
     ),
     h(
       'section',

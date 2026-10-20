@@ -25,7 +25,11 @@ export function installButton(): HTMLElement | null {
   if (isInstalled()) return null;
   const ios = detectPlatform(navigator.userAgent, navigator.maxTouchPoints) === 'ios';
 
-  const button = h('button', { type: 'button', class: 'install-button' }, 'Install 123go.taxi');
+  const button = h('button', { type: 'button', class: 'install-button' });
+  // Static markup, no user data: a "+" in a circle, then the label.
+  button.innerHTML =
+    '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>';
+  button.append('Install 123go.taxi');
   const steps = h('p', { class: 'hint', hidden: true }, 'Tap the Share button, then “Add to Home Screen”.');
   const section = h('section', { class: 'install', 'aria-label': 'Install', hidden: !ios }, button, steps);
 
