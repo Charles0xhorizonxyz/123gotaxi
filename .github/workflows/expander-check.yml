@@ -1,0 +1,21 @@
+name: Short-link check
+
+# Every morning, real Google Maps short links go through the live link
+# expander. If Google changed its answers, this fails and GitHub emails you.
+on:
+  schedule:
+    - cron: '0 6 * * *' # 09:00 in Istanbul
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+      - run: node scripts/check-expander.mjs
