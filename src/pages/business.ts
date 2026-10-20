@@ -5,16 +5,17 @@
 
 import { buildJourneyUrl, type Journey } from '../destination-url';
 import { h } from '../dom';
+import { language, LANGUAGES, t } from '../i18n';
 import { qrDataUrl } from '../qr';
 
 /** The card's words, per language: what it says, and the QR's description for screen readers. */
 export const CARD_LANGUAGES = {
-  en: { name: 'English', text: 'Reach us with 123go.taxi', alt: 'QR code: reach us with 123go.taxi' },
-  fr: { name: 'Français', text: 'Rejoignez-nous avec 123go.taxi', alt: 'Code QR : rejoignez-nous avec 123go.taxi' },
-  tr: { name: 'Türkçe', text: '123go.taxi ile bize ulaşın', alt: 'QR kod: 123go.taxi ile bize ulaşın' },
-  de: { name: 'Deutsch', text: 'Mit 123go.taxi zu uns', alt: 'QR-Code: mit 123go.taxi zu uns' },
-  es: { name: 'Español', text: 'Llega hasta nosotros con 123go.taxi', alt: 'Código QR: llega hasta nosotros con 123go.taxi' },
-  ru: { name: 'Русский', text: 'Доберитесь до нас с 123go.taxi', alt: 'QR-код: доберитесь до нас с 123go.taxi' },
+  en: { text: 'Reach us with 123go.taxi', alt: 'QR code: reach us with 123go.taxi' },
+  fr: { text: 'Rejoignez-nous avec 123go.taxi', alt: 'Code QR : rejoignez-nous avec 123go.taxi' },
+  tr: { text: '123go.taxi ile bize ulaşın', alt: 'QR kod: 123go.taxi ile bize ulaşın' },
+  de: { text: 'Mit 123go.taxi zu uns', alt: 'QR-Code: mit 123go.taxi zu uns' },
+  es: { text: 'Llega hasta nosotros con 123go.taxi', alt: 'Código QR: llega hasta nosotros con 123go.taxi' },
+  ru: { text: 'Доберитесь до нас с 123go.taxi', alt: 'QR-код: доберитесь до нас с 123go.taxi' },
 } as const;
 export type CardLanguage = keyof typeof CARD_LANGUAGES;
 
@@ -57,52 +58,57 @@ export interface BusinessPanel {
   update(journey: Journey | null): void;
 }
 
-export function businessPanel(publicUrl: () => string): BusinessPanel {
+/**
+ * `suggestedName`: the place's name when the page already knows it (typed in
+ * Name, or carried by the link or the search). It fills the public name until
+ * the user types their own.
+ */
+export function businessPanel(publicUrl: () => string, suggestedName: () => string): BusinessPanel {
   let journey: Journey | null = null;
   let version = 0;
   const toggle = h(
     'button',
     { type: 'button', class: 'text-link', 'aria-expanded': 'false', 'aria-controls': 'business' },
-    'Put it on your website',
+    t.putOnWebsite,
   );
+  let nameTyped = false;
   const nameInput = h('input', {
     id: 'public-name',
     type: 'text',
     maxlength: '60',
     autocomplete: 'organization',
-    placeholder: 'e.g. Pandeli Restaurant',
+    placeholder: t.placeNamePlaceholder,
   });
   const languageSelect = h(
     'select',
     { id: 'card-language' },
-    ...Object.entries(CARD_LANGUAGES).map(([code, words]) => h('option', { value: code }, words.name)),
+    ...Object.keys(CARD_LANGUAGES).map((code) =>
+      h('option', { value: code, selected: code === language }, LANGUAGES[code as CardLanguage]),
+    ),
   );
   const cardText = h('span', {});
   const cardQr = h('img', { alt: '', width: '180', height: '180' });
   const card = h('a', { class: 'business-card', href: '#', target: '_blank', rel: 'noopener' }, cardText, cardQr);
   const code = h('textarea', { id: 'business-code', class: 'business-code', rows: '4', readonly: true, spellcheck: 'false' });
-  const copy = h('button', { type: 'button', class: 'go' }, 'Copy the code');
-  const download = h('a', { class: 'text-link', href: '#', download: '123go-qr.png' }, 'Download the QR');
+  const copy = h('button', { type: 'button', class: 'go' }, t.copyCode);
+  const download = h('a', { class: 'text-link', href: '#', download: '123go-qr.png' }, t.downloadQr);
   const panel = h(
     'div',
     { class: 'business', id: 'business', hidden: true },
-    h('label', { for: 'public-name' }, 'Your place’s name ', h('span', { class: 'optional' }, '(shown to guests and drivers)')),
+    h('label', { for: 'public-name' }, t.placeName, h('span', { class: 'optional' }, t.placeNameNote)),
     nameInput,
-    h('label', { for: 'card-language' }, 'Language of the card'),
+    h('label', { for: 'card-language' }, t.cardLanguage),
     languageSelect,
     h('div', { class: 'business-preview' }, card),
-    h('label', { for: 'business-code' }, 'Paste this on your Contact or Getting here page'),
+    h('label', { for: 'business-code' }, t.pasteThis),
     code,
     h('div', { class: 'actions' }, copy, h('span', { class: 'more' }, download)),
-    h(
-      'p',
-      { class: 'hint' },
-      'On a phone, guests tap the card; on a computer, they scan the QR. Either way your place lands in their list, ready for the driver.',
-    ),
+    h('p', { class: 'hint' }, t.businessHint),
   );
 
   async function refresh(): Promise<void> {
     if (!journey || panel.hidden) return;
+    if (!nameTyped) nameInput.value = suggestedName();
     const mine = ++version;
     const language = languageSelect.value as CardLanguage;
     const url = buildJourneyUrl(publicUrl(), { ...journey, label: nameInput.value.trim() || undefined });
@@ -115,7 +121,7 @@ export function businessPanel(publicUrl: () => string): BusinessPanel {
     cardQr.alt = CARD_LANGUAGES[language].alt;
     download.href = image;
     code.value = websiteSnippet(url, image, language);
-    copy.textContent = 'Copy the code';
+    copy.textContent = t.copyCode;
   }
 
   toggle.addEventListener('click', () => {
@@ -123,15 +129,18 @@ export function businessPanel(publicUrl: () => string): BusinessPanel {
     toggle.setAttribute('aria-expanded', String(!panel.hidden));
     void refresh();
   });
-  nameInput.addEventListener('input', () => void refresh());
+  nameInput.addEventListener('input', () => {
+    nameTyped = nameInput.value.trim() !== '';
+    void refresh();
+  });
   languageSelect.addEventListener('change', () => void refresh());
   copy.addEventListener('click', async () => {
     try {
       await navigator.clipboard.writeText(code.value);
-      copy.textContent = 'Copied';
+      copy.textContent = t.copied;
     } catch {
       code.select();
-      copy.textContent = 'Select all and copy';
+      copy.textContent = t.selectAndCopy;
     }
   });
 

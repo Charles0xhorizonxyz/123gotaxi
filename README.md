@@ -16,6 +16,8 @@ The QR code points to a 123go.taxi page, not straight to one app, so app support
 
 **For restaurants, hotels and other places:** make the QR for your address, tap **Put it on your website**, type your place's name (it goes into the QR, so guests and drivers see it), pick the language, and copy the ready-made **Reach us with 123go.taxi** card (the words over the QR) onto your Contact or Getting here page. Guests tap it on a phone or scan it on a computer, and your place lands in their list, ready for the driver. Step-by-step guide, including exact instructions an AI assistant can follow: [docs/ADD-TO-YOUR-WEBSITE.md](docs/ADD-TO-YOUR-WEBSITE.md).
 
+**Languages:** English, Français, Türkçe, Deutsch, Español and Русский. The site follows the phone's language the first time; the **文A** button in the bottom-right corner changes it. All the words live in `src/i18n/index.ts`: add a language there and the build checks nothing is missing.
+
 **Install it:** the round download button in the bottom-right corner installs it (on iPhone: Share in Safari's toolbar, then "Add to Home Screen"), so it sits on the home screen like an app. No store, no account.
 
 ## Privacy

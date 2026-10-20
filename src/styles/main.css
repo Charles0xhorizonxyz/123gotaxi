@@ -10,7 +10,7 @@
   --line: #e6dcb8;
   --radius: 14px;
   --border: 2px solid var(--asphalt);
-  --font-display: 'Alfa Slab One', Rockwell, Georgia, serif;
+  --font-display: 'Alfa Slab One', 'Roboto Slab', Rockwell, Georgia, serif;
   --font-body: 'Archivo', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   color-scheme: light;
   font-family: var(--font-body);
@@ -1055,4 +1055,43 @@ body:has(input:focus, textarea:focus) .corner {
 .osm-credit {
   font-size: 0.8rem;
   color: var(--muted);
+}
+
+/* 文A: the language list opens above its button */
+.language-picker {
+  position: relative;
+}
+
+.language-list {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 0.5rem);
+  margin: 0;
+  padding: 0.35rem;
+  list-style: none;
+  min-width: 10rem;
+  border-radius: var(--radius);
+  border: var(--border);
+  background: var(--paper);
+  box-shadow: 0 10px 24px rgba(20, 20, 20, 0.16);
+}
+
+.language-list button {
+  width: 100%;
+  min-height: 44px;
+  padding: 0.5rem 0.8rem;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  text-align: left;
+  font-weight: 400;
+}
+
+.language-list button:hover {
+  background: var(--seat);
+}
+
+.language-list button[aria-current='true'] {
+  font-weight: 700;
+  background: var(--yellow);
 }

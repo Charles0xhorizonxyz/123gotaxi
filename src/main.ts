@@ -1,16 +1,20 @@
 import '@fontsource/archivo/400.css';
 import '@fontsource/archivo/700.css';
 import '@fontsource/alfa-slab-one/400.css';
+// Alfa Slab One has no Cyrillic: Russian titles use a matching heavy slab instead.
+import '@fontsource/roboto-slab/cyrillic-900.css';
 import './styles/main.css';
 import { h } from './dom';
 import { parseJourney } from './destination-url';
 import { browserStorage, SavedPlaces } from './saved-places';
 import { renderCreate } from './pages/create';
 import { renderDestination } from './pages/destination';
+import { language, t } from './i18n';
 
 // One page, two screens: a journey in the link means a driver scanned a QR.
 // The create screen is built once and only hidden while the driver screen
 // shows, so coming back from "Open in navigation" keeps what was typed.
+document.documentElement.lang = language;
 const root = document.querySelector<HTMLElement>('#app')!;
 const createView = h('div', { class: 'view' });
 const destinationView = h('div', { class: 'view' });
@@ -53,7 +57,7 @@ function route(): void {
         // Storage full or blocked: the ride itself still works.
       }
     }
-    document.title = 'Next stop · 123go.taxi';
+    document.title = t.pageTitleDriver;
     renderDestination(destinationView, parsed.journey, {
       // Opened from our own create screen: the back arrow returns to it as it was.
       backToCreate: createBuilt ? () => history.back() : undefined,

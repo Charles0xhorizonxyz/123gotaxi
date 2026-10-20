@@ -1,5 +1,6 @@
 import { h } from '../dom';
 import { MAX_STOPS } from '../destination-url';
+import { t } from '../i18n';
 
 export interface StopsEditor {
   element: HTMLElement;
@@ -29,7 +30,7 @@ export type StopsChange = 'commit' | 'leave' | 'typing' | 'reorder';
  */
 export function createStopsEditor({ onChange }: { onChange: (change: StopsChange) => void }): StopsEditor {
   const list = h('ol', { class: 'stops' });
-  const addButton = h('button', { type: 'button', class: 'text-link add-stop' }, '+ Add a stop');
+  const addButton = h('button', { type: 'button', class: 'text-link add-stop' }, t.addStop);
 
   function rows(): HTMLLIElement[] {
     return [...list.children] as HTMLLIElement[];
@@ -42,13 +43,13 @@ export function createStopsEditor({ onChange }: { onChange: (change: StopsChange
       const input = row.querySelector('input')!;
       const handle = row.querySelector<HTMLButtonElement>('.drag-handle')!;
       const remove = row.querySelector<HTMLButtonElement>('.remove-stop')!;
-      const name = all.length === 1 ? 'Where to?' : i === all.length - 1 ? 'Final stop' : `Stop ${i + 1}`;
+      const name = all.length === 1 ? t.whereTo : i === all.length - 1 ? t.finalStop : t.stopN(i + 1);
       input.setAttribute('aria-label', name);
       input.placeholder =
-        i === 0 ? 'Address, link or 29.979235, 31.134202' : 'Address, link or coordinates';
+        i === 0 ? t.placeholderFirst : t.placeholderOther;
       row.querySelector('.stop-number')!.textContent = String(i + 1);
-      handle.setAttribute('aria-label', `Move stop ${i + 1}. Use the arrow keys.`);
-      remove.setAttribute('aria-label', `Remove stop ${i + 1}`);
+      handle.setAttribute('aria-label', t.moveStop(i + 1));
+      remove.setAttribute('aria-label', t.removeStop(i + 1));
     });
     addButton.hidden = all.length >= MAX_STOPS;
   }

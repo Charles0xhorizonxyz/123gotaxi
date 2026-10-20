@@ -175,3 +175,35 @@ test.describe('with Geoapify answering', () => {
     expect(photonRequests).toEqual([]);
   });
 });
+
+test('文A switches the whole page to another language, and remembers it', async ({ page }) => {
+  await page.goto('./');
+  await page.getByRole('button', { name: /^Language/ }).click();
+  await page.getByRole('button', { name: 'Français' }).click();
+  await expect(page.getByRole('heading', { name: 'Où allez-vous ?' })).toBeVisible();
+  await expect(page.locator('html')).toHaveAttribute('lang', 'fr');
+  await page.reload();
+  await expect(page.getByRole('heading', { name: 'Vos lieux' })).toBeVisible();
+  // The driver screen speaks it too.
+  await page.goto('about:blank');
+  await page.goto(DRIVER_LINK);
+  await expect(page.getByRole('heading', { name: 'Ouvrir avec' })).toBeVisible();
+});
+
+test('a phone set to Turkish gets the page in Turkish', async ({ browser }) => {
+  const context = await browser.newContext({ locale: 'tr-TR' });
+  const page = await context.newPage();
+  await page.route('https://**', (route) => route.abort());
+  await page.goto('http://localhost:4173/');
+  await expect(page.getByRole('heading', { name: 'Nereye?' })).toBeVisible();
+  await context.close();
+});
+
+test('"Put it on your website" starts with the place’s name and the page’s language', async ({ page }) => {
+  await page.goto('./');
+  await page.getByLabel('Where to?', { exact: true }).fill('41.0342, 28.9844');
+  await page.getByLabel(/^Name/).fill('Pandeli');
+  await page.getByRole('button', { name: 'Put it on your website' }).click();
+  await expect(page.getByLabel(/^Your place’s name/)).toHaveValue('Pandeli');
+  await expect(page.getByLabel('Language of the card')).toHaveValue('en');
+});

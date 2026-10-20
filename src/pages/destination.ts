@@ -4,6 +4,7 @@ import { appsFor, detectPlatform, type NavApp } from '../navigation-links';
 import { AppPreference } from '../preferences';
 import { browserStorage } from '../saved-places';
 import { creditFooter, SHARE_RESULT_TEXT, shareLink } from './common';
+import { t } from '../i18n';
 
 export function renderDestination(
   root: HTMLElement,
@@ -53,10 +54,10 @@ export function renderDestination(
           preference.setDirect(true);
         },
       },
-      app.name,
+      app.id === 'geo' ? t.otherApp : app.name,
     );
 
-  const shareButton = h('button', { type: 'button', class: 'text-link' }, 'Share');
+  const shareButton = h('button', { type: 'button', class: 'text-link' }, t.share);
   shareButton.addEventListener('click', async () => {
     const outcome = await shareLink(location.href, journey.label ?? '123go.taxi');
     shareButton.textContent = SHARE_RESULT_TEXT[outcome];
@@ -71,7 +72,7 @@ export function renderDestination(
         {
           href: import.meta.env.BASE_URL,
           class: 'back',
-          'aria-label': 'Back to 123go.taxi',
+          'aria-label': t.back,
           onclick: (event: Event) => {
             if (!backToCreate) return;
             event.preventDefault();
@@ -85,11 +86,11 @@ export function renderDestination(
     h(
       'header',
       { class: 'masthead' },
-      h('p', { class: 'eyebrow' }, multiStop ? `Your route · ${journey.stops.length} stops` : 'Next stop'),
+      h('p', { class: 'eyebrow' }, multiStop ? t.yourRouteStops(journey.stops.length) : t.nextStop),
       h(
         'h1',
         { class: 'destination-name' },
-        journey.label ?? journey.address ?? (multiStop ? 'Your route' : pretty(journey.stops.length - 1)),
+        journey.label ?? journey.address ?? (multiStop ? t.yourRoute : pretty(journey.stops.length - 1)),
       ),
       // An old link with a name: the address goes under it.
       journey.label && journey.address ? h('p', { class: 'address' }, journey.address) : null,
@@ -107,26 +108,26 @@ export function renderDestination(
     ),
     h(
       'section',
-      { class: 'apps', 'aria-label': 'Open with' },
-      h('h2', {}, 'Open with'),
+      { class: 'apps', 'aria-label': t.openWith },
+      h('h2', {}, t.openWith),
       opening
-        ? h('p', { class: 'opening', role: 'status' }, `Opening ${opening.name}… Didn't open? Tap it below.`)
+        ? h('p', { class: 'opening', role: 'status' }, t.opening(opening.id === 'geo' ? t.otherApp : opening.name))
         : null,
       h('div', { class: 'app-list' }, ...apps.map(button)),
       preference.available
-        ? h('label', { class: 'remember', for: 'remember' }, rememberBox, 'Open this app directly next time')
+        ? h('label', { class: 'remember', for: 'remember' }, rememberBox, t.openDirectlyNextTime)
         : null,
       multiStop
         ? h(
             'p',
             { class: 'hint' },
-            "Waze, Apple Maps and other apps can't follow several stops from a link, so only apps that can are listed.",
+            t.multiStopHint,
           )
         : null,
       h(
         'p',
         { class: 'hint' },
-        "We can't see which apps are on this phone. If the one you pick isn't installed, you'll get its website or app store instead.",
+        t.cantSeeApps,
       ),
     ),
     creditFooter(),

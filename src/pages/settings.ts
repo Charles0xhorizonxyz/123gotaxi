@@ -1,5 +1,6 @@
 import { h } from '../dom';
 import { sectionHead } from './common';
+import { t } from '../i18n';
 import { appsFor, detectPlatform } from '../navigation-links';
 import { AppPreference } from '../preferences';
 import { browserStorage } from '../saved-places';
@@ -7,16 +8,13 @@ import { browserStorage } from '../saved-places';
 /** "Your navigation app": which app a QR scanned on this phone opens straight away. */
 export function navAppSettings(): HTMLElement {
   const preference = new AppPreference(browserStorage());
-  const heading = sectionHead(
-    'Your navigation app',
-    'Pick your app, and a 123go.taxi QR scanned with this phone opens it straight away. Pick “Ask every time” to choose each time.',
-  );
+  const heading = sectionHead(t.yourNavApp, t.navAppHelp, { id: 'help-nav-app' });
   if (!preference.available) {
     return h(
       'section',
       { class: 'settings block' },
       heading,
-      h('p', { class: 'hint' }, "This browser doesn't allow saving (private mode?)."),
+      h('p', { class: 'hint' }, t.savingBlockedPrivate),
     );
   }
 
@@ -26,8 +24,8 @@ export function navAppSettings(): HTMLElement {
   const select = h(
     'select',
     { id: 'nav-app' },
-    h('option', { value: '' }, 'Ask every time'),
-    ...apps.map((app) => h('option', { value: app.id, selected: app.id === remembered }, app.name)),
+    h('option', { value: '' }, t.askEveryTime),
+    ...apps.map((app) => h('option', { value: app.id, selected: app.id === remembered }, app.id === 'geo' ? t.otherApp : app.name)),
   );
   select.addEventListener('change', () => {
     if (select.value) {
@@ -40,7 +38,7 @@ export function navAppSettings(): HTMLElement {
     'section',
     { class: 'settings block' },
     heading,
-    h('label', { for: 'nav-app', class: 'visually-hidden' }, 'Navigation app'),
+    h('label', { for: 'nav-app', class: 'visually-hidden' }, t.navAppLabel),
     select,
   );
 }

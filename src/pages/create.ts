@@ -21,15 +21,9 @@ import { cornerButtons, isInstalled } from './install';
 import { scanButton, type ScanOutcome } from './scanner';
 import { navAppSettings } from './settings';
 import { createStopsEditor, type StopsChange } from './stops-editor';
+import { t } from '../i18n';
 
-const ERRORS = {
-  empty: 'Paste a map link or type coordinates first.',
-  'short-link':
-    'That link threw its rider. Short links hide the location: open it, then copy the long link from the address bar.',
-  unrecognised:
-    'We couldn\'t find that place. Pick one from the list, paste a map link, or type coordinates like "29.979235, 31.134202".',
-  invalidQr: 'That QR link looks broken. Make a fresh one below.',
-} as const;
+const ERRORS = t.errors;
 
 /** Three QR corner squares, drawn faintly: the "empty QR" placeholder. Static markup, no user data. */
 const EMPTY_QR_SVG = `<svg viewBox="0 0 29 29" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1">
@@ -49,32 +43,33 @@ const stopsKey = (journey: Journey) => journey.stops.map(formatPoint).join('~');
 /** What a saved place is called in the list when it has no name: its address, else its coordinates. */
 function fallbackName(place: SavedPlace): string {
   const end = place.address ?? pretty(place.stops[place.stops.length - 1]!);
-  return place.stops.length > 1 ? `Route to ${end}` : end;
+  return place.stops.length > 1 ? t.routeTo(end) : end;
 }
 
 /** "Where to?" explained in plain words: three ways to say where you're going. */
 function whereHelp(): HTMLElement {
+  const w = t.whereHelp;
   return h(
     'div',
     {},
-    h('p', {}, h('strong', {}, 'Three ways to say where you’re going:')),
+    h('p', {}, h('strong', {}, w.intro)),
     h(
       'ul',
       {},
-      h('li', {}, h('strong', {}, 'Type an address'), ' or the name of a place, then tap it in the list.'),
+      h('li', {}, h('strong', {}, w.type.strong), w.type.rest),
       h(
         'li',
         {},
-        h('strong', {}, 'From a map app'),
-        ' (Google Maps, Yandex, Waze…): open the place, tap ',
-        h('em', {}, 'Share'),
-        ', then ',
-        h('em', {}, 'Copy'),
-        ', and paste it here.',
+        h('strong', {}, w.app.strong),
+        w.app.before,
+        h('em', {}, w.app.share),
+        w.app.between,
+        h('em', {}, w.app.copy),
+        w.app.after,
       ),
-      h('li', {}, h('strong', {}, 'Type coordinates'), ', like 29.979235, 31.134202.'),
+      h('li', {}, h('strong', {}, w.coords.strong), w.coords.rest),
     ),
-    h('p', {}, 'Going to several places? Tap ', h('em', {}, '+ Add a stop'), '.'),
+    h('p', {}, w.stops.before, h('em', {}, w.stops.addStop), w.stops.after),
   );
 }
 
@@ -105,7 +100,7 @@ export function renderCreate(
   const error = h('p', { class: 'error', role: 'alert', hidden: !brokenLink });
   const notice = h('p', { class: 'hint', role: 'status', hidden: true });
   // Typed words: places found, under "Where to?". Only a place picked here makes a QR.
-  const suggestions = h('ul', { class: 'suggestions', 'aria-label': 'Places found', hidden: true });
+  const suggestions = h('ul', { class: 'suggestions', 'aria-label': t.placesFound, hidden: true });
   let searching: AbortController | undefined;
   let suggestionsFor = -1;
   // Short links already asked about: the long link, or null if it couldn't be opened.
@@ -115,32 +110,32 @@ export function renderCreate(
 
   // Result card: address, QR, then what you'd want to keep it under, then actions.
   const addressLine = h('p', { class: 'address', hidden: true });
-  const qrCanvas = h('canvas', { class: 'qr', role: 'img', 'aria-label': 'QR code for this journey' });
+  const qrCanvas = h('canvas', { class: 'qr', role: 'img', 'aria-label': t.qrAria });
   const resultStops = h('p', { class: 'coords' });
   const nameInput = h('input', {
     id: 'name',
     type: 'text',
     maxlength: '60',
     autocomplete: 'off',
-    placeholder: 'e.g. Home, Office, Mum',
+    placeholder: t.namePlaceholder,
   });
   const noteInput = h('textarea', {
     id: 'note',
     rows: '2',
     maxlength: '200',
-    placeholder: 'e.g. Blue door, ring twice',
+    placeholder: t.notePlaceholder,
   });
   const saveMessage = h('p', { class: 'error', role: 'status', hidden: true });
-  const saveButton = h('button', { type: 'button', class: 'go' }, 'Save');
-  const shareButton = h('button', { type: 'button' }, 'Share');
-  const downloadLink = h('a', { class: 'text-link', href: '#', download: '123go.png' }, 'Download PNG');
+  const saveButton = h('button', { type: 'button', class: 'go' }, t.save);
+  const shareButton = h('button', { type: 'button' }, t.share);
+  const downloadLink = h('a', { class: 'text-link', href: '#', download: '123go.png' }, t.downloadPng);
   // Your own navigation app, straight away if one is chosen; otherwise the app list.
-  const previewLink = h('a', { class: 'text-link', href: '#' }, 'Open in navigation');
-  const business = businessPanel(publicUrl);
+  const previewLink = h('a', { class: 'text-link', href: '#' }, t.openInNavigation);
+  const business = businessPanel(publicUrl, () => nameInput.value.trim() || current?.label || '');
   // Shown until there's a place: a faded QR outline, so the page explains itself.
-  const qrEmpty = h('div', { class: 'qr-empty', role: 'img', 'aria-label': 'Your QR appears here' });
+  const qrEmpty = h('div', { class: 'qr-empty', role: 'img', 'aria-label': t.qrAppears });
   qrEmpty.innerHTML = EMPTY_QR_SVG;
-  qrEmpty.append(h('span', {}, 'Your QR appears here'));
+  qrEmpty.append(h('span', {}, t.qrAppears));
   qrCanvas.hidden = true;
   // Always shown. Name and note can be filled in first; the actions wait for a QR.
   const resultDetails = h(
@@ -150,9 +145,9 @@ export function renderCreate(
     h(
       'div',
       { class: 'keep-fields' },
-      h('label', { for: 'name' }, 'Name ', h('span', { class: 'optional' }, '(optional, only for you)')),
+      h('label', { for: 'name' }, `${t.name} `, h('span', { class: 'optional' }, t.optionalPrivate)),
       nameInput,
-      h('label', { for: 'note' }, 'Note ', h('span', { class: 'optional' }, '(optional, only for you)')),
+      h('label', { for: 'note' }, `${t.note} `, h('span', { class: 'optional' }, t.optionalPrivate)),
       noteInput,
     ),
     saveMessage,
@@ -180,8 +175,8 @@ export function renderCreate(
     class: 'visually-hidden',
     id: 'import-file',
   });
-  const exportLink = h('a', { class: 'text-link', href: '#', download: '123go-places.json' }, 'Export list');
-  const importLabel = h('label', { for: 'import-file', class: 'text-link' }, 'Import list');
+  const exportLink = h('a', { class: 'text-link', href: '#', download: '123go-places.json' }, t.exportList);
+  const importLabel = h('label', { for: 'import-file', class: 'text-link' }, t.importList);
   const placesMessage = h('p', { class: 'hint', role: 'status' });
   // Only worth saying once there's something to lose. Installed, the list is
   // kept for good (iPhone's 7-day erasing only applies to Safari itself).
@@ -190,20 +185,15 @@ export function renderCreate(
     ? h(
         'p',
         { class: 'hint', hidden: true },
-        'Kept on this phone. To move it to another phone, tap Export list.',
+        t.keptInstalled,
       )
     : h(
         'p',
         { class: 'warning', hidden: true },
-        h('strong', {}, ios ? 'Safari erases this list after 7 days without a visit. ' : 'This list can disappear. '),
-        ios
-          ? 'Install 123go.taxi to keep it for good, then use Export list here and Import list in the app to move it there.'
-          : 'Clearing your browser data erases it. Install 123go.taxi, or tap Export list to keep a copy.',
+        h('strong', {}, ios ? t.lossIosStrong : t.lossStrong),
+        ios ? t.lossIos : t.loss,
       );
-  const placesHead = sectionHead(
-    'Your places',
-    'Kept only in this browser, and only you can see them. Paste a place and tap Save to keep it here.',
-  );
+  const placesHead = sectionHead(t.yourPlaces, t.placesHelp, { id: 'help-places' });
   const savedSection = h(
     'section',
     { class: 'saved block' },
@@ -216,7 +206,7 @@ export function renderCreate(
   if (!saved.available) {
     savedSection.replaceChildren(
       placesHead,
-      h('p', { class: 'hint' }, "This browser doesn't allow saving (private mode?)."),
+      h('p', { class: 'hint' }, t.savingBlockedPrivate),
     );
   }
 
@@ -233,7 +223,7 @@ export function renderCreate(
   }
 
   function resetSaveButton(): void {
-    saveButton.textContent = 'Save';
+    saveButton.textContent = t.save;
     saveMessage.hidden = true;
   }
 
@@ -253,10 +243,10 @@ export function renderCreate(
     if (changed) {
       await drawQr(qrCanvas, buildJourneyUrl(publicUrl(), journey));
       resetSaveButton();
-      shareButton.textContent = 'Share';
+      shareButton.textContent = t.share;
     }
     resultStops.textContent =
-      journey.stops.length > 1 ? `${journey.stops.length} stops` : pretty(journey.stops[0]!);
+      journey.stops.length > 1 ? t.nStops(journey.stops.length) : pretty(journey.stops[0]!);
     previewLink.href = buildJourneyHash(journey);
     business.update(journey);
     error.hidden = true;
@@ -287,7 +277,7 @@ export function renderCreate(
   function showAddress(address: string | undefined, pending: boolean): void {
     addressLine.hidden = false;
     addressLine.classList.toggle('pending', pending || !address);
-    addressLine.textContent = address ?? (pending ? 'Looking up the address…' : 'No street address found for this spot');
+    addressLine.textContent = address ?? (pending ? t.lookingUp : t.noAddress);
   }
 
   function hideResult(): void {
@@ -296,11 +286,11 @@ export function renderCreate(
     current = null;
     qrEmpty.hidden = false;
     qrCanvas.hidden = true;
-    resultStops.textContent = 'No place yet';
+    resultStops.textContent = t.noPlaceYet;
     previewLink.href = '#';
     business.update(null);
     resetSaveButton();
-    shareButton.textContent = 'Share';
+    shareButton.textContent = t.share;
     setReady(false);
   }
 
@@ -392,7 +382,7 @@ export function renderCreate(
     const lookup = new AbortController();
     searching = lookup;
     suggestionsFor = index;
-    showSuggestionNote('Searching…');
+    showSuggestionNote(t.searching);
     geocoder
       .search(query, lookup.signal)
       .then((results) => {
@@ -412,14 +402,14 @@ export function renderCreate(
                   ),
                 ),
               )
-            : [h('li', { class: 'hint' }, 'No place found. Add the town, or paste a map link.')]),
+            : [h('li', { class: 'hint' }, t.noPlaceFound)]),
         );
         openSuggestions();
         error.hidden = true;
       })
       .catch(() => {
         // Slow, offline or down: say so. Links and coordinates still work.
-        if (!lookup.signal.aborted) showSuggestionNote('Search is slow right now. Try again, or paste a map link.');
+        if (!lookup.signal.aborted) showSuggestionNote(t.searchSlow);
       });
   }
 
@@ -455,7 +445,7 @@ export function renderCreate(
           openShortLink(key, reveal);
           hideResult();
           error.hidden = true;
-          notice.textContent = 'Opening the short link…';
+          notice.textContent = t.openingShortLink;
           notice.hidden = false;
           return;
         }
@@ -469,7 +459,7 @@ export function renderCreate(
         // Words with places listed under them aren't a mistake: the list is the answer.
         if (explain && (parsed.reason !== 'unrecognised' || suggestions.hidden)) {
           error.textContent =
-            filled.length > 1 ? `Stop ${number}: ${ERRORS[parsed.reason]}` : ERRORS[parsed.reason];
+            filled.length > 1 ? t.stopError(number, ERRORS[parsed.reason]) : ERRORS[parsed.reason];
           error.hidden = false;
         }
         return;
@@ -509,7 +499,7 @@ export function renderCreate(
           {
             type: 'button',
             class: 'saved-keep',
-            'aria-label': `Keep ${title}`,
+            'aria-label': t.keep(title),
             onclick: () => {
               saved.keep(place.id);
               renderSaved();
@@ -536,9 +526,9 @@ export function renderCreate(
         h(
           'span',
           { class: 'saved-name' },
-          place.pending ? h('span', { class: 'chip new' }, 'New') : null,
+          place.pending ? h('span', { class: 'chip new' }, t.newChip) : null,
           title,
-          place.stops.length > 1 ? h('span', { class: 'chip' }, `${place.stops.length} stops`) : null,
+          place.stops.length > 1 ? h('span', { class: 'chip' }, t.nStops(place.stops.length)) : null,
         ),
         place.note ? h('span', { class: 'saved-note' }, place.note) : null,
       ),
@@ -548,7 +538,7 @@ export function renderCreate(
         {
           type: 'button',
           class: 'saved-delete',
-          'aria-label': `${place.pending ? 'Remove' : 'Delete'} ${title}`,
+          'aria-label': place.pending ? t.remove(title) : t.delete(title),
           onclick: () => {
             saved.remove(place.id);
             renderSaved();
@@ -562,14 +552,14 @@ export function renderCreate(
   saveButton.addEventListener('click', () => {
     if (!current) return;
     if (!saved.available) {
-      saveMessage.textContent = "This browser doesn't allow saving.";
+      saveMessage.textContent = t.savingBlocked;
       saveMessage.hidden = false;
       return;
     }
     saved.add({ ...current, name: nameInput.value, note: noteInput.value });
     // Ask the browser not to clear our storage when space runs low. It may say no.
     void navigator.storage?.persist?.().catch(() => false);
-    saveButton.textContent = 'Saved';
+    saveButton.textContent = t.saved;
     renderSaved();
   });
 
@@ -629,10 +619,10 @@ export function renderCreate(
     try {
       const added = saved.importJson(await file.text());
       placesMessage.textContent =
-        added === 0 ? 'Nothing new in that file.' : `Added ${added} place${added === 1 ? '' : 's'}.`;
+        added === 0 ? t.nothingNew : t.addedPlaces(added);
       renderSaved();
     } catch {
-      placesMessage.textContent = "That file isn't a 123go.taxi export.";
+      placesMessage.textContent = t.notAnExport;
     }
   });
 
@@ -657,7 +647,7 @@ export function renderCreate(
       update(true, true);
       return { done: true };
     }
-    return { done: false, message: "That QR isn't a place. Try a 123go.taxi or map QR." };
+    return { done: false, message: t.notAPlace };
   }
 
   root.replaceChildren(
@@ -675,7 +665,7 @@ export function renderCreate(
         ),
         scanButton(onScan),
       ),
-      h('p', { class: 'tagline' }, 'Paste a place. Get a QR. Share it. Go!'),
+      h('p', { class: 'tagline' }, t.tagline),
     ),
     h(
       'section',
@@ -683,7 +673,7 @@ export function renderCreate(
       h(
         'div',
         { class: 'place-form' },
-        sectionHead('Where to?', whereHelp(), { titleClass: 'where-title' }),
+        sectionHead(t.whereTo, whereHelp(), { titleClass: 'where-title', id: 'help-where' }),
         stops.element,
         suggestions,
         notice,
