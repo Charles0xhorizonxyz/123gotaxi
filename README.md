@@ -1,6 +1,6 @@
 # 123go.taxi
 
-*Hold on to your hat. Paste a place, get a QR ready to share.*
+*Paste a place, get a QR ready to share.*
 
 **123go.taxi** is a fully open-source web app ([MIT](LICENSE)) that turns an address into a QR code that a taxi driver can scan to start navigation in their own app: Google Maps, Yandex, Waze, Apple Maps or any other.
 
@@ -14,7 +14,7 @@
 
 The QR code points to a 123go.taxi page, not straight to one app, so app support can improve without reprinting codes. That page lists the apps. Once a phone has a navigation app chosen ("Open this app directly next time" on that page, or **Your navigation app** on the main page), a scan opens it directly; untick "Open it directly" to see the list again.
 
-**Install it:** the main page has an **Install 123go.taxi** button (on iPhone: Share, then "Add to Home Screen"), so it sits on the home screen like an app. No store, no account.
+**Install it:** the round download button in the bottom-right corner installs it (on iPhone: Share in Safari's toolbar, then "Add to Home Screen"), so it sits on the home screen like an app. No store, no account.
 
 ## Privacy
 

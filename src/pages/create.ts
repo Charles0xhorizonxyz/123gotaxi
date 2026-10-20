@@ -16,7 +16,7 @@ import { drawQr, pngFileName, qrPngUrl } from '../qr';
 import { detectPlatform } from '../navigation-links';
 import { browserStorage, SavedPlaces, type SavedPlace } from '../saved-places';
 import { creditFooter, sectionHead, SHARE_RESULT_TEXT, shareLink } from './common';
-import { installButton, isInstalled, shareAppButton } from './install';
+import { cornerButtons, isInstalled } from './install';
 import { scanButton, type ScanOutcome } from './scanner';
 import { navAppSettings } from './settings';
 import { createStopsEditor, type StopsChange } from './stops-editor';
@@ -610,7 +610,6 @@ export function renderCreate(
         scanButton(onScan),
       ),
       h('p', { class: 'tagline' }, 'Paste a place, get a QR ready to share.'),
-      installButton(),
     ),
     h(
       'section',
@@ -619,7 +618,7 @@ export function renderCreate(
       result,
     ),
     savedSection,
-    shareAppButton(),
+    cornerButtons(),
     navAppSettings(),
     creditFooter(),
   );

@@ -44,17 +44,16 @@ test('the driver screen opened from "See what the driver sees" never jumps to th
   expect(page.url()).not.toContain('waze.com');
 });
 
-test('Install is one button; on iPhone it shows the two steps', async ({ page }, testInfo) => {
+test('Install is a round button in the corner; on iPhone it shows the two steps', async ({ page }, testInfo) => {
   await page.goto('./');
-  const install = page.getByRole('region', { name: 'Install' });
+  const install = page.getByRole('button', { name: 'Install 123go.taxi' });
   // Android: the button waits for the browser's install offer, which tests never get.
   if (testInfo.project.name === 'android') {
     await expect(install).toBeHidden();
     return;
   }
-  await expect(install.getByRole('button', { name: 'Install 123go.taxi' })).toBeVisible();
-  await install.getByRole('button', { name: 'Install 123go.taxi' }).click();
-  await expect(install).toContainText('Add to Home Screen');
+  await install.click();
+  await expect(page.locator('.corner-status')).toContainText('Add to Home Screen');
 });
 
 test('Scan reads a 123go.taxi QR with the camera and opens its driver screen', async ({ page }) => {

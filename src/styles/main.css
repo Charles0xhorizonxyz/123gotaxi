@@ -614,29 +614,10 @@ label.text-link {
 }
 
 /* Install card and navigation app setting, under saved places */
-.install,
 .settings {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-}
-
-.install {
-  align-items: flex-start;
-  margin-top: 0.4rem;
-}
-
-/* A small pill under the tagline */
-.install-button {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  min-height: 44px;
-  padding: 0.45rem 1rem 0.45rem 0.75rem;
-  border-radius: 999px;
-  background: var(--asphalt);
-  color: var(--yellow);
-  font-size: 0.95rem;
 }
 
 select {
@@ -864,18 +845,18 @@ select:focus-visible {
   color: var(--muted);
 }
 
-/* Share 123go.taxi: a round button in the bottom-right corner */
-.share-app-corner {
+/* Install and Share: round buttons floating in the bottom-right corner */
+.corner {
   position: fixed;
   right: calc(16px + env(safe-area-inset-right, 0px));
   bottom: calc(24px + env(safe-area-inset-bottom, 0px));
   z-index: 20;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.6rem;
 }
 
-.share-app {
+.corner-button {
   width: 3.5rem;
   height: 3.5rem;
   min-height: 0;
@@ -888,17 +869,19 @@ select:focus-visible {
   color: var(--yellow);
 }
 
-.share-app-status:not(:empty) {
-  padding: 0.35rem 0.7rem;
-  border-radius: 999px;
+.corner-status:not(:empty) {
+  max-width: 13rem;
+  padding: 0.45rem 0.8rem;
+  border-radius: 14px;
   background: var(--asphalt);
   color: var(--seat);
   font-size: 0.85rem;
   font-weight: 700;
+  line-height: 1.3;
 }
 
 /* While typing, the keyboard needs the room. */
-body:has(input:focus, textarea:focus) .share-app-corner {
+body:has(input:focus, textarea:focus) .corner {
   display: none;
 }
 

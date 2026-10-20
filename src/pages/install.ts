@@ -16,53 +16,57 @@ export function isInstalled(): boolean {
   );
 }
 
+// Static markup, no user data.
+const ICONS = {
+  // The share symbol each phone's own apps use.
+  shareIos:
+    '<svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7.5 7.5 12 3l4.5 4.5"/><path d="M8 10H6a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-9a1 1 0 0 0-1-1h-2"/></svg>',
+  shareOther:
+    '<svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true" fill="currentColor"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 10.7 15.4 6.6M8.6 13.3l6.8 4.1" stroke="currentColor" stroke-width="2"/></svg>',
+  download:
+    '<svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7.5 10.5 12 15l4.5-4.5"/><path d="M5 20h14"/></svg>',
+};
+
 /**
- * One "Install 123go.taxi" button. Android: shown once the browser offers to
- * install. iPhone can't install from a page, so the button shows the two steps.
- * Gone once installed.
+ * Two round buttons floating in the bottom-right corner: install 123go.taxi
+ * (only until it's installed; on Android once Chrome offers it), and share it.
+ * iPhone can't install from a page, so its install button shows the two steps.
  */
-export function installButton(): HTMLElement | null {
-  if (isInstalled()) return null;
+export function cornerButtons(): HTMLElement {
   const ios = detectPlatform(navigator.userAgent, navigator.maxTouchPoints) === 'ios';
+  const status = h('span', { class: 'corner-status', role: 'status' });
+  let statusTimer: ReturnType<typeof setTimeout> | undefined;
+  const say = (text: string, ms = 2500) => {
+    clearTimeout(statusTimer);
+    status.textContent = text;
+    if (text) statusTimer = setTimeout(() => (status.textContent = ''), ms);
+  };
 
-  const button = h('button', { type: 'button', class: 'install-button' });
-  // Static markup, no user data: a "+" in a circle, then the label.
-  button.innerHTML =
-    '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>';
-  button.append('Install 123go.taxi');
-  const steps = h('p', { class: 'hint', hidden: true }, 'Tap the Share button, then “Add to Home Screen”.');
-  const section = h('section', { class: 'install', 'aria-label': 'Install', hidden: !ios }, button, steps);
+  const share = h('button', { type: 'button', class: 'corner-button', 'aria-label': 'Share 123go.taxi' });
+  share.innerHTML = ios ? ICONS.shareIos : ICONS.shareOther;
+  share.addEventListener('click', async () => {
+    const outcome = await shareLink(CANONICAL_URL, '123go.taxi');
+    say(outcome === 'shared' ? '' : SHARE_RESULT_TEXT[outcome]);
+  });
 
+  const install = h('button', {
+    type: 'button',
+    class: 'corner-button',
+    'aria-label': 'Install 123go.taxi',
+    hidden: isInstalled() || !ios,
+  });
+  install.innerHTML = ICONS.download;
   let prompt: BeforeInstallPromptEvent | null = null;
   window.addEventListener('beforeinstallprompt', (event) => {
     event.preventDefault();
     prompt = event as BeforeInstallPromptEvent;
-    section.hidden = false;
+    install.hidden = false;
   });
-  window.addEventListener('appinstalled', () => section.remove());
-  button.addEventListener('click', () => {
+  window.addEventListener('appinstalled', () => install.remove());
+  install.addEventListener('click', () => {
     if (prompt) void prompt.prompt();
-    else steps.hidden = false;
+    else say('To install: tap Share in Safari’s toolbar, then “Add to Home Screen”.', 7000);
   });
-  return section;
-}
 
-// The share symbol each phone's own apps use. Static markup, no user data.
-const SHARE_ICONS = {
-  ios: '<svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7.5 7.5 12 3l4.5 4.5"/><path d="M8 10H6a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-9a1 1 0 0 0-1-1h-2"/></svg>',
-  other: '<svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true" fill="currentColor"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 10.7 15.4 6.6M8.6 13.3l6.8 4.1" stroke="currentColor" stroke-width="2"/></svg>',
-};
-
-/** A round share button in the bottom-right corner: sends 123go.taxi itself to someone. */
-export function shareAppButton(): HTMLElement {
-  const ios = detectPlatform(navigator.userAgent, navigator.maxTouchPoints) === 'ios';
-  const button = h('button', { type: 'button', class: 'share-app', 'aria-label': 'Share 123go.taxi' });
-  button.innerHTML = ios ? SHARE_ICONS.ios : SHARE_ICONS.other;
-  const status = h('span', { class: 'share-app-status', role: 'status' });
-  button.addEventListener('click', async () => {
-    const outcome = await shareLink(CANONICAL_URL, '123go.taxi');
-    status.textContent = outcome === 'shared' ? '' : SHARE_RESULT_TEXT[outcome];
-    if (status.textContent) setTimeout(() => (status.textContent = ''), 2500);
-  });
-  return h('div', { class: 'share-app-corner' }, status, button);
+  return h('div', { class: 'corner' }, status, install, share);
 }
