@@ -52,7 +52,13 @@ export function creditFooter(): HTMLElement {
     'aria-label': 'Source code on GitHub',
   });
   github.innerHTML = GITHUB_SVG;
-  return h('footer', {}, github);
+  // Addresses and searches come from OpenStreetMap, whose licence asks for this credit.
+  const osm = h(
+    'a',
+    { href: 'https://www.openstreetmap.org/copyright', rel: 'noopener', target: '_blank', class: 'osm-credit' },
+    'Addresses © OpenStreetMap',
+  );
+  return h('footer', {}, h('div', { class: 'footer-row' }, github, osm));
 }
 
 /**

@@ -14,7 +14,7 @@
 
 The QR code points to a 123go.taxi page, not straight to one app, so app support can improve without reprinting codes. That page lists the apps. Once a phone has a navigation app chosen ("Open this app directly next time" on that page, or **Your navigation app** on the main page), a scan opens it straight away; pick "Ask every time" to see the list again.
 
-**For restaurants, hotels and other places:** make the QR for your address, tap **Put it on your website**, type your place's name (it goes into the QR, so guests and drivers see it), and copy the ready-made **Get here by taxi** button and QR onto your Contact or Getting here page. Guests tap it on a phone or scan it on a computer, and your place lands in their list, ready for the driver.
+**For restaurants, hotels and other places:** make the QR for your address, tap **Put it on your website**, type your place's name (it goes into the QR, so guests and drivers see it), and copy the ready-made **Get here by taxi** button and QR onto your Contact or Getting here page. Guests tap it on a phone or scan it on a computer, and your place lands in their list, ready for the driver. Step-by-step guide, including exact instructions an AI assistant can follow: [docs/ADD-TO-YOUR-WEBSITE.md](docs/ADD-TO-YOUR-WEBSITE.md).
 
 **Install it:** the round download button in the bottom-right corner installs it (on iPhone: Share in Safari's toolbar, then "Add to Home Screen"), so it sits on the home screen like an app. No store, no account.
 

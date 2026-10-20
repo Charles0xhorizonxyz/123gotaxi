@@ -1030,3 +1030,17 @@ body:has(input:focus, textarea:focus) .corner {
   font-size: 0.8rem;
   word-break: break-all;
 }
+
+/* Footer: GitHub mark and the OpenStreetMap credit, side by side */
+.footer-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+}
+
+.osm-credit {
+  font-size: 0.8rem;
+  color: var(--muted);
+}

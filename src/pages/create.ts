@@ -113,7 +113,6 @@ export function renderCreate(
 
   // Result card: address, QR, then what you'd want to keep it under, then actions.
   const addressLine = h('p', { class: 'address', hidden: true });
-  const attribution = h('p', { class: 'attribution', hidden: true }, geocoder.attribution);
   const qrCanvas = h('canvas', { class: 'qr', role: 'img', 'aria-label': 'QR code for this journey' });
   const resultStops = h('p', { class: 'coords' });
   const nameInput = h('input', {
@@ -160,7 +159,6 @@ export function renderCreate(
     h('div', { class: 'more' }, business.toggle),
     business.panel,
   );
-  resultDetails.append(attribution);
   const result = h(
     'section',
     { class: 'result', 'aria-live': 'polite' },
@@ -288,13 +286,11 @@ export function renderCreate(
     addressLine.hidden = false;
     addressLine.classList.toggle('pending', pending || !address);
     addressLine.textContent = address ?? (pending ? 'Looking up the address…' : 'No street address found for this spot');
-    attribution.hidden = !address;
   }
 
   function hideResult(): void {
     addressLookup?.abort();
     addressLine.hidden = true;
-    attribution.hidden = true;
     current = null;
     qrEmpty.hidden = false;
     qrCanvas.hidden = true;

@@ -1,0 +1,25 @@
+# 123go.taxi
+
+> Turns an address into a QR code a taxi driver scans to start navigation in their own app (Google Maps, Yandex, Waze, Apple Maps, any other). Free, open source, no accounts, nothing collected.
+
+Businesses (restaurants, hotels, venues) can put a "Get here by taxi" button and QR on their website. Full instructions, written to be followed exactly by an AI assistant: https://github.com/Charles0xhorizonxyz/123gotaxi/blob/main/docs/ADD-TO-YOUR-WEBSITE.md
+
+## Link format
+
+https://123go.taxi/#v=1&lat=<LAT>&lon=<LON>&n=<NAME>&a=<ADDRESS>
+
+- lat, lon: decimal degrees of the entrance, max 5 decimals. Required.
+- n: public name of the place, max 60 characters, URL-encoded (spaces as +). Recommended.
+- a: readable street address, max 100 characters, URL-encoded. Optional.
+- via: earlier stops, "lat,lon~lat,lon", max 3. Optional.
+- Everything stays after "#" (never sent to a server). Add no other parameters and never shorten the link.
+
+Example: https://123go.taxi/#v=1&lat=41.02564&lon=28.97417&n=Galata+Kulesi&a=Bereketzade,+Beyo%C4%9Flu
+
+## QR code
+
+Encode exactly that link, error correction level Q, margin 2+, black on white, PNG 360 px or larger. 123go.taxi doesn't serve QR images: generate your own.
+
+## Source
+
+https://github.com/Charles0xhorizonxyz/123gotaxi (MIT)

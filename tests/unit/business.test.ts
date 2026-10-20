@@ -14,3 +14,18 @@ describe('websiteSnippet', () => {
     expect(websiteSnippet('https://123go.taxi/#v=1&lat=41&lon=29', '', 'data:x')).toContain('Get here by taxi');
   });
 });
+
+describe('the website guide', () => {
+  it("has an example link that opens as the guide says", async () => {
+    const { readFileSync } = await import('node:fs');
+    const { parseJourney } = await import('../../src/destination-url');
+    const guide = readFileSync('docs/ADD-TO-YOUR-WEBSITE.md', 'utf8');
+    const llms = readFileSync('public/llms.txt', 'utf8');
+    for (const text of [guide, llms]) {
+      const link = /https:\/\/123go\.taxi\/#v=1&lat=41\.02564[^\s)`"]+/.exec(text)?.[0];
+      expect(link).toBeDefined();
+      const parsed = parseJourney(new URL(link!).hash);
+      expect(parsed).toMatchObject({ kind: 'ok', journey: { label: 'Galata Kulesi', address: 'Bereketzade, Beyoğlu' } });
+    }
+  });
+});
