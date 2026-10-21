@@ -219,3 +219,17 @@ test('the one-pager for places speaks the visitor’s language and leads to the 
   await page.getByRole('link', { name: 'Kartınızı oluşturun' }).click();
   await expect(page.getByRole('heading', { name: 'Nereye?' })).toBeVisible();
 });
+
+test('More apps: switching one on adds it to the menu and to the driver screen; suggestions go to GitHub', async ({ page }) => {
+  await page.goto('./');
+  await page.getByText('More apps on this phone').click();
+  await page.getByLabel('2GIS').check();
+  await page.getByLabel('Organic Maps').check();
+  await expect(page.getByLabel('Navigation app', { exact: true }).locator('option', { hasText: '2GIS' })).toHaveCount(1);
+  await expect(page.getByRole('link', { name: /Suggest it on GitHub/ })).toHaveAttribute('href', /issues\/new\?template=app-suggestion\.yml/);
+  await page.goto('about:blank');
+  await page.goto(DRIVER_LINK);
+  await expect(page.getByRole('link', { name: '2GIS' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Organic Maps' })).toHaveAttribute('href', /^https:\/\/omaps\.app\//);
+  await expect(page.getByText('Organic Maps open the place')).toBeVisible();
+});

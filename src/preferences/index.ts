@@ -4,6 +4,8 @@
 export const APP_KEY = 'gogogo.app.v1';
 /** "0" means: show the app list even when an app is chosen. Absent means open directly. */
 export const DIRECT_KEY = 'gogogo.app.direct.v1';
+/** Extra apps switched on in "More apps", as a JSON list of ids. */
+export const MORE_KEY = 'gogogo.app.more.v1';
 
 export class AppPreference {
   constructor(private readonly storage: Storage | null) {}
@@ -27,6 +29,21 @@ export class AppPreference {
   /** Open the chosen app straight away when a QR is scanned. On unless turned off. */
   get direct(): boolean {
     return this.read(DIRECT_KEY) !== '0';
+  }
+
+  /** The extra apps (More apps) switched on for this phone. */
+  get more(): string[] {
+    try {
+      const value: unknown = JSON.parse(this.read(MORE_KEY) ?? '[]');
+      return Array.isArray(value) ? value.filter((id): id is string => typeof id === 'string') : [];
+    } catch {
+      return [];
+    }
+  }
+
+  setMore(ids: readonly string[]): void {
+    if (ids.length) this.storage?.setItem(MORE_KEY, JSON.stringify(ids));
+    else this.storage?.removeItem(MORE_KEY);
   }
 
   setDirect(direct: boolean): void {

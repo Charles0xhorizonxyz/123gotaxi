@@ -1137,3 +1137,49 @@ body:has(input:focus, textarea:focus) .corner {
 .places-guide {
   align-self: flex-start;
 }
+
+/* "More apps on this phone" under Your navigation app */
+.more-apps-box {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.more-apps-box summary {
+  cursor: pointer;
+  font-weight: 700;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  list-style: none;
+}
+
+/* Our own arrow, the same on every phone: ▸ closed, ▾ open */
+.more-apps-box summary::-webkit-details-marker {
+  display: none;
+}
+
+.more-apps-box summary::before {
+  content: '▸';
+  font-size: 1.1rem;
+  transition: transform 0.15s;
+}
+
+.more-apps-box[open] summary::before {
+  transform: rotate(90deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .more-apps-box summary::before {
+    transition: none;
+  }
+}
+
+.more-apps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
+}

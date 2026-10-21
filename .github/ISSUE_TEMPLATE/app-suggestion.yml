@@ -1,0 +1,44 @@
+name: Suggest a navigation app
+description: Your navigation app is missing from 123go.taxi? Tell us which one.
+title: "App suggestion: "
+labels: ["app suggestion"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks! Once we confirm how the app opens a destination from a link, it becomes a button for everyone.
+        Any language is fine.
+  - type: input
+    id: app
+    attributes:
+      label: App name
+      placeholder: e.g. Sygic, Magic Earth, Petal Maps
+    validations:
+      required: true
+  - type: checkboxes
+    id: phones
+    attributes:
+      label: Where do you use it?
+      options:
+        - label: Android
+        - label: iPhone
+        - label: Computer
+  - type: input
+    id: store
+    attributes:
+      label: Link to the app (store page or website)
+      placeholder: https://
+  - type: input
+    id: country
+    attributes:
+      label: Country or city where drivers use it
+      placeholder: e.g. Istanbul
+  - type: textarea
+    id: share
+    attributes:
+      label: A link shared from the app (optional)
+      description: In the app, open any place, tap Share and paste what it gives you. It helps us read and open that app's links.
+  - type: textarea
+    id: notes
+    attributes:
+      label: Anything else

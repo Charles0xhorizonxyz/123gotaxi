@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { Journey } from '../../src/destination-url';
-import { appsFor, detectPlatform, NAV_APPS, type Platform } from '../../src/navigation-links';
+import { appsFor, detectPlatform, MORE_APPS, NAV_APPS, type Platform } from '../../src/navigation-links';
+import { parseLocation } from '../../src/link-parsing';
 
 const home: Journey = { stops: [{ lat: 41.034212, lon: 28.98441 }], label: 'Ev (Cihangir) & bahçe' };
 const tour: Journey = {
@@ -123,5 +124,40 @@ describe('detectPlatform', () => {
     ['Mozilla/5.0 (Windows NT 10.0; Win64; x64)', 0, 'other'],
   ] as const)('%s', (ua, touch, expected) => {
     expect(detectPlatform(ua, touch)).toBe(expected);
+  });
+});
+
+describe('More apps', () => {
+  const journey = { stops: [{ lat: 41.02564, lon: 28.97417 }], label: 'Galata Kulesi' };
+  const more = (id: string) => MORE_APPS.find((a) => a.id === id)!;
+
+  it('only appear when switched on, after the usual apps', () => {
+    expect(appsFor('android').some((a) => a.id === '2gis')).toBe(false);
+    const ids = appsFor('android', 1, ['2gis', 'organic']).map((a) => a.id);
+    expect(ids.slice(-2)).toEqual(['2gis', 'organic']);
+  });
+
+  it('2GIS starts a car route from where the driver is (longitude first)', () => {
+    expect(more('2gis').url(journey, 'ios')).toBe('dgis://2gis.ru/routeSearch/rsType/car/to/28.97417,41.02564');
+    expect(more('2gis').url(journey, 'android')).toMatch(/^intent:\/\/2gis\.ru\/routeSearch\/rsType\/car\/to\/28\.97417,41\.02564#Intent;scheme=dgis;package=ru\.dublgis\.dgismobile;/);
+  });
+
+  it('Mapy.com navigates, following every stop', () => {
+    const route = { stops: [{ lat: 41.03, lon: 28.98 }, ...journey.stops] };
+    expect(more('mapy').url(route, 'android')).toBe(
+      'https://mapy.com/fnc/v1/route?end=28.97417,41.02564&routeType=car_fast&waypoints=28.98,41.03&navigate=true',
+    );
+  });
+
+  it('Organic Maps gets a link our own reader opens at the same spot, with the name', () => {
+    const link = more('organic').url(journey, 'ios');
+    expect(link).toMatch(/^https:\/\/omaps\.app\/[A-Za-z0-9_-]{10}\/Galata_Kulesi$/);
+    const back = parseLocation(link);
+    expect(back.ok && Math.abs(back.place.lat - 41.02564) < 1e-4 && Math.abs(back.place.lon - 28.97417) < 1e-4).toBe(true);
+  });
+
+  it('OsmAnd and HERE WeGo open the place', () => {
+    expect(more('osmand').url(journey, 'ios')).toBe('https://osmand.net/go?lat=41.02564&lon=28.97417&z=17');
+    expect(more('here').url(journey, 'ios')).toBe('https://share.here.com/l/41.02564,28.97417,Galata%20Kulesi');
   });
 });

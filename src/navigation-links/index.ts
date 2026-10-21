@@ -9,6 +9,7 @@
 //           (lat_to/lon_to, lat_via_N/lon_via_N)
 
 import { finalStop, formatCoord, formatPoint, type Journey } from '../destination-url';
+import { MORE_APPS, SUGGEST_APP_URL, type MoreApp } from './more';
 
 export type Platform = 'android' | 'ios' | 'other';
 
@@ -113,9 +114,19 @@ export const NAV_APPS: readonly NavApp[] = [
   },
 ];
 
-/** Apps to offer: right platform, and able to follow every stop of the journey. */
-export function appsFor(platform: Platform, stopCount = 1): NavApp[] {
-  return NAV_APPS.filter(
+/**
+ * Apps to offer: right platform, and able to follow every stop of the journey.
+ * `more`: ids of the extra apps this phone switched on (see more.ts), after the usual ones.
+ */
+export function appsFor(platform: Platform, stopCount = 1, more: readonly string[] = []): NavApp[] {
+  return [...NAV_APPS, ...MORE_APPS.filter((app) => more.includes(app.id))].filter(
     (app) => app.platforms.includes(platform) && (stopCount === 1 || app.multiStop),
   );
 }
+
+/** The extra apps this platform can offer in "More apps". */
+export function moreAppsFor(platform: Platform): MoreApp[] {
+  return MORE_APPS.filter((app) => app.platforms.includes(platform));
+}
+
+export { MORE_APPS, SUGGEST_APP_URL, type MoreApp };

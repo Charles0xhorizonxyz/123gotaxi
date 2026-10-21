@@ -1,6 +1,6 @@
 import { h } from '../dom';
 import { formatPoint, type Journey } from '../destination-url';
-import { appsFor, detectPlatform, type NavApp } from '../navigation-links';
+import { appsFor, detectPlatform, MORE_APPS, type NavApp } from '../navigation-links';
 import { AppPreference } from '../preferences';
 import { browserStorage } from '../saved-places';
 import { creditFooter, SHARE_RESULT_TEXT, shareLink } from './common';
@@ -25,11 +25,13 @@ export function renderDestination(
 
   // The remembered app goes first; everything else keeps its usual order.
   const remembered = preference.get();
-  const apps = appsFor(platform, journey.stops.length).sort(
+  const apps = appsFor(platform, journey.stops.length, preference.more).sort(
     (a, b) => Number(b.id === remembered) - Number(a.id === remembered),
   );
 
   const chosen = apps.find((a) => a.id === remembered);
+  // Some extra apps can only show the place; say so, so the driver taps their route button.
+  const placeOnly = MORE_APPS.filter((m) => m.opensPlace && apps.some((a) => a.id === m.id));
   const opening = autoOpen && preference.direct ? chosen : undefined;
 
   const rememberBox = h('input', {
@@ -116,6 +118,9 @@ export function renderDestination(
       h('div', { class: 'app-list' }, ...apps.map(button)),
       preference.available
         ? h('label', { class: 'remember', for: 'remember' }, rememberBox, t.openDirectlyNextTime)
+        : null,
+      placeOnly.length
+        ? h('p', { class: 'hint' }, t.opensPlaceHint(placeOnly.map((a) => a.name).join(', ')))
         : null,
       multiStop
         ? h(
