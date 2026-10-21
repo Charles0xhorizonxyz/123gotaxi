@@ -64,7 +64,7 @@ The Geoapify key in `src/config.ts` only works from 123go.taxi. When self-hostin
 
 ## Credits
 
-Addresses © [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors, looked up with [Geoapify](https://www.geoapify.com) and [Photon](https://github.com/komoot/photon) by komoot. QR reading on iPhone with [jsQR](https://github.com/cozmo/jsQR) (Apache-2.0).
+Addresses © [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors, looked up with [Geoapify](https://www.geoapify.com) and [Photon](https://github.com/komoot/photon) by komoot. QR reading on iPhone with [jsQR](https://github.com/cozmo/jsQR) (Apache-2.0). App logos from [Simple Icons](https://simpleicons.org) (CC0); the brands belong to their owners.
 
 ## Contact
 

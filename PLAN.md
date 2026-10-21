@@ -12,7 +12,7 @@ Live at **https://123go.taxi** since 2026-10-19, first real ride with a taxi dri
 
 **Using it**
 - Save, share, download as PNG, or **Open in navigation** for yourself.
-- **Your places**: saved on the phone, with a private name and note; every 123go.taxi QR opened on a phone is added as *New* (✓ keep, ✕ remove). Export and import.
+- **Your places**: saved on the phone, with a private name and note, put in order by dragging; every 123go.taxi QR opened on a phone is added as *New* (✓ keep, ✕ remove). Export and import.
 - **Your navigation app**: pick one and a scanned QR opens it straight away (until one is picked, the driver screen shows the list). The menu also has 2GIS, Mapy.com, Organic Maps, OsmAnd, HERE WeGo, the ride apps Uber and Yandex Go (book a ride there), and on Android Bolt, BiTaksi and Citymapper (location handed to the app directly), and on Android "Other app on this phone" (any installed app); missing apps can then be suggested through a GitHub form (label *app suggestion*).
 - Six languages (English, Français, Türkçe, Deutsch, Español, Русский), chosen from the phone, changed with 文A.
 - Install on the home screen (keeps the list for good on iPhone), share the app, all from the corner buttons.

@@ -504,9 +504,11 @@ export function renderCreate(
           '✓',
         )
       : null;
-    return h(
+    const handle = h('button', { type: 'button', class: 'drag-handle', 'aria-label': t.movePlace(title) }, '⠿');
+    const row = h(
       'li',
-      { class: place.pending ? 'pending' : undefined },
+      { class: place.pending ? 'pending' : undefined, 'data-id': place.id },
+      handle,
       h(
         'button',
         {
@@ -543,6 +545,50 @@ export function renderCreate(
         '×',
       ),
     );
+    handle.addEventListener('pointerdown', (event) => dragPlace(row, handle, event));
+    handle.addEventListener('keydown', (event) => {
+      if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return;
+      event.preventDefault();
+      const sibling = event.key === 'ArrowUp' ? row.previousElementSibling : row.nextElementSibling;
+      if (!sibling) return;
+      savedList.insertBefore(row, event.key === 'ArrowUp' ? sibling : sibling.nextElementSibling);
+      keepOrder();
+      handle.focus();
+    });
+    return row;
+  }
+
+  /** Save the order the list now shows. */
+  function keepOrder(): void {
+    saved.reorder([...savedList.children].map((li) => (li as HTMLElement).dataset.id ?? ''));
+  }
+
+  /** Drag a saved place by its handle (finger or mouse); the order is saved on release. */
+  function dragPlace(row: HTMLLIElement, handle: HTMLButtonElement, event: PointerEvent): void {
+    event.preventDefault();
+    handle.setPointerCapture(event.pointerId);
+    row.classList.add('dragging');
+    const onMove = (move: PointerEvent) => {
+      const all = [...savedList.children] as HTMLElement[];
+      const mine = all.indexOf(row);
+      for (const [index, other] of all.entries()) {
+        if (other === row) continue;
+        const box = other.getBoundingClientRect();
+        const middle = box.top + box.height / 2;
+        if (index < mine && move.clientY < middle) return void savedList.insertBefore(row, other);
+        if (index > mine && move.clientY > middle) return void savedList.insertBefore(row, other.nextElementSibling);
+      }
+    };
+    const onEnd = () => {
+      row.classList.remove('dragging');
+      keepOrder();
+      handle.removeEventListener('pointermove', onMove);
+      handle.removeEventListener('pointerup', onEnd);
+      handle.removeEventListener('pointercancel', onEnd);
+    };
+    handle.addEventListener('pointermove', onMove);
+    handle.addEventListener('pointerup', onEnd);
+    handle.addEventListener('pointercancel', onEnd);
   }
 
   saveButton.addEventListener('click', () => {

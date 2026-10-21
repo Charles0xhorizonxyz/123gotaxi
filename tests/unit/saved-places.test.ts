@@ -176,3 +176,15 @@ describe('places opened from a QR', () => {
     expect(JSON.parse(saved.exportJson()).places).toHaveLength(1);
   });
 });
+
+describe('reordering', () => {
+  it('keeps the order the places were dragged into', () => {
+    const saved = new SavedPlaces(memoryStorage());
+    const a = saved.add({ stops: [{ lat: 1, lon: 1 }], name: 'A' }, 1);
+    const b = saved.add({ stops: [{ lat: 2, lon: 2 }], name: 'B' }, 2);
+    const c = saved.add({ stops: [{ lat: 3, lon: 3 }], name: 'C' }, 3);
+    expect(saved.list().map((p) => p.name)).toEqual(['C', 'B', 'A']);
+    saved.reorder([a.id, c.id, b.id]);
+    expect(saved.list().map((p) => p.name)).toEqual(['A', 'C', 'B']);
+  });
+});

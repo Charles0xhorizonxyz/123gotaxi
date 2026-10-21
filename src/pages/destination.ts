@@ -1,6 +1,7 @@
 import { h } from '../dom';
 import { formatPoint, type Journey } from '../destination-url';
 import { appsFor, detectPlatform, MORE_APPS, type NavApp } from '../navigation-links';
+import { appLogo } from '../navigation-links/logos';
 import { AppPreference } from '../preferences';
 import { browserStorage } from '../saved-places';
 import { creditFooter, SHARE_RESULT_TEXT, shareLink } from './common';
@@ -56,7 +57,8 @@ export function renderDestination(
           preference.setDirect(true);
         },
       },
-      app.id === 'geo' ? t.otherApp : app.name,
+      appLogo(app.id),
+      h('span', { class: 'app-name' }, app.id === 'geo' ? t.otherApp : app.name),
     );
 
   const shareButton = h('button', { type: 'button', class: 'text-link' }, t.share);

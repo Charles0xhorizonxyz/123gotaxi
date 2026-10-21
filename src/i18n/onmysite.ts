@@ -47,7 +47,7 @@ export const PLACES: Record<Language, PlacesStrings> = {
   },
   fr: {
     title: '123go.taxi pour les restaurants, hôtels et commerces',
-    headline: 'Amenez vos clients jusqu’à votre porte en taxi',
+    headline: 'Amenez vos clients jusqu’à votre porte',
     lede: 'Ajoutez une carte 123go.taxi à votre site. Vos clients montrent leur QR au chauffeur, et l’itinéraire jusqu’à votre porte démarre dans leur propre appli de navigation.',
     exampleCaption: 'Une carte telle qu’elle apparaît sur un site. Cliquez dessus sur un téléphone, ou scannez-la depuis un ordinateur.',
     benefitsTitle: 'Ce que ça vous apporte',

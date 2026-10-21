@@ -148,6 +148,16 @@ export class SavedPlaces {
     this.write(this.list().map((p) => (p.id === id ? { ...p, pending: undefined } : p)));
   }
 
+  /** Put the places in this order (by id), as dragged in Your places. */
+  reorder(ids: readonly string[]): void {
+    const all = this.list();
+    const rank = (p: SavedPlace) => {
+      const i = ids.indexOf(p.id);
+      return i < 0 ? ids.length : i;
+    };
+    this.write([...all].sort((a, b) => rank(a) - rank(b)));
+  }
+
   remove(id: string): void {
     this.write(this.list().filter((p) => p.id !== id));
   }

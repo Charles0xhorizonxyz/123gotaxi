@@ -243,5 +243,20 @@ test('every app is in the menu and usable straight away; suggesting one is optio
   await page.evaluate(() => localStorage.setItem('gogogo.app.direct.v1', '0'));
   await page.goto('about:blank');
   await page.goto(DRIVER_LINK);
-  await expect(page.locator('.app').first()).toHaveText('2GIS');
+  await expect(page.locator('.app .app-name').first()).toHaveText('2GIS');
+});
+
+test('Your places can be put in order with the handle, and the order stays', async ({ page }) => {
+  await page.goto('./');
+  for (const [coords, name] of [['41.01, 28.97', 'Office'], ['41.02, 28.98', 'Home']] as const) {
+    await page.getByLabel('Where to?', { exact: true }).fill(coords);
+    await page.getByLabel(/^Name/).fill(name);
+    await page.getByRole('button', { name: 'Save', exact: true }).click();
+  }
+  const names = page.locator('.saved-list .saved-name');
+  await expect(names).toHaveText(['Home', 'Office']);
+  await page.getByRole('button', { name: /^Move Home/ }).press('ArrowDown');
+  await expect(names).toHaveText(['Office', 'Home']);
+  await page.reload();
+  await expect(names).toHaveText(['Office', 'Home']);
 });

@@ -407,8 +407,33 @@ button:disabled {
 .app {
   font-size: 1.2rem;
   min-height: 64px;
-  justify-content: space-between;
-  padding-inline: 1.25rem;
+  justify-content: flex-start;
+  gap: 0.85rem;
+  padding-inline: 1rem 1.25rem;
+}
+
+.app-name {
+  flex: 1;
+  text-align: left;
+}
+
+/* The app's logo, on a white disc so every brand colour reads on yellow or black */
+.app-logo {
+  flex: none;
+  width: 2.25rem;
+  height: 2.25rem;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--paper);
+  color: var(--asphalt);
+  border: 1.5px solid var(--asphalt);
+}
+
+.app-badge {
+  font-size: 0.85rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
 }
 
 .app::after {
