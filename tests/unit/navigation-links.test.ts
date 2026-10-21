@@ -189,6 +189,16 @@ describe('ride apps', () => {
   });
 
   it('sit in the menu after the navigation apps, before "Other app"', () => {
-    expect(appsFor('android', 1, 'all').map((a) => a.id).slice(-3)).toEqual(['uber', 'yandex-go', 'geo']);
+    expect(appsFor('android', 1, 'all').map((a) => a.id).slice(-6)).toEqual(['uber', 'yandex-go', 'bolt', 'bitaksi', 'citymapper', 'geo']);
+    expect(appsFor('ios', 1, 'all').some((a) => ['bolt', 'bitaksi', 'citymapper'].includes(a.id))).toBe(false);
+  });
+
+  it('Bolt, BiTaksi and Citymapper get the location directly on Android, or their store page', () => {
+    expect(more('bolt').url(journey, 'android')).toBe(
+      'intent:41.02564,28.97417?q=41.02564,28.97417(Galata%20Kulesi)#Intent;scheme=geo;package=ee.mtakso.client;' +
+        'S.browser_fallback_url=https%3A%2F%2Fplay.google.com%2Fstore%2Fapps%2Fdetails%3Fid%3Dee.mtakso.client;end',
+    );
+    expect(more('bitaksi').url(journey, 'android')).toContain('package=com.bitaksi.musteri;');
+    expect(more('citymapper').url(journey, 'android')).toContain('package=com.citymapper.app.release;');
   });
 });

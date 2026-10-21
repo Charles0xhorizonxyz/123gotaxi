@@ -13,7 +13,9 @@
 //                  locations (several drops = several stops)
 //   Yandex Go:     yandex.com/dev/taxi, "Generating links to an order":
 //                  3.redirect.appmetrica.yandex.com/route with end-lat/end-lon and Yandex's tracking id
-// Bolt and BiTaksi publish no link format; people can ask for them on GitHub.
+// Bolt, BiTaksi and Citymapper publish no link format, but on Android they take a
+// map location like any map app (they're in Android's "open with" list). Their
+// buttons hand the location to that app directly; Android only.
 // Apps without a documented link (Sygic, Magic Earth, Petal Maps...) are left
 // out until one is confirmed: suggestions go to GitHub.
 
@@ -49,6 +51,18 @@ export function encodeGe0(lat: number, lon: number, zoom = 17): string {
 }
 
 const title = (journey: Journey) => journey.label ?? journey.address ?? '';
+
+/**
+ * Android: hand the destination to one app as a map location ("geo:"), the way
+ * the phone's own "open with" does, without the chooser. Not installed: its store page.
+ */
+function androidGeo(journey: Journey, androidPackage: string): string {
+  const end = finalStop(journey);
+  const point = `${formatCoord(end.lat)},${formatCoord(end.lon)}`;
+  const name = title(journey).replace(/[()]/g, '');
+  const store = encodeURIComponent(`https://play.google.com/store/apps/details?id=${androidPackage}`);
+  return `intent:${point}?q=${point}${name ? `(${encodeURIComponent(name)})` : ''}#Intent;scheme=geo;package=${androidPackage};S.browser_fallback_url=${store};end`;
+}
 const lonLat = (p: { lat: number; lon: number }) => `${formatCoord(p.lon)},${formatCoord(p.lat)}`;
 
 export interface MoreApp extends NavApp {
@@ -150,5 +164,29 @@ export const MORE_APPS: readonly MoreApp[] = [
         `&ref=123go.taxi&appmetrica_tracking_id=1178268795219780156&lang=${globalThis.document?.documentElement?.lang || 'en'}`
       );
     },
+  },
+  {
+    id: 'bolt',
+    name: 'Bolt',
+    platforms: ['android'],
+    multiStop: false,
+    opensPlace: false,
+    url: (journey) => androidGeo(journey, 'ee.mtakso.client'),
+  },
+  {
+    id: 'bitaksi',
+    name: 'BiTaksi',
+    platforms: ['android'],
+    multiStop: false,
+    opensPlace: false,
+    url: (journey) => androidGeo(journey, 'com.bitaksi.musteri'),
+  },
+  {
+    id: 'citymapper',
+    name: 'Citymapper',
+    platforms: ['android'],
+    multiStop: false,
+    opensPlace: false,
+    url: (journey) => androidGeo(journey, 'com.citymapper.app.release'),
   },
 ];

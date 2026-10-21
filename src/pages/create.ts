@@ -178,15 +178,11 @@ export function renderCreate(
   const exportLink = h('a', { class: 'text-link', href: '#', download: '123go-places.json' }, t.exportList);
   const importLabel = h('label', { for: 'import-file', class: 'text-link' }, t.importList);
   const placesMessage = h('p', { class: 'hint', role: 'status' });
-  // Only worth saying once there's something to lose. Installed, the list is
-  // kept for good (iPhone's 7-day erasing only applies to Safari itself).
+  // Only worth saying once there's something to lose. Installed, iPhone's 7-day
+  // erasing no longer applies, but the list still lives on this phone only.
   const ios = detectPlatform(navigator.userAgent, navigator.maxTouchPoints) === 'ios';
   const lossWarning = isInstalled()
-    ? h(
-        'p',
-        { class: 'hint', hidden: true },
-        t.keptInstalled,
-      )
+    ? h('p', { class: 'warning', hidden: true }, h('strong', {}, t.keptInstalledStrong), t.keptInstalled)
     : h(
         'p',
         { class: 'warning', hidden: true },
