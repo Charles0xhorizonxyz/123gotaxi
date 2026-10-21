@@ -21,10 +21,15 @@ test('choosing an app on the main page makes a scanned QR open it directly', asy
   await page.waitForURL(/^https:\/\/waze\.com\/ul\?ll=41\.0342,28\.9844/);
 });
 
-test('"Ask every time" shows the app list', async ({ page }) => {
-  await page.addInitScript(() => localStorage.setItem('gogogo.app.v1', 'waze'));
+test('the menu starts on "Choose your app", which can’t be picked back once an app is chosen', async ({ page }) => {
   await page.goto('./');
-  await page.getByLabel('Navigation app', { exact: true }).selectOption({ label: 'Ask every time' });
+  const menu = page.getByLabel('Navigation app', { exact: true });
+  await expect(menu.locator('option:checked')).toHaveText('Choose your app');
+  await menu.selectOption({ label: 'Waze' });
+  await expect(menu.locator('option', { hasText: 'Choose your app' })).toHaveCount(0);
+  // Nothing chosen yet on another phone: the driver screen shows the list.
+  await page.evaluate(() => localStorage.clear());
+  await page.goto('about:blank');
   await page.goto(DRIVER_LINK);
   await expect(page.getByRole('heading', { name: 'Cihangir' })).toBeVisible();
   expect(page.url()).not.toContain('waze.com');

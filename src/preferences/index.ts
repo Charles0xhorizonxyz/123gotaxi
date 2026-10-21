@@ -1,5 +1,5 @@
 // This phone's navigation app, and whether a scanned QR opens it directly.
-// Stored only in this browser; choosing "Ask every time" deletes it.
+// Stored only in this browser.
 
 export const APP_KEY = 'gogogo.app.v1';
 /** "0" means: show the app list even when an app is chosen. Absent means open directly. */

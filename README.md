@@ -12,7 +12,7 @@
 2. Show the QR, share the link, or download it as a PNG. Save places on your device, with a private name and note, and export or import the list.
 3. **The driver** scans it with the phone's camera, or with **Scan** in 123go.taxi itself, and the route starts in their navigation app. Driving yourself? **Open in navigation** opens it in yours.
 
-The QR code points to a 123go.taxi page, not straight to one app, so app support can improve without reprinting codes. That page lists the apps. Once a phone has a navigation app chosen ("Open this app directly next time" on that page, or **Your navigation app** on the main page), a scan opens it straight away; pick "Ask every time" to see the list again.
+The QR code points to a 123go.taxi page, not straight to one app, so app support can improve without reprinting codes. That page lists the apps. Once a phone has a navigation app chosen ("Open this app directly next time" on that page, or **Your navigation app** on the main page), a scan opens it straight away (it can be changed any time).
 
 **For restaurants, hotels and other places:** make the QR for your address, tap **Put it on your website**, type your place's name (it goes into the QR, so guests and drivers see it), pick the language, and copy the ready-made **Reach us with 123go.taxi** card (the words over the QR) onto your Contact or Getting here page. Guests tap it on a phone or scan it on a computer, and your place lands in their list, ready for the driver. Send places the one-pager in six languages: **[123go.taxi/onmysite/](https://123go.taxi/onmysite/)**. Step-by-step guide, including exact instructions an AI assistant can follow: [docs/ADD-TO-YOUR-WEBSITE.md](docs/ADD-TO-YOUR-WEBSITE.md).
 
@@ -32,7 +32,7 @@ The QR code points to a 123go.taxi page, not straight to one app, so app support
 - **The coordinates are part of the QR link.** Anyone who scans the code sees the location. For a home address, consider pinning a nearby corner instead.
 - Saved places, names and notes stay in your browser (`localStorage`) and never go into the QR code or anywhere else.
 - **Opened QRs are kept on that phone.** Any 123go.taxi QR opened on a phone (camera, Scan, or a tapped link) is added to *Your places* as **New**, with ✓ to keep it and ✕ to remove it. That includes a driver's phone, which keeps the places its driver scans until removed. It stays on that phone only.
-- The chosen navigation app is stored only in that phone's browser. Pick "Ask every time" to clear it.
+- The chosen navigation app is stored only in that phone's browser.
 - The published page's Content-Security-Policy forbids it from sending data to any server other than those address services and the link expander.
 
 ## Development

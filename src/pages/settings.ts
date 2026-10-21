@@ -23,12 +23,13 @@ export function navAppSettings(): HTMLElement {
   }
 
   const platform = detectPlatform(navigator.userAgent, navigator.maxTouchPoints);
-  // A chosen app opens straight away; "Ask every time" shows the list.
+  // A chosen app opens straight away. Until one is chosen, the driver screen shows the list.
   const remembered = preference.direct ? preference.get() : null;
   const select = h(
     'select',
     { id: 'nav-app' },
-    h('option', { value: '' }, t.askEveryTime),
+    // Only a prompt: it can't be picked, and goes once an app is chosen.
+    remembered ? null : h('option', { value: '', disabled: true, selected: true }, t.chooseApp),
     ...appsFor(platform, 1, 'all').map((app) =>
       h('option', { value: app.id, selected: app.id === remembered }, app.id === 'geo' ? t.otherAppOnPhone : app.name),
     ),
@@ -36,10 +37,9 @@ export function navAppSettings(): HTMLElement {
   // "Other app": what it does, in one line.
   const otherHint = h('p', { class: 'hint', hidden: remembered !== 'geo' }, t.otherAppHint);
   select.addEventListener('change', () => {
-    if (select.value) {
-      preference.set(select.value);
-      preference.setDirect(true);
-    } else preference.forget();
+    preference.set(select.value);
+    preference.setDirect(true);
+    select.querySelector('option[value=""]')?.remove();
     otherHint.hidden = select.value !== 'geo';
   });
 
