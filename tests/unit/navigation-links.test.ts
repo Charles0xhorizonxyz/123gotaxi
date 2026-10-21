@@ -32,7 +32,7 @@ describe('single destination', () => {
   });
 
   it('Apple Maps: driving directions', () => {
-    expect(url('apple', home, 'ios')).toBe('https://maps.apple.com/?daddr=41.03421,28.98441&dirflg=d');
+    expect(url('apple', home, 'ios')).toBe('https://maps.apple.com/directions?destination=41.03421,28.98441&mode=driving');
   });
 
   it('Yandex Maps: route from here on the Turkish site', () => {
@@ -93,7 +93,7 @@ describe('multi-stop journeys', () => {
 
   it('only apps that follow every stop are offered', () => {
     expect(appsFor('android', 3).map((a) => a.id)).toEqual(['google', 'yandex-navi', 'yandex-maps']);
-    expect(appsFor('ios', 3).map((a) => a.id)).toEqual(['google', 'yandex-navi', 'yandex-maps']);
+    expect(appsFor('ios', 3).map((a) => a.id)).toEqual(['google', 'yandex-navi', 'yandex-maps', 'apple']);
   });
 });
 
@@ -131,10 +131,18 @@ describe('More apps', () => {
   const journey = { stops: [{ lat: 41.02564, lon: 28.97417 }], label: 'Galata Kulesi' };
   const more = (id: string) => MORE_APPS.find((a) => a.id === id)!;
 
-  it('only appear when switched on, after the usual apps', () => {
+  it('come after the usual apps, and "Other app" (Android) always last', () => {
     expect(appsFor('android').some((a) => a.id === '2gis')).toBe(false);
     const ids = appsFor('android', 1, ['2gis', 'organic']).map((a) => a.id);
-    expect(ids.slice(-2)).toEqual(['2gis', 'organic']);
+    expect(ids.slice(-3)).toEqual(['2gis', 'organic', 'geo']);
+    expect(appsFor('ios', 1, 'all').map((a) => a.id)).toEqual(['google', 'yandex-navi', 'yandex-maps', 'waze', 'apple', '2gis', 'mapy', 'organic', 'osmand', 'here']);
+  });
+
+  it('Apple Maps follows every stop with Apple’s current link format', () => {
+    const route = { stops: [{ lat: 41.03, lon: 28.98 }, { lat: 41.02564, lon: 28.97417 }] };
+    expect(NAV_APPS.find((a) => a.id === 'apple')!.url(route, 'ios')).toBe(
+      'https://maps.apple.com/directions?destination=41.02564,28.97417&waypoint=41.03,28.98&mode=driving',
+    );
   });
 
   it('2GIS starts a car route from where the driver is (longitude first)', () => {

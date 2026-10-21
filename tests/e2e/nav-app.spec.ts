@@ -220,16 +220,23 @@ test('the one-pager for places speaks the visitor’s language and leads to the 
   await expect(page.getByRole('heading', { name: 'Nereye?' })).toBeVisible();
 });
 
-test('More apps: switching one on adds it to the menu and to the driver screen; suggestions go to GitHub', async ({ page }) => {
+test('every app is in the menu and usable straight away; suggesting one is optional', async ({ page }, testInfo) => {
   await page.goto('./');
-  await page.getByText('More apps on this phone').click();
-  await page.getByLabel('2GIS').check();
-  await page.getByLabel('Organic Maps').check();
-  await expect(page.getByLabel('Navigation app', { exact: true }).locator('option', { hasText: '2GIS' })).toHaveCount(1);
-  await expect(page.getByRole('link', { name: /Suggest it on GitHub/ })).toHaveAttribute('href', /issues\/new\?template=app-suggestion\.yml/);
+  const menu = page.getByLabel('Navigation app', { exact: true });
+  await menu.selectOption({ label: '2GIS' });
+  await expect(page.getByRole('link', { name: /isn’t listed\? Tell us/ })).toHaveAttribute('href', /issues\/new\?template=app-suggestion\.yml/);
+  // Android: "Other app on this phone" opens any installed app; iPhone has no such way.
+  const other = menu.locator('option', { hasText: 'Other app on this phone' });
+  if (testInfo.project.name === 'android') {
+    await menu.selectOption({ label: 'Other app on this phone' });
+    await expect(page.getByText('Opens any navigation app on this phone')).toBeVisible();
+    await menu.selectOption({ label: '2GIS' });
+  } else {
+    await expect(other).toHaveCount(0);
+  }
+  // Keep the list showing, to look at it: the chosen app comes first.
+  await page.evaluate(() => localStorage.setItem('gogogo.app.direct.v1', '0'));
   await page.goto('about:blank');
   await page.goto(DRIVER_LINK);
-  await expect(page.getByRole('link', { name: '2GIS' })).toBeVisible();
-  await expect(page.getByRole('link', { name: 'Organic Maps' })).toHaveAttribute('href', /^https:\/\/omaps\.app\//);
-  await expect(page.getByText('Organic Maps open the place')).toBeVisible();
+  await expect(page.locator('.app').first()).toHaveText('2GIS');
 });

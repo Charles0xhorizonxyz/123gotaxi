@@ -25,7 +25,7 @@ export function renderDestination(
 
   // The remembered app goes first; everything else keeps its usual order.
   const remembered = preference.get();
-  const apps = appsFor(platform, journey.stops.length, preference.more).sort(
+  const apps = appsFor(platform, journey.stops.length, remembered ? [remembered] : []).sort(
     (a, b) => Number(b.id === remembered) - Number(a.id === remembered),
   );
 

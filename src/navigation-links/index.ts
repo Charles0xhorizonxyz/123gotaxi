@@ -94,9 +94,12 @@ export const NAV_APPS: readonly NavApp[] = [
     id: 'apple',
     name: 'Apple Maps',
     platforms: ['ios', 'other'],
-    multiStop: false,
+    multiStop: true,
+    // Apple's unified Maps URLs (developer.apple.com, "Adopting unified Maps URLs"):
+    // the old "?daddr=" form no longer behaves reliably on recent iPhones.
     url(journey) {
-      return `https://maps.apple.com/?daddr=${formatPoint(finalStop(journey))}&dirflg=d`;
+      const via = journey.stops.slice(0, -1).map((p) => `&waypoint=${formatPoint(p)}`).join('');
+      return `https://maps.apple.com/directions?destination=${formatPoint(finalStop(journey))}${via}&mode=driving`;
     },
   },
   {
@@ -116,17 +119,16 @@ export const NAV_APPS: readonly NavApp[] = [
 
 /**
  * Apps to offer: right platform, and able to follow every stop of the journey.
- * `more`: ids of the extra apps this phone switched on (see more.ts), after the usual ones.
+ * `more`: which extra apps (more.ts) to include, after the usual ones; "Other app"
+ * (Android's "open with" for any installed app) always comes last.
  */
-export function appsFor(platform: Platform, stopCount = 1, more: readonly string[] = []): NavApp[] {
-  return [...NAV_APPS, ...MORE_APPS.filter((app) => more.includes(app.id))].filter(
+export function appsFor(platform: Platform, stopCount = 1, more: readonly string[] | 'all' = []): NavApp[] {
+  const extras = MORE_APPS.filter((app) => more === 'all' || more.includes(app.id));
+  const usual = NAV_APPS.filter((app) => app.id !== 'geo');
+  const other = NAV_APPS.filter((app) => app.id === 'geo');
+  return [...usual, ...extras, ...other].filter(
     (app) => app.platforms.includes(platform) && (stopCount === 1 || app.multiStop),
   );
-}
-
-/** The extra apps this platform can offer in "More apps". */
-export function moreAppsFor(platform: Platform): MoreApp[] {
-  return MORE_APPS.filter((app) => app.platforms.includes(platform));
 }
 
 export { MORE_APPS, SUGGEST_APP_URL, type MoreApp };
