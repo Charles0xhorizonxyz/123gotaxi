@@ -1,6 +1,13 @@
+import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
 
 const DRIVER_LINK = './#v=1&lat=41.0342&lon=28.9844&n=Cihangir';
+
+/** Pick an app in "Your navigation app" (our own menu, with logos). */
+async function chooseApp(page: Page, name: string): Promise<void> {
+  await page.getByRole('button', { name: /^Navigation app/ }).click();
+  await page.getByRole('option', { name, exact: true }).click();
+}
 
 test.beforeEach(async ({ page }) => {
   // Stand-in for Waze, so nothing leaves the test.
@@ -15,7 +22,7 @@ test('a scanned QR opens the chosen app directly', async ({ page }) => {
 
 test('choosing an app on the main page makes a scanned QR open it directly', async ({ page }) => {
   await page.goto('./');
-  await page.getByLabel('Navigation app', { exact: true }).selectOption({ label: 'Waze' });
+  await chooseApp(page, 'Waze');
   await page.goto('about:blank');
   await page.goto(DRIVER_LINK);
   await page.waitForURL(/^https:\/\/waze\.com\/ul\?ll=41\.0342,28\.9844/);
@@ -23,10 +30,14 @@ test('choosing an app on the main page makes a scanned QR open it directly', asy
 
 test('the menu starts on "Choose your app", which can’t be picked back once an app is chosen', async ({ page }) => {
   await page.goto('./');
-  const menu = page.getByLabel('Navigation app', { exact: true });
-  await expect(menu.locator('option:checked')).toHaveText('Choose your app');
-  await menu.selectOption({ label: 'Waze' });
-  await expect(menu.locator('option', { hasText: 'Choose your app' })).toHaveCount(0);
+  const menu = page.getByRole('button', { name: /^Navigation app/ });
+  await expect(menu).toHaveAccessibleName('Navigation app: Choose your app');
+  await chooseApp(page, 'Waze');
+  await expect(menu).toHaveAccessibleName('Navigation app: Waze');
+  await menu.click();
+  await expect(page.getByRole('option', { name: 'Choose your app' })).toHaveCount(0);
+  await expect(page.getByRole('option', { name: 'Waze' })).toHaveAttribute('aria-selected', 'true');
+  await page.keyboard.press('Escape');
   // Nothing chosen yet on another phone: the driver screen shows the list.
   await page.evaluate(() => localStorage.clear());
   await page.goto('about:blank');
@@ -227,17 +238,17 @@ test('the one-pager for places speaks the visitor’s language and leads to the 
 
 test('every app is in the menu and usable straight away; suggesting one is optional', async ({ page }, testInfo) => {
   await page.goto('./');
-  const menu = page.getByLabel('Navigation app', { exact: true });
-  await menu.selectOption({ label: '2GIS' });
+  await chooseApp(page, '2GIS');
   await expect(page.getByRole('link', { name: /isn’t listed\? Tell us/ })).toHaveAttribute('href', /issues\/new\?template=app-suggestion\.yml/);
   // Android: "Other app on this phone" opens any installed app; iPhone has no such way.
-  const other = menu.locator('option', { hasText: 'Other app on this phone' });
   if (testInfo.project.name === 'android') {
-    await menu.selectOption({ label: 'Other app on this phone' });
+    await chooseApp(page, 'Other app on this phone');
     await expect(page.getByText('Opens any navigation app on this phone')).toBeVisible();
-    await menu.selectOption({ label: '2GIS' });
+    await chooseApp(page, '2GIS');
   } else {
-    await expect(other).toHaveCount(0);
+    await page.getByRole('button', { name: /^Navigation app/ }).click();
+    await expect(page.getByRole('option', { name: 'Other app on this phone' })).toHaveCount(0);
+    await page.keyboard.press('Escape');
   }
   // Keep the list showing, to look at it: the chosen app comes first.
   await page.evaluate(() => localStorage.setItem('gogogo.app.direct.v1', '0'));
@@ -246,7 +257,7 @@ test('every app is in the menu and usable straight away; suggesting one is optio
   await expect(page.locator('.app .app-name').first()).toHaveText('2GIS');
 });
 
-test('Your places can be put in order with the handle, and the order stays', async ({ page }) => {
+test('Your places can be put in order by press-and-hold or Alt+arrows, and the order stays', async ({ page }) => {
   await page.goto('./');
   for (const [coords, name] of [['41.01, 28.97', 'Office'], ['41.02, 28.98', 'Home']] as const) {
     await page.getByLabel('Where to?', { exact: true }).fill(coords);
@@ -255,8 +266,24 @@ test('Your places can be put in order with the handle, and the order stays', asy
   }
   const names = page.locator('.saved-list .saved-name');
   await expect(names).toHaveText(['Home', 'Office']);
-  await page.getByRole('button', { name: /^Move Home/ }).press('ArrowDown');
+  // Keyboard: Alt + arrow.
+  await page.getByRole('button', { name: /^Home/ }).press('Alt+ArrowDown');
   await expect(names).toHaveText(['Office', 'Home']);
   await page.reload();
   await expect(names).toHaveText(['Office', 'Home']);
+  // Finger or mouse: press and hold, then slide.
+  const home = page.getByRole('button', { name: /^Home/ });
+  await page.locator('.saved-list').scrollIntoViewIfNeeded();
+  const office = await page.getByRole('button', { name: /^Office/ }).boundingBox();
+  const box = (await home.boundingBox())!;
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.down();
+  await page.waitForTimeout(700);
+  await page.mouse.move(box.x + box.width / 2, office!.y + 5, { steps: 8 });
+  await page.mouse.up();
+  await expect(names).toHaveText(['Home', 'Office']);
+  // A quick tap still opens the place.
+  await page.waitForTimeout(500);
+  await page.getByRole('button', { name: /^Office/ }).click();
+  await expect(page.getByLabel('Where to?', { exact: true })).toHaveValue('41.01, 28.97');
 });

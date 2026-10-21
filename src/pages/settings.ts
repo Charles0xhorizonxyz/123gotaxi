@@ -1,4 +1,5 @@
 import { h } from '../dom';
+import { appMenu } from './app-menu';
 import { sectionHead } from './common';
 import { t } from '../i18n';
 import { appsFor, detectPlatform, SUGGEST_APP_URL } from '../navigation-links';
@@ -25,30 +26,26 @@ export function navAppSettings(): HTMLElement {
   const platform = detectPlatform(navigator.userAgent, navigator.maxTouchPoints);
   // A chosen app opens straight away. Until one is chosen, the driver screen shows the list.
   const remembered = preference.direct ? preference.get() : null;
-  const select = h(
-    'select',
-    { id: 'nav-app' },
-    // Only a prompt: it can't be picked, and goes once an app is chosen.
-    remembered ? null : h('option', { value: '', disabled: true, selected: true }, t.chooseApp),
-    ...appsFor(platform, 1, 'all').map((app) =>
-      h('option', { value: app.id, selected: app.id === remembered }, app.id === 'geo' ? t.otherAppOnPhone : app.name),
-    ),
-  );
   // "Other app": what it does, in one line.
   const otherHint = h('p', { class: 'hint', hidden: remembered !== 'geo' }, t.otherAppHint);
-  select.addEventListener('change', () => {
-    preference.set(select.value);
-    preference.setDirect(true);
-    select.querySelector('option[value=""]')?.remove();
-    otherHint.hidden = select.value !== 'geo';
+  const menu = appMenu({
+    label: t.navAppLabel,
+    apps: appsFor(platform, 1, 'all').map((app) => ({ id: app.id, name: app.id === 'geo' ? t.otherAppOnPhone : app.name })),
+    selected: remembered,
+    // Only a prompt, until an app is picked; there's no going back to it.
+    placeholder: t.chooseApp,
+    onPick: (id) => {
+      preference.set(id);
+      preference.setDirect(true);
+      otherHint.hidden = id !== 'geo';
+    },
   });
 
   return h(
     'section',
     { class: 'settings block' },
     heading,
-    h('label', { for: 'nav-app', class: 'visually-hidden' }, t.navAppLabel),
-    select,
+    menu,
     otherHint,
     // Optional, afterwards: help everyone get the app as a button of its own.
     h('a', { class: 'text-link suggest-app', href: SUGGEST_APP_URL, rel: 'noopener', target: '_blank' }, t.suggestApp),

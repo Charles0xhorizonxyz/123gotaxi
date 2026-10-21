@@ -504,32 +504,36 @@ export function renderCreate(
           '✓',
         )
       : null;
-    const handle = h('button', { type: 'button', class: 'drag-handle', 'aria-label': t.movePlace(title) }, '⠿');
+    const open = h(
+      'button',
+      {
+        type: 'button',
+        class: 'saved-open',
+        // Screen readers and keyboards: Alt + arrow keys move the place.
+        'aria-keyshortcuts': 'Alt+ArrowUp Alt+ArrowDown',
+        'aria-description': t.movePlace(title),
+        onclick: () => {
+          // The end of a press-and-hold move is not a tap.
+          if (open.dataset.moved) return void delete open.dataset.moved;
+          stops.setValues(place.stops.map(pretty));
+            nameInput.value = place.name ?? '';
+            noteInput.value = place.note ?? '';
+          void show({ stops: place.stops, address: place.address }, { reveal: true });
+        },
+      },
+      h(
+        'span',
+        { class: 'saved-name' },
+        place.pending ? h('span', { class: 'chip new' }, t.newChip) : null,
+        title,
+        place.stops.length > 1 ? h('span', { class: 'chip' }, t.nStops(place.stops.length)) : null,
+      ),
+      place.note ? h('span', { class: 'saved-note' }, place.note) : null,
+    );
     const row = h(
       'li',
       { class: place.pending ? 'pending' : undefined, 'data-id': place.id },
-      handle,
-      h(
-        'button',
-        {
-          type: 'button',
-          class: 'saved-open',
-          onclick: () => {
-            stops.setValues(place.stops.map(pretty));
-            nameInput.value = place.name ?? '';
-            noteInput.value = place.note ?? '';
-            void show({ stops: place.stops, address: place.address }, { reveal: true });
-          },
-        },
-        h(
-          'span',
-          { class: 'saved-name' },
-          place.pending ? h('span', { class: 'chip new' }, t.newChip) : null,
-          title,
-          place.stops.length > 1 ? h('span', { class: 'chip' }, t.nStops(place.stops.length)) : null,
-        ),
-        place.note ? h('span', { class: 'saved-note' }, place.note) : null,
-      ),
+      open,
       keep,
       h(
         'button',
@@ -545,15 +549,15 @@ export function renderCreate(
         '×',
       ),
     );
-    handle.addEventListener('pointerdown', (event) => dragPlace(row, handle, event));
-    handle.addEventListener('keydown', (event) => {
-      if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return;
+    open.addEventListener('pointerdown', (event) => holdToMove(row, open, event));
+    open.addEventListener('keydown', (event) => {
+      if (!event.altKey || (event.key !== 'ArrowUp' && event.key !== 'ArrowDown')) return;
       event.preventDefault();
       const sibling = event.key === 'ArrowUp' ? row.previousElementSibling : row.nextElementSibling;
       if (!sibling) return;
       savedList.insertBefore(row, event.key === 'ArrowUp' ? sibling : sibling.nextElementSibling);
       keepOrder();
-      handle.focus();
+      open.focus();
     });
     return row;
   }
@@ -563,12 +567,40 @@ export function renderCreate(
     saved.reorder([...savedList.children].map((li) => (li as HTMLElement).dataset.id ?? ''));
   }
 
-  /** Drag a saved place by its handle (finger or mouse); the order is saved on release. */
-  function dragPlace(row: HTMLLIElement, handle: HTMLButtonElement, event: PointerEvent): void {
-    event.preventDefault();
-    handle.setPointerCapture(event.pointerId);
-    row.classList.add('dragging');
+  /** While a place is being moved, the page must not scroll under the finger (Safari on iPhone). */
+  let moving = false;
+  document.addEventListener(
+    'touchmove',
+    (event) => {
+      if (moving) event.preventDefault();
+    },
+    { passive: false },
+  );
+
+  /**
+   * Press and hold a place (about half a second, without moving) to pick it up,
+   * then slide it up or down; let go to drop it. A quick tap still opens it, and
+   * moving before the hold lets the page scroll as usual.
+   */
+  function holdToMove(row: HTMLLIElement, open: HTMLButtonElement, down: PointerEvent): void {
+    if (down.button !== 0) return;
+    const startY = down.clientY;
+    let held = false;
+    const timer = setTimeout(() => {
+      held = true;
+      moving = true;
+      row.classList.add('dragging');
+      open.dataset.moved = '1';
+      navigator.vibrate?.(15);
+    }, 450);
+    // Follow this finger or mouse over the whole page: Safari won't let a card
+    // keep the pointer once it has left it.
     const onMove = (move: PointerEvent) => {
+      if (move.pointerId !== down.pointerId) return;
+      if (!held) {
+        if (Math.abs(move.clientY - startY) > 8) finish();
+        return;
+      }
       const all = [...savedList.children] as HTMLElement[];
       const mine = all.indexOf(row);
       for (const [index, other] of all.entries()) {
@@ -579,16 +611,21 @@ export function renderCreate(
         if (index > mine && move.clientY > middle) return void savedList.insertBefore(row, other.nextElementSibling);
       }
     };
-    const onEnd = () => {
+    const finish = () => {
+      clearTimeout(timer);
+      document.removeEventListener('pointermove', onMove);
+      document.removeEventListener('pointerup', finish);
+      document.removeEventListener('pointercancel', finish);
+      if (!held) return;
+      moving = false;
       row.classList.remove('dragging');
       keepOrder();
-      handle.removeEventListener('pointermove', onMove);
-      handle.removeEventListener('pointerup', onEnd);
-      handle.removeEventListener('pointercancel', onEnd);
+      // The tap that may follow the release is ignored; after that, taps open the place again.
+      setTimeout(() => delete open.dataset.moved, 400);
     };
-    handle.addEventListener('pointermove', onMove);
-    handle.addEventListener('pointerup', onEnd);
-    handle.addEventListener('pointercancel', onEnd);
+    document.addEventListener('pointermove', onMove);
+    document.addEventListener('pointerup', finish);
+    document.addEventListener('pointercancel', finish);
   }
 
   saveButton.addEventListener('click', () => {
