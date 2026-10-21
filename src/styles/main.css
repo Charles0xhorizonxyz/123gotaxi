@@ -353,18 +353,23 @@ button:disabled {
   user-select: none;
 }
 
-.saved-list li {
-  transition: transform 0.12s;
+/* Picked up: lifted above the others, following the finger */
+.saved-list li.dragging {
+  position: relative;
+  z-index: 5;
 }
 
-/* Picked up: lifted, ready to be moved */
 .saved-list li.dragging .saved-open {
-  box-shadow: 0 10px 22px rgba(20, 20, 20, 0.22);
-  transform: scale(1.02);
+  box-shadow: 0 12px 26px rgba(20, 20, 20, 0.25);
+}
+
+/* The other cards slide aside smoothly to make room */
+.saved-list li.making-room {
+  transition: transform 0.18s ease;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .saved-list li {
+  .saved-list li.making-room {
     transition: none;
   }
 }

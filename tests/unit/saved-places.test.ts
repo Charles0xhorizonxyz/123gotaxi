@@ -19,11 +19,11 @@ function memoryStorage(): Storage {
 const at = (lat: number, lon = lat) => ({ stops: [{ lat, lon }] });
 
 describe('SavedPlaces', () => {
-  it('saves name and note, newest first', () => {
+  it('saves name and note, new places at the bottom', () => {
     const store = new SavedPlaces(memoryStorage());
     store.add({ ...at(1), name: 'A', note: 'Blue door' }, 1);
     store.add({ ...at(2), name: 'B' }, 2);
-    const [b, a] = store.list();
+    const [a, b] = store.list();
     expect(b).toMatchObject({ name: 'B', note: undefined });
     expect(a).toMatchObject({ name: 'A', note: 'Blue door' });
   });
@@ -183,8 +183,12 @@ describe('reordering', () => {
     const a = saved.add({ stops: [{ lat: 1, lon: 1 }], name: 'A' }, 1);
     const b = saved.add({ stops: [{ lat: 2, lon: 2 }], name: 'B' }, 2);
     const c = saved.add({ stops: [{ lat: 3, lon: 3 }], name: 'C' }, 3);
-    expect(saved.list().map((p) => p.name)).toEqual(['C', 'B', 'A']);
-    saved.reorder([a.id, c.id, b.id]);
-    expect(saved.list().map((p) => p.name)).toEqual(['A', 'C', 'B']);
+    expect(saved.list().map((p) => p.name)).toEqual(['A', 'B', 'C']);
+    saved.reorder([c.id, a.id, b.id]);
+    expect(saved.list().map((p) => p.name)).toEqual(['C', 'A', 'B']);
+    // Saving one of them again keeps its place in the order.
+    saved.add({ stops: [{ lat: 1, lon: 1 }], name: 'A', note: 'again' }, 4);
+    expect(saved.list().map((p) => p.name)).toEqual(['C', 'A', 'B']);
+    expect(saved.list()[1]!.note).toBe('again');
   });
 });

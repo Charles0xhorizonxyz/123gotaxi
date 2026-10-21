@@ -110,7 +110,10 @@ export class SavedPlaces {
     }
   }
 
-  /** Save a journey, newest first. Saving the same one again moves it to the top. */
+  /**
+   * Save a journey at the bottom of the list, so the places people put on top stay
+   * there. Saving the same one again updates it where it is.
+   */
   add(journey: Journey & { name?: string; note?: string }, now = Date.now()): SavedPlace {
     const place: SavedPlace = {
       id: newId(now),
@@ -120,7 +123,11 @@ export class SavedPlaces {
       stops: journey.stops.map(({ lat, lon }) => ({ lat, lon })),
       savedAt: now,
     };
-    this.write([place, ...this.list().filter((p) => !sameJourney(p, place))]);
+    const list = this.list();
+    const at = list.findIndex((p) => sameJourney(p, place));
+    if (at >= 0) list[at] = { ...place, id: list[at]!.id };
+    else list.push(place);
+    this.write(list);
     return place;
   }
 
@@ -139,7 +146,8 @@ export class SavedPlaces {
       savedAt: now,
       pending: true,
     };
-    this.write([place, ...this.list()]);
+    // At the bottom, like any new place.
+    this.write([...this.list(), place]);
     return place;
   }
 

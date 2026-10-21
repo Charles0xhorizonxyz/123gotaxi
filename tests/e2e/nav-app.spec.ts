@@ -265,20 +265,28 @@ test('Your places can be put in order by press-and-hold or Alt+arrows, and the o
     await page.getByRole('button', { name: 'Save', exact: true }).click();
   }
   const names = page.locator('.saved-list .saved-name');
-  await expect(names).toHaveText(['Home', 'Office']);
+  // New places go at the bottom.
+  await expect(names).toHaveText(['Office', 'Home']);
   // Keyboard: Alt + arrow.
+  await page.getByRole('button', { name: /^Home/ }).press('Alt+ArrowUp');
+  await expect(names).toHaveText(['Home', 'Office']);
   await page.getByRole('button', { name: /^Home/ }).press('Alt+ArrowDown');
   await expect(names).toHaveText(['Office', 'Home']);
   await page.reload();
   await expect(names).toHaveText(['Office', 'Home']);
   // Finger or mouse: press and hold, then slide.
   const home = page.getByRole('button', { name: /^Home/ });
-  await page.locator('.saved-list').scrollIntoViewIfNeeded();
+  // In the middle of the screen, away from the edges where the page scrolls along.
+  await page.locator('.saved-list').evaluate((list) => list.scrollIntoView({ block: 'center' }));
   const office = await page.getByRole('button', { name: /^Office/ }).boundingBox();
   const box = (await home.boundingBox())!;
   await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
   await page.mouse.down();
   await page.waitForTimeout(700);
+  // Halfway: the card already follows the finger, before it reaches its new place.
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2 - 20, { steps: 4 });
+  const halfway = await page.locator('.saved-list li.dragging').evaluate((li) => getComputedStyle(li).transform);
+  expect(halfway).not.toBe('none');
   await page.mouse.move(box.x + box.width / 2, office!.y + 5, { steps: 8 });
   await page.mouse.up();
   await expect(names).toHaveText(['Home', 'Office']);

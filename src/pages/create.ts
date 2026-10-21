@@ -585,40 +585,82 @@ export function renderCreate(
   function holdToMove(row: HTMLLIElement, open: HTMLButtonElement, down: PointerEvent): void {
     if (down.button !== 0) return;
     const startY = down.clientY;
+    const startScroll = window.scrollY;
+    let pointerY = down.clientY;
     let held = false;
+    let rows: HTMLElement[] = [];
+    let tops: number[] = [];
+    let from = 0;
+    let to = 0;
+    let step = 0;
+    let scrollTimer: ReturnType<typeof setInterval> | undefined;
+
     const timer = setTimeout(() => {
       held = true;
       moving = true;
-      row.classList.add('dragging');
       open.dataset.moved = '1';
       navigator.vibrate?.(15);
+      // Where every card sits now (page coordinates), to know which ones to slide aside.
+      rows = [...savedList.children] as HTMLElement[];
+      tops = rows.map((r) => r.getBoundingClientRect().top + window.scrollY);
+      from = to = rows.indexOf(row);
+      const box = row.getBoundingClientRect();
+      const next = rows[from + 1] ?? rows[from - 1];
+      step = next ? Math.abs(next.getBoundingClientRect().top - box.top) : box.height;
+      row.classList.add('dragging');
+      for (const r of rows) if (r !== row) r.classList.add('making-room');
+      // Near the top or bottom of the screen, the page scrolls along.
+      scrollTimer = setInterval(() => {
+        const edge = 70;
+        const speed = pointerY < edge ? -12 : pointerY > window.innerHeight - edge ? 12 : 0;
+        if (speed) {
+          window.scrollBy(0, speed);
+          follow();
+        }
+      }, 16);
     }, 450);
+
+    /** The card under the finger; the others slide out of its way. */
+    function follow(): void {
+      const dy = pointerY - startY + (window.scrollY - startScroll);
+      row.style.transform = `translateY(${dy}px) scale(1.02)`;
+      const centre = tops[from]! + dy + row.offsetHeight / 2;
+      to = from;
+      while (to < rows.length - 1 && centre > tops[to + 1]! + rows[to + 1]!.offsetHeight / 2) to++;
+      while (to > 0 && centre < tops[to - 1]! + rows[to - 1]!.offsetHeight / 2) to--;
+      for (const [i, r] of rows.entries()) {
+        if (r === row) continue;
+        const shift = from < to && i > from && i <= to ? -step : from > to && i < from && i >= to ? step : 0;
+        r.style.transform = shift ? `translateY(${shift}px)` : '';
+      }
+    }
+
     // Follow this finger or mouse over the whole page: Safari won't let a card
     // keep the pointer once it has left it.
     const onMove = (move: PointerEvent) => {
       if (move.pointerId !== down.pointerId) return;
+      pointerY = move.clientY;
       if (!held) {
         if (Math.abs(move.clientY - startY) > 8) finish();
         return;
       }
-      const all = [...savedList.children] as HTMLElement[];
-      const mine = all.indexOf(row);
-      for (const [index, other] of all.entries()) {
-        if (other === row) continue;
-        const box = other.getBoundingClientRect();
-        const middle = box.top + box.height / 2;
-        if (index < mine && move.clientY < middle) return void savedList.insertBefore(row, other);
-        if (index > mine && move.clientY > middle) return void savedList.insertBefore(row, other.nextElementSibling);
-      }
+      follow();
     };
+
     const finish = () => {
       clearTimeout(timer);
+      clearInterval(scrollTimer);
       document.removeEventListener('pointermove', onMove);
       document.removeEventListener('pointerup', finish);
       document.removeEventListener('pointercancel', finish);
       if (!held) return;
       moving = false;
-      row.classList.remove('dragging');
+      // Drop it into the gap: move it in the list, and let every card sit still again.
+      for (const r of rows) {
+        r.classList.remove('making-room', 'dragging');
+        r.style.transform = '';
+      }
+      if (to !== from) savedList.insertBefore(row, to > from ? rows[to]!.nextElementSibling : rows[to]!);
       keepOrder();
       // The tap that may follow the release is ignored; after that, taps open the place again.
       setTimeout(() => delete open.dataset.moved, 400);
@@ -627,6 +669,7 @@ export function renderCreate(
     document.addEventListener('pointerup', finish);
     document.addEventListener('pointercancel', finish);
   }
+
 
   saveButton.addEventListener('click', () => {
     if (!current) return;
