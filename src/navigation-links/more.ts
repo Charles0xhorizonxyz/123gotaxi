@@ -8,6 +8,12 @@
 //                  position, which we don't have, so the share link opens the place
 //   OsmAnd:        iOS 2.90 release notes, osmand.net/go?lat=&lon=&z= (opens the place)
 //   HERE WeGo:     docs.here.com Deeplinking API, share.here.com/l/<lat>,<lon>,<title> (opens the place)
+// Ride apps, to book a ride there (pickup: where the rider is):
+//   Uber:          developer.uber.com/docs/deep-linking, m.uber.com/looking with drop[n] JSON
+//                  locations (several drops = several stops)
+//   Yandex Go:     yandex.com/dev/taxi, "Generating links to an order":
+//                  3.redirect.appmetrica.yandex.com/route with end-lat/end-lon and Yandex's tracking id
+// Bolt and BiTaksi publish no link format; people can ask for them on GitHub.
 // Apps without a documented link (Sygic, Magic Earth, Petal Maps...) are left
 // out until one is confirmed: suggestions go to GitHub.
 
@@ -114,6 +120,35 @@ export const MORE_APPS: readonly MoreApp[] = [
       const end = finalStop(journey);
       const name = title(journey).replace(/[,/?#]/g, ' ').trim();
       return `https://share.here.com/l/${formatCoord(end.lat)},${formatCoord(end.lon)}${name ? `,${encodeURIComponent(name)}` : ''}`;
+    },
+  },
+  {
+    id: 'uber',
+    name: 'Uber',
+    platforms: ['android', 'ios', 'other'],
+    multiStop: true,
+    opensPlace: false,
+    url(journey) {
+      const drops = journey.stops.map((p, i) => {
+        const last = i === journey.stops.length - 1;
+        const place = { latitude: p.lat, longitude: p.lon, ...(last && title(journey) ? { addressLine1: title(journey) } : {}) };
+        return `drop[${i}]=${encodeURIComponent(JSON.stringify(place))}`;
+      });
+      return `https://m.uber.com/looking?${drops.join('&')}`;
+    },
+  },
+  {
+    id: 'yandex-go',
+    name: 'Yandex Go',
+    platforms: ['android', 'ios', 'other'],
+    multiStop: false,
+    opensPlace: false,
+    url(journey) {
+      const end = finalStop(journey);
+      return (
+        `https://3.redirect.appmetrica.yandex.com/route?end-lat=${formatCoord(end.lat)}&end-lon=${formatCoord(end.lon)}` +
+        `&ref=123go.taxi&appmetrica_tracking_id=1178268795219780156&lang=${globalThis.document?.documentElement?.lang || 'en'}`
+      );
     },
   },
 ];

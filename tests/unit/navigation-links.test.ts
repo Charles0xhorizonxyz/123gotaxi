@@ -135,7 +135,7 @@ describe('More apps', () => {
     expect(appsFor('android').some((a) => a.id === '2gis')).toBe(false);
     const ids = appsFor('android', 1, ['2gis', 'organic']).map((a) => a.id);
     expect(ids.slice(-3)).toEqual(['2gis', 'organic', 'geo']);
-    expect(appsFor('ios', 1, 'all').map((a) => a.id)).toEqual(['google', 'yandex-navi', 'yandex-maps', 'waze', 'apple', '2gis', 'mapy', 'organic', 'osmand', 'here']);
+    expect(appsFor('ios', 1, 'all').map((a) => a.id)).toEqual(['google', 'yandex-navi', 'yandex-maps', 'waze', 'apple', '2gis', 'mapy', 'organic', 'osmand', 'here', 'uber', 'yandex-go']);
   });
 
   it('Apple Maps follows every stop with Apple’s current link format', () => {
@@ -167,5 +167,28 @@ describe('More apps', () => {
   it('OsmAnd and HERE WeGo open the place', () => {
     expect(more('osmand').url(journey, 'ios')).toBe('https://osmand.net/go?lat=41.02564&lon=28.97417&z=17');
     expect(more('here').url(journey, 'ios')).toBe('https://share.here.com/l/41.02564,28.97417,Galata%20Kulesi');
+  });
+});
+
+describe('ride apps', () => {
+  const journey = { stops: [{ lat: 41.02564, lon: 28.97417 }], label: 'Galata Kulesi' };
+  const more = (id: string) => MORE_APPS.find((a) => a.id === id)!;
+
+  it('Uber books a ride there, every stop as a drop, with the name', () => {
+    const route = { stops: [{ lat: 41.03, lon: 28.98 }, ...journey.stops], label: 'Galata Kulesi' };
+    const link = new URL(more('uber').url(route, 'ios'));
+    expect(link.origin + link.pathname).toBe('https://m.uber.com/looking');
+    expect(JSON.parse(link.searchParams.get('drop[0]')!)).toEqual({ latitude: 41.03, longitude: 28.98 });
+    expect(JSON.parse(link.searchParams.get('drop[1]')!)).toEqual({ latitude: 41.02564, longitude: 28.97417, addressLine1: 'Galata Kulesi' });
+  });
+
+  it('Yandex Go orders a ride to the destination with Yandex’s own link', () => {
+    expect(more('yandex-go').url(journey, 'android')).toBe(
+      'https://3.redirect.appmetrica.yandex.com/route?end-lat=41.02564&end-lon=28.97417&ref=123go.taxi&appmetrica_tracking_id=1178268795219780156&lang=en',
+    );
+  });
+
+  it('sit in the menu after the navigation apps, before "Other app"', () => {
+    expect(appsFor('android', 1, 'all').map((a) => a.id).slice(-3)).toEqual(['uber', 'yandex-go', 'geo']);
   });
 });
