@@ -316,6 +316,7 @@ button:disabled {
 
 /* Saved places */
 .saved {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
@@ -381,20 +382,6 @@ button:disabled {
 .saved-open .coords {
   font-weight: 400;
   color: #5a4e20;
-}
-
-.saved-delete {
-  background: var(--paper);
-  font-size: 1.4rem;
-  min-width: 52px;
-}
-
-/* New: opened from a 123go.taxi QR, waiting for ✓ keep or ✕ remove */
-.saved-keep {
-  background: var(--asphalt);
-  color: var(--yellow);
-  font-size: 1.3rem;
-  min-width: 52px;
 }
 
 .saved-list li.pending .saved-open {
@@ -1265,4 +1252,35 @@ body:has(input:focus, textarea:focus) .corner {
 .app-menu-list [aria-selected='true'] {
   background: var(--yellow);
   font-weight: 700;
+}
+
+/* The bin: appears over the "Your places" title while a place is held */
+.places-bin {
+  position: absolute;
+  z-index: 6;
+  left: 0;
+  right: 0;
+  /* Exactly over the title row, never over the first place below it. */
+  top: 1.5rem;
+  height: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  border: 2px dashed var(--asphalt);
+  border-radius: var(--radius);
+  background: var(--paper);
+  font-weight: 700;
+}
+
+.places-bin.over {
+  border-style: solid;
+  border-color: var(--danger);
+  background: var(--danger);
+  color: var(--paper);
+}
+
+/* A place about to be removed */
+.saved-list li.to-bin .saved-open {
+  opacity: 0.55;
 }

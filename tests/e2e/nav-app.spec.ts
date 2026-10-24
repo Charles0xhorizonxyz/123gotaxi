@@ -56,20 +56,24 @@ test('"Open in navigation" opens the chosen app straight away, without adding a 
   expect(saved ?? '[]').not.toContain('pending');
 });
 
-test('a 123go.taxi QR opened on this phone is added as New, with keep and remove', async ({ page }) => {
+test('a 123go.taxi QR opened on this phone is added as New; Delete removes it, with Undo', async ({ page }) => {
   await page.goto(DRIVER_LINK);
   await expect(page.getByRole('heading', { name: 'Cihangir' })).toBeVisible();
   await page.goto('./');
   await expect(page.locator('.chip.new')).toBeVisible();
-  await page.getByRole('button', { name: 'Keep Cihangir' }).click();
+  // Opening it makes it an ordinary place.
+  await page.getByRole('button', { name: /Cihangir/ }).click();
   await expect(page.locator('.chip.new')).toHaveCount(0);
-  await expect(page.getByRole('button', { name: /^Cihangir/ })).toBeVisible();
   // Opening the same QR again doesn't add it twice.
   await page.goto(DRIVER_LINK);
   await page.goto('./');
-  await expect(page.getByRole('button', { name: /^Cihangir/ })).toHaveCount(1);
-  await page.getByRole('button', { name: 'Delete Cihangir' }).click();
-  await expect(page.getByRole('button', { name: /^Cihangir/ })).toHaveCount(0);
+  const place = page.getByRole('button', { name: /^Cihangir/ });
+  await expect(place).toHaveCount(1);
+  await place.press('Delete');
+  await expect(place).toHaveCount(0);
+  await expect(page.getByText('Removed Cihangir')).toBeVisible();
+  await page.getByRole('button', { name: 'Undo' }).click();
+  await expect(place).toHaveCount(1);
 });
 
 test('Install is a round button in the corner; on iPhone it shows the two steps', async ({ page }, testInfo) => {
@@ -174,7 +178,7 @@ test('"Put it on your website" puts the public name in the QR and gives the code
   await page.goto(link!.replace('https://123go.taxi/', './'));
   await expect(page.getByRole('heading', { name: 'Pandeli' })).toBeVisible();
   await page.goto('./');
-  await expect(page.getByRole('button', { name: 'Keep Pandeli' })).toBeVisible();
+  await expect(page.locator('.saved-list li.pending')).toContainText('Pandeli');
 });
 
 test.describe('with Geoapify answering', () => {
@@ -289,6 +293,19 @@ test('Your places can be put in order by press-and-hold or Alt+arrows, and the o
   expect(halfway).not.toBe('none');
   await page.mouse.move(box.x + box.width / 2, office!.y + 5, { steps: 8 });
   await page.mouse.up();
+  await expect(names).toHaveText(['Home', 'Office']);
+  // Held and dropped on the bin over the title: removed, with Undo.
+  const officeNow = (await page.getByRole('button', { name: /^Office/ }).boundingBox())!;
+  await page.mouse.move(officeNow.x + officeNow.width / 2, officeNow.y + officeNow.height / 2);
+  await page.mouse.down();
+  await page.waitForTimeout(700);
+  await expect(page.getByText('Drop here to remove')).toBeVisible();
+  const bin = (await page.locator('.places-bin').boundingBox())!;
+  await page.mouse.move(bin.x + bin.width / 2, bin.y + bin.height / 2, { steps: 8 });
+  await page.mouse.up();
+  await expect(names).toHaveText(['Home']);
+  await expect(page.locator('.places-bin')).toBeHidden();
+  await page.getByRole('button', { name: 'Undo' }).click();
   await expect(names).toHaveText(['Home', 'Office']);
   // A quick tap still opens the place.
   await page.waitForTimeout(500);

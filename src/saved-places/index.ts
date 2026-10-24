@@ -19,7 +19,7 @@ export interface SavedPlace {
   address?: string;
   stops: Point[];
   savedAt: number;
-  /** Added by opening a 123go.taxi QR; waits for the user to keep (✓) or remove (✕) it. */
+  /** Added by opening a 123go.taxi QR; shows "New" until it's opened or moved. */
   pending?: boolean;
 }
 
@@ -151,7 +151,7 @@ export class SavedPlaces {
     return place;
   }
 
-  /** ✓ on a New place: it becomes an ordinary saved place. */
+  /** A New place was opened or moved: it's no longer new. */
   keep(id: string): void {
     this.write(this.list().map((p) => (p.id === id ? { ...p, pending: undefined } : p)));
   }
@@ -164,6 +164,13 @@ export class SavedPlaces {
       return i < 0 ? ids.length : i;
     };
     this.write([...all].sort((a, b) => rank(a) - rank(b)));
+  }
+
+  /** Put a removed place back where it was (Undo). */
+  restore(place: SavedPlace, index: number): void {
+    const list = this.list().filter((p) => p.id !== place.id);
+    list.splice(Math.min(index, list.length), 0, place);
+    this.write(list);
   }
 
   remove(id: string): void {
@@ -181,8 +188,7 @@ export class SavedPlaces {
         format: EXPORT_FORMAT,
         version: 1,
         // Ids are per-device; the importing device makes its own.
-        // New places nobody has kept yet stay out of the file.
-        places: this.list().filter((p) => !p.pending).map(({ name, note, address, stops, savedAt }) => ({
+        places: this.list().map(({ name, note, address, stops, savedAt }) => ({
           name,
           note,
           address,

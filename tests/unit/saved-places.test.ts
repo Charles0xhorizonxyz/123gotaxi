@@ -163,17 +163,26 @@ describe('AppPreference', () => {
 });
 
 describe('places opened from a QR', () => {
-  it('are added once, as New, until kept', () => {
+  it('are added once, as New until opened or moved, and exported like the rest', () => {
     const saved = new SavedPlaces(memoryStorage());
     const journey = { stops: [{ lat: 41.0342, lon: 28.9844 }], label: 'Pandeli' };
     const place = saved.addScanned(journey);
     expect(place).toMatchObject({ name: 'Pandeli', pending: true });
     saved.addScanned(journey);
     expect(saved.list()).toHaveLength(1);
-    expect(JSON.parse(saved.exportJson()).places).toHaveLength(0);
+    expect(JSON.parse(saved.exportJson()).places).toHaveLength(1);
     saved.keep(place.id);
     expect(saved.list()[0]!.pending).toBeUndefined();
-    expect(JSON.parse(saved.exportJson()).places).toHaveLength(1);
+  });
+
+  it('a removed place can be put back where it was (Undo)', () => {
+    const saved = new SavedPlaces(memoryStorage());
+    saved.add({ stops: [{ lat: 1, lon: 1 }], name: 'A' }, 1);
+    const b = saved.add({ stops: [{ lat: 2, lon: 2 }], name: 'B' }, 2);
+    saved.add({ stops: [{ lat: 3, lon: 3 }], name: 'C' }, 3);
+    saved.remove(b.id);
+    saved.restore(b, 1);
+    expect(saved.list().map((p) => p.name)).toEqual(['A', 'B', 'C']);
   });
 });
 

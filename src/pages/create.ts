@@ -190,9 +190,16 @@ export function renderCreate(
         ios ? t.lossIos : t.loss,
       );
   const placesHead = sectionHead(t.yourPlaces, t.placesHelp, { id: 'help-places' });
+  // Shown only while a place is held: drop it here to remove it. It covers the
+  // section title, so nothing below moves when it appears.
+  const bin = h('div', { class: 'places-bin', hidden: true, 'aria-hidden': 'true' });
+  bin.innerHTML =
+    '<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6"/></svg>';
+  bin.append(h('span', {}, t.binLabel));
   const savedSection = h(
     'section',
     { class: 'saved block' },
+    bin,
     placesHead,
     savedList,
     lossWarning,
@@ -489,32 +496,22 @@ export function renderCreate(
 
   function savedItem(place: SavedPlace): HTMLLIElement {
     const title = place.name ?? fallbackName(place);
-    const keep = place.pending
-      ? h(
-          'button',
-          {
-            type: 'button',
-            class: 'saved-keep',
-            'aria-label': t.keep(title),
-            onclick: () => {
-              saved.keep(place.id);
-              renderSaved();
-            },
-          },
-          '✓',
-        )
-      : null;
     const open = h(
       'button',
       {
         type: 'button',
         class: 'saved-open',
         // Screen readers and keyboards: Alt + arrow keys move the place.
-        'aria-keyshortcuts': 'Alt+ArrowUp Alt+ArrowDown',
+        'aria-keyshortcuts': 'Alt+ArrowUp Alt+ArrowDown Delete',
         'aria-description': t.movePlace(title),
         onclick: () => {
           // The end of a press-and-hold move is not a tap.
           if (open.dataset.moved) return void delete open.dataset.moved;
+          if (place.pending) {
+            saved.keep(place.id);
+            row.classList.remove('pending');
+            row.querySelector('.chip.new')?.remove();
+          }
           stops.setValues(place.stops.map(pretty));
             nameInput.value = place.name ?? '';
             noteInput.value = place.note ?? '';
@@ -534,23 +531,13 @@ export function renderCreate(
       'li',
       { class: place.pending ? 'pending' : undefined, 'data-id': place.id },
       open,
-      keep,
-      h(
-        'button',
-        {
-          type: 'button',
-          class: 'saved-delete',
-          'aria-label': place.pending ? t.remove(title) : t.delete(title),
-          onclick: () => {
-            saved.remove(place.id);
-            renderSaved();
-          },
-        },
-        '×',
-      ),
     );
     open.addEventListener('pointerdown', (event) => holdToMove(row, open, event));
     open.addEventListener('keydown', (event) => {
+      if (event.key === 'Delete' || event.key === 'Backspace') {
+        event.preventDefault();
+        return removePlace(place);
+      }
       if (!event.altKey || (event.key !== 'ArrowUp' && event.key !== 'ArrowDown')) return;
       event.preventDefault();
       const sibling = event.key === 'ArrowUp' ? row.previousElementSibling : row.nextElementSibling;
@@ -565,6 +552,24 @@ export function renderCreate(
   /** Save the order the list now shows. */
   function keepOrder(): void {
     saved.reorder([...savedList.children].map((li) => (li as HTMLElement).dataset.id ?? ''));
+  }
+
+  /** Remove a place, with a few seconds to undo it. */
+  let undoTimer: ReturnType<typeof setTimeout> | undefined;
+  function removePlace(place: SavedPlace): void {
+    const index = saved.list().findIndex((p) => p.id === place.id);
+    saved.remove(place.id);
+    renderSaved();
+    const undo = h('button', { type: 'button', class: 'text-link' }, t.undo);
+    undo.addEventListener('click', () => {
+      clearTimeout(undoTimer);
+      saved.restore(place, index);
+      placesMessage.replaceChildren();
+      renderSaved();
+    });
+    placesMessage.replaceChildren(`${t.removedPlace(place.name ?? fallbackName(place))} · `, undo);
+    clearTimeout(undoTimer);
+    undoTimer = setTimeout(() => placesMessage.replaceChildren(), 6000);
   }
 
   /** While a place is being moved, the page must not scroll under the finger (Safari on iPhone). */
@@ -594,6 +599,7 @@ export function renderCreate(
     let to = 0;
     let step = 0;
     let scrollTimer: ReturnType<typeof setInterval> | undefined;
+    let overBin = false;
 
     const timer = setTimeout(() => {
       held = true;
@@ -609,6 +615,7 @@ export function renderCreate(
       step = next ? Math.abs(next.getBoundingClientRect().top - box.top) : box.height;
       row.classList.add('dragging');
       for (const r of rows) if (r !== row) r.classList.add('making-room');
+      bin.hidden = false;
       // Near the top or bottom of the screen, the page scrolls along.
       scrollTimer = setInterval(() => {
         const edge = 70;
@@ -622,6 +629,11 @@ export function renderCreate(
 
     /** The card under the finger; the others slide out of its way. */
     function follow(): void {
+      const binBox = bin.getBoundingClientRect();
+      // Only right on the bin: the first place sits just below it.
+      overBin = pointerY >= binBox.top && pointerY <= binBox.bottom;
+      bin.classList.toggle('over', overBin);
+      row.classList.toggle('to-bin', overBin);
       const dy = pointerY - startY + (window.scrollY - startScroll);
       row.style.transform = `translateY(${dy}px) scale(1.02)`;
       const centre = tops[from]! + dy + row.offsetHeight / 2;
@@ -655,13 +667,19 @@ export function renderCreate(
       document.removeEventListener('pointercancel', finish);
       if (!held) return;
       moving = false;
+      bin.hidden = true;
+      bin.classList.remove('over');
       // Drop it into the gap: move it in the list, and let every card sit still again.
       for (const r of rows) {
-        r.classList.remove('making-room', 'dragging');
+        r.classList.remove('making-room', 'dragging', 'to-bin');
         r.style.transform = '';
       }
+      const place = saved.list().find((p) => p.id === row.dataset.id);
+      if (overBin && place) return void removePlace(place);
       if (to !== from) savedList.insertBefore(row, to > from ? rows[to]!.nextElementSibling : rows[to]!);
+      if (place?.pending) saved.keep(place.id);
       keepOrder();
+      if (place?.pending) renderSaved();
       // The tap that may follow the release is ignored; after that, taps open the place again.
       setTimeout(() => delete open.dataset.moved, 400);
     };
