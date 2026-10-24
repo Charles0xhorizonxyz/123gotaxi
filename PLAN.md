@@ -45,4 +45,5 @@ Live at **https://123go.taxi** since 2026-10-19, first real ride with a taxi dri
 2. **Native speakers** check the translations, Turkish and Russian first.
 3. **Pilot with 3 to 5 places** in Istanbul using the one-pager; ask them how it went (the site counts nothing).
 4. **Your places**: when lists get long, make the section scroll on its own so it doesn't take over the page.
-5. Then, depending on what testing shows: working offline (opens without signal; also helps installing), short Plus Codes with a town ("X2MQ+GG Istanbul").
+5. **Public usage numbers (to consider):** Geoapify offers no way to read usage automatically, so the idea is a monthly snapshot: a screenshot of its "Usage & statistics" turned into `docs/USAGE.md` (searches per day and month against the free 3,000 a day). The site itself keeps counting nothing.
+6. Then, depending on what testing shows: working offline (opens without signal; also helps installing), short Plus Codes with a town ("X2MQ+GG Istanbul").
