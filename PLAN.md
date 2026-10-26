@@ -19,6 +19,7 @@ Live at **https://123go.taxi** since 2026-10-19, first real ride with a taxi dri
 
 **For places**
 - "Put it on your website": a *Reach us with 123go.taxi* card (words over the QR) in six languages, with the place's public name in the QR.
+- Link previews: sharing https://123go.taxi on LinkedIn, WhatsApp, X, Slack or Telegram shows a card with the taxi logo and slogan (`public/og-image.png`, tags in `index.html`). Apps keep old previews for days: refresh LinkedIn with its [Post Inspector](https://www.linkedin.com/post-inspector/), or add `?ref=li` / `?ref=wa` to the link.
 - One-pager to send them: **https://123go.taxi/onmysite/**. Exact guide for web designers and AI assistants: [docs/ADD-TO-YOUR-WEBSITE.md](docs/ADD-TO-YOUR-WEBSITE.md), and `/llms.txt`.
 
 ## How it runs
@@ -46,4 +47,5 @@ Live at **https://123go.taxi** since 2026-10-19, first real ride with a taxi dri
 3. **Pilot with 3 to 5 places** in Istanbul using the one-pager; ask them how it went (the site counts nothing).
 4. **Your places**: when lists get long, make the section scroll on its own so it doesn't take over the page.
 5. **Public usage numbers (to consider):** Geoapify offers no way to read usage automatically, so the idea is a monthly snapshot: a screenshot of its "Usage & statistics" turned into `docs/USAGE.md` (searches per day and month against the free 3,000 a day). The site itself keeps counting nothing.
-6. Then, depending on what testing shows: working offline (opens without signal; also helps installing), short Plus Codes with a town ("X2MQ+GG Istanbul").
+6. **Neshan and Balad** (the apps Tehran drivers use) aren't in the navigation menu yet. Needed before telling people it works in Iran; first collect real shared links from both apps to learn their formats.
+7. Then, depending on what testing shows: working offline (opens without signal; also helps installing), short Plus Codes with a town ("X2MQ+GG Istanbul").
